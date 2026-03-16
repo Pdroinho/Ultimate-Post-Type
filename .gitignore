@@ -1,0 +1,52 @@
+# WordPress
+wp-admin/
+wp-content/plugins/
+wp-content/themes/
+wp-content/uploads/
+wp-config.php
+wp-config-local.php
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+wp-content/uploads/
+
+# Logs
+*.log
+error_log
+debug.log
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Build files
+*.zip
+*.tar.gz
+*.min.css.map
+*.min.js.map
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Temporary files
+tmp/
+temp/
+.cache/
