@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       upt - Catálogo Front-End
  * Description:       Gerenciador de itens de catálogo com submissão e gerenciamento via front-end.
- * Version: V20.7.32-wizard
+ * Version: V20.7.34-wizard
  * Author:            Pedro
  */
 
@@ -15,7 +15,16 @@
  * Todas as alterações devem seguir estritamente as regras documentadas lá.
  *
  * CHANGELOG:
- * [V20.7.32-wizard]
+ * [V20.7.34-wizard]
+ * - Importação XML de Imobiliária: reescrita completa para processamento em lotes via AJAX.
+ * - Upload do XML salva como arquivo temporário; processamento em lotes de N imóveis por vez.
+ * - Barra de progresso visual com contadores (total, processados, importados, fotos, erros).
+ * - Retomada automática: se o processo morrer no meio, pode ser reiniciado sem duplicar imóveis.
+ * - Cancelamento: botão para interromper a importação a qualquer momento.
+ * - Contagem prévia: conta total de imóveis no XML antes de começar.
+ * - Anti-SSRF: bloqueia download de imagens de IPs privados/locais.
+ *
+ * [V20.7.33-wizard]
  * - Filtro de Categorias (Elementor): adiciona alinhamento "Justificada" para equilibrar itens em 2 linhas (sem deixar 1 sozinho) e preencher a largura disponível.
  *
  * [V20.7.31-wizard]
@@ -139,6 +148,7 @@ final class UPT
         require_once UPT_PLUGIN_DIR . 'includes/class-image-webp.php';
         require_once UPT_PLUGIN_DIR . 'includes/class-shortcodes.php';
         require_once UPT_PLUGIN_DIR . 'includes/class-cache.php';
+        require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
         require_once UPT_PLUGIN_DIR . 'includes/elementor/class-elementor.php';
     }
 

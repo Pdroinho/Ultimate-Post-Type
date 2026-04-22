@@ -45,6 +45,12 @@ class UPT_Ajax {
 
         add_action( 'edit_term', [ self::class, 'capture_category_old_name' ], 10, 3 );
         add_action( 'edited_catalog_category', [ self::class, 'sync_elementor_category_name' ], 10, 2 );
+
+        add_action( 'wp_ajax_upt_imob_count', [ self::class, 'imob_count' ] );
+        add_action( 'wp_ajax_upt_imob_upload', [ self::class, 'imob_upload' ] );
+        add_action( 'wp_ajax_upt_imob_batch', [ self::class, 'imob_batch' ] );
+        add_action( 'wp_ajax_upt_imob_status', [ self::class, 'imob_status' ] );
+        add_action( 'wp_ajax_upt_imob_cancel', [ self::class, 'imob_cancel' ] );
     }
 
     private static function normalize_schema_slugs( $schema_slugs ) {
@@ -3109,6 +3115,141 @@ public static function delete_category() {
             }
         }
         wp_reset_postdata();
+    }
+
+    public static function imob_upload() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        if ( empty( $_FILES['imob_xml_file'] ) || $_FILES['imob_xml_file']['error'] !== UPLOAD_ERR_OK ) {
+            wp_send_json_error( [ 'message' => 'Nenhum arquivo enviado ou erro no upload.' ] );
+        }
+
+        require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
+
+        $schema_mode = isset( $_POST['imob_schema_mode'] ) ? sanitize_key( $_POST['imob_schema_mode'] ) : 'new';
+        $schema_slug = '';
+        $schema_label = '';
+
+        if ( $schema_mode === 'existing' ) {
+            $existing_slug = isset( $_POST['imob_schema_existing'] ) ? sanitize_title( $_POST['imob_schema_existing'] ) : '';
+            if ( $existing_slug ) {
+                $term = get_term_by( 'slug', $existing_slug, 'catalog_schema' );
+                if ( $term && ! is_wp_error( $term ) ) {
+                    $schema_slug = $term->slug;
+                    $schema_label = $term->name;
+                } else {
+                    wp_send_json_error( [ 'message' => 'Esquema existente não encontrado.' ] );
+                }
+            } else {
+                wp_send_json_error( [ 'message' => 'Selecione um esquema existente.' ] );
+            }
+        } else {
+            $schema_name = isset( $_POST['imob_schema_name'] ) ? sanitize_text_field( $_POST['imob_schema_name'] ) : '';
+            if ( $schema_name === '' ) {
+                $schema_name = 'Imóveis';
+            }
+            $schema_slug = sanitize_title( $schema_name );
+            $schema_label = $schema_name;
+        }
+
+        $file_path = $_FILES['imob_xml_file']['tmp_name'];
+        $custom_fields_mode = ( $schema_mode === 'existing' ) ? 'existing' : 'auto';
+
+        $result = UPT_Imobiliaria_Importer::prepare_upload( $file_path, $schema_slug, $schema_label, $custom_fields_mode );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
+        }
+
+        wp_send_json_success( [ 'session_id' => $result ] );
+    }
+
+    public static function imob_count() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
+
+        $session_id = isset( $_POST['session_id'] ) ? sanitize_text_field( $_POST['session_id'] ) : '';
+        if ( $session_id === '' ) {
+            wp_send_json_error( [ 'message' => 'Sessão inválida.' ] );
+        }
+
+        $result = UPT_Imobiliaria_Importer::ajax_count( $session_id );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
+        }
+
+        wp_send_json_success( $result );
+    }
+
+    public static function imob_batch() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
+
+        $session_id = isset( $_POST['session_id'] ) ? sanitize_text_field( $_POST['session_id'] ) : '';
+        $offset     = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
+        $limit      = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 5;
+
+        if ( $session_id === '' ) {
+            wp_send_json_error( [ 'message' => 'Sessão inválida.' ] );
+        }
+
+        if ( $limit < 1 ) {
+            $limit = 5;
+        }
+        if ( $limit > 50 ) {
+            $limit = 50;
+        }
+
+        $result = UPT_Imobiliaria_Importer::ajax_process_batch( $session_id, $offset, $limit );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
+        }
+
+        wp_send_json_success( $result );
+    }
+
+    public static function imob_status() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
+
+        $session_id = isset( $_POST['session_id'] ) ? sanitize_text_field( $_POST['session_id'] ) : '';
+
+        if ( $session_id === '' ) {
+            wp_send_json_error( [ 'message' => 'Sessão inválida.' ] );
+        }
+
+        $status = UPT_Imobiliaria_Importer::ajax_get_status( $session_id );
+        wp_send_json_success( $status );
+    }
+
+    public static function imob_cancel() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
+
+        $session_id = isset( $_POST['session_id'] ) ? sanitize_text_field( $_POST['session_id'] ) : '';
+
+        if ( $session_id === '' ) {
+            wp_send_json_error( [ 'message' => 'Sessão inválida.' ] );
+        }
+
+        $result = UPT_Imobiliaria_Importer::ajax_cancel( $session_id );
+        wp_send_json_success( $result );
     }
 
 }
