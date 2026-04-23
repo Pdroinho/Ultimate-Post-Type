@@ -1268,6 +1268,16 @@ endif; ?>
                 </li>
             <?php
     endif; ?>
+
+            <?php if (current_user_can('manage_options')): ?>
+                <li class="upt-tab-imob-import">
+                    <a href="#tab-imob-import">
+                        <span class="upt-tab-icon" aria-hidden="true">📥</span>
+                        Importar XML
+                    </a>
+                </li>
+            <?php endif; ?>
+
         </ul>
         <div class="upt-saas-sidebar-footer">
              <a href="https://devlevelup.online" target="_blank" class="upt-saas-help-link">Suporte</a>
@@ -1961,6 +1971,66 @@ endif; ?>
 <?php
     endif; ?>
 
+                    <?php if (current_user_can('manage_options')): ?>
+                    <div id="tab-imob-import" class="upt-tab-pane">
+                        <div style="max-width:600px;">
+                            <h3 style="margin:0 0 4px;">Importar XML de Imobiliária</h3>
+                            <p style="color:#6b7280;margin:0 0 20px;font-size:13px;">Importe imóveis de um XML no formato OKE / Zap / Viva Real. As imagens são baixadas automaticamente.</p>
+
+                            <div id="upt-imob-upload-section">
+                                <div style="margin-bottom:16px;">
+                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Esquema:</label>
+                                    <select id="upt-imob-schema-mode" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
+                                        <option value="new">Criar novo esquema</option>
+                                        <option value="existing">Usar esquema existente</option>
+                                    </select>
+                                </div>
+                                <div id="upt-imob-new-schema-field" style="margin-bottom:16px;">
+                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Nome do esquema:</label>
+                                    <input type="text" id="upt-imob-schema-name" value="Imóveis" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+                                </div>
+                                <div id="upt-imob-existing-schema-field" style="margin-bottom:16px;display:none;">
+                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Esquema:</label>
+                                    <select id="upt-imob-schema-existing" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
+                                        <option value="">— Selecione —</option>
+                                        <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
+                                            <option value="<?php echo esc_attr($s->slug); ?>"><?php echo esc_html($s->name); ?></option>
+                                        <?php endforeach; endif; ?>
+                                    </select>
+                                </div>
+                                <div style="margin-bottom:16px;">
+                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Arquivo XML:</label>
+                                    <input type="file" id="upt-imob-xml-file" accept=".xml,text/xml,application/xml" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+                                </div>
+                                <button type="button" id="upt-imob-start-btn" class="button button-primary" style="width:100%;padding:10px;">Enviar e Iniciar Importação</button>
+                            </div>
+
+                            <div id="upt-imob-progress-section" style="display:none;">
+                                <div style="background:#e2e8f0;border-radius:8px;overflow:hidden;height:28px;position:relative;margin:16px 0 10px;">
+                                    <div id="upt-imob-progress-bar" style="background:#6366f1;height:100%;width:0%;transition:width 0.4s ease;border-radius:8px;"></div>
+                                    <span id="upt-imob-progress-text" style="position:absolute;top:0;left:0;right:0;text-align:center;line-height:28px;color:#fff;font-size:13px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.2);">0%</span>
+                                </div>
+                                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:13px;color:#475569;">
+                                    <span>Total: <strong id="upt-imob-stat-total">—</strong></span>
+                                    <span>Importados: <strong id="upt-imob-stat-imported" style="color:#16a34a;">0</strong></span>
+                                    <span>Fotos: <strong id="upt-imob-stat-photos" style="color:#2563eb;">0</strong></span>
+                                    <span>Erros: <strong id="upt-imob-stat-errors" style="color:#dc2626;">0</strong></span>
+                                </div>
+                                <div id="upt-imob-status-msg" style="padding:10px 14px;border-radius:6px;background:#f1f5f9;margin-bottom:12px;font-size:13px;">Preparando...</div>
+                                <button type="button" id="upt-imob-cancel-btn" class="button" style="color:#dc2626;border-color:#dc2626;">Cancelar</button>
+                            </div>
+
+                            <div id="upt-imob-done-section" style="display:none;">
+                                <div style="padding:16px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;margin:12px 0;">
+                                    <p style="margin:0 0 6px;font-weight:600;color:#16a34a;">Importação concluída!</p>
+                                    <p id="upt-imob-done-stats" style="margin:0;color:#475569;font-size:13px;"></p>
+                                </div>
+                                <button type="button" id="upt-imob-new-btn" class="button">Importar Outro XML</button>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     </div>
 
                 </div>
@@ -2553,6 +2623,119 @@ var dashboardChart = new Chart($dashboardCanvas, {
         // aplica filtro inicial nos envios de formulário
         uptFilterSubmissionsByRange();
     }
+
+    // ===== Importador XML de Imobiliária =====
+    (function() {
+        var $startBtn = jQuery('#upt-imob-start-btn');
+        if (!$startBtn.length) return;
+
+        var ajaxUrl = (typeof upt_ajax !== 'undefined') ? upt_ajax.ajax_url : '/wp-admin/admin-ajax.php';
+        var nonce = (typeof upt_ajax !== 'undefined') ? upt_ajax.nonce : '';
+
+        var $mode = jQuery('#upt-imob-schema-mode');
+        var $newField = jQuery('#upt-imob-new-schema-field');
+        var $existingField = jQuery('#upt-imob-existing-schema-field');
+        var $uploadSection = jQuery('#upt-imob-upload-section');
+        var $progressSection = jQuery('#upt-imob-progress-section');
+        var $doneSection = jQuery('#upt-imob-done-section');
+        var $cancelBtn = jQuery('#upt-imob-cancel-btn');
+        var $newBtn = jQuery('#upt-imob-new-btn');
+
+        var session_id = '', total_items = 0, imported_total = 0, photos_total = 0, errors_total = 0, current_offset = 0, is_running = false, batch_size = 5;
+
+        $mode.on('change', function() {
+            if (jQuery(this).val() === 'existing') { $newField.hide(); $existingField.show(); }
+            else { $newField.show(); $existingField.hide(); }
+        });
+
+        $startBtn.on('click', function() {
+            var fileInput = jQuery('#upt-imob-xml-file')[0];
+            if (!fileInput.files || fileInput.files.length === 0) { alert('Selecione um arquivo XML.'); return; }
+            $startBtn.prop('disabled', true).text('Enviando...');
+            uploadAndStart(fileInput.files[0]);
+        });
+
+        $cancelBtn.on('click', function() {
+            if (!confirm('Cancelar importação?')) return;
+            is_running = false;
+            jQuery.post(ajaxUrl, { action: 'upt_imob_cancel', nonce: nonce, session_id: session_id });
+            $progressSection.hide(); $uploadSection.show();
+            $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
+        });
+
+        $newBtn.on('click', function() {
+            $doneSection.hide(); $uploadSection.show();
+            $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
+            jQuery('#upt-imob-xml-file').val('');
+        });
+
+        function uploadAndStart(file) {
+            var formData = new FormData();
+            formData.append('imob_xml_file', file);
+            formData.append('action', 'upt_imob_upload');
+            formData.append('nonce', nonce);
+            formData.append('imob_schema_mode', $mode.val());
+            formData.append('imob_schema_name', jQuery('#upt-imob-schema-name').val());
+            formData.append('imob_schema_existing', jQuery('#upt-imob-schema-existing').val());
+
+            jQuery.ajax({
+                url: ajaxUrl, type: 'POST', data: formData,
+                processData: false, contentType: false, timeout: 300000,
+                success: function(resp) {
+                    $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
+                    if (resp.success && resp.data && resp.data.session_id) {
+                        session_id = resp.data.session_id;
+                        $uploadSection.hide(); $doneSection.hide(); $progressSection.show();
+                        imported_total = 0; photos_total = 0; errors_total = 0; current_offset = 0; is_running = true;
+                        updateStats();
+                        countAndProcess();
+                    } else { alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'Não foi possível iniciar.')); }
+                },
+                error: function() { $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação'); alert('Erro ao enviar.'); }
+            });
+        }
+
+        function updateStats() {
+            var pct = total_items > 0 ? Math.round((current_offset / total_items) * 100) : 0;
+            jQuery('#upt-imob-progress-bar').css('width', pct + '%');
+            jQuery('#upt-imob-progress-text').text(pct + '%');
+            jQuery('#upt-imob-stat-total').text(total_items || '—');
+            jQuery('#upt-imob-stat-imported').text(imported_total);
+            jQuery('#upt-imob-stat-photos').text(photos_total);
+            jQuery('#upt-imob-stat-errors').text(errors_total);
+        }
+
+        function countAndProcess() {
+            setStatus('Contando imóveis...');
+            jQuery.post(ajaxUrl, { action: 'upt_imob_count', nonce: nonce, session_id: session_id }, function(resp) {
+                if (!resp.success) { setStatus('Erro: ' + (resp.data && resp.data.message ? resp.data.message : '?'), true); return; }
+                total_items = resp.data.total; updateStats(); processNextBatch();
+            });
+        }
+
+        function processNextBatch() {
+            if (!is_running) return;
+            setStatus('Processando ' + (current_offset + 1) + '-' + Math.min(current_offset + batch_size, total_items) + ' de ' + total_items + '...');
+            jQuery.post(ajaxUrl, { action: 'upt_imob_batch', nonce: nonce, session_id: session_id, offset: current_offset, limit: batch_size }, function(resp) {
+                if (!is_running) return;
+                if (!resp.success) {
+                    setStatus('Erro: ' + (resp.data && resp.data.message ? resp.data.message : '?') + '. Continuando...', true);
+                    current_offset += batch_size; updateStats(); setTimeout(processNextBatch, 2000); return;
+                }
+                var d = resp.data;
+                imported_total += d.imported; photos_total += d.photos; errors_total += d.errors; current_offset = d.next_offset; updateStats();
+                if (d.last_error) setStatus('Erro: ' + d.last_error + '. Continuando...', true);
+                else setStatus('Processados ' + current_offset + ' de ' + total_items + '. Fotos: ' + photos_total + '.');
+                if (d.is_finished) { is_running = false; $progressSection.hide(); $doneSection.show(); jQuery('#upt-imob-done-stats').text('Importados: ' + imported_total + ' | Erros: ' + errors_total + ' | Fotos: ' + photos_total); }
+                else setTimeout(processNextBatch, 500);
+            }).fail(function() { if (!is_running) return; setStatus('Erro de conexão. Tentando...', true); setTimeout(processNextBatch, 3000); });
+        }
+
+        function setStatus(msg, isError) {
+            var $el = jQuery('#upt-imob-status-msg'); $el.text(msg);
+            if (isError) $el.css({ background: '#fef2f2', color: '#991b1b' }); else $el.css({ background: '#f1f5f9', color: '#475569' });
+        }
+    })();
 
 });
 </script>

@@ -137,7 +137,7 @@ class UPT_Imobiliaria_Importer
 
         $count = 0;
         $reader = new XMLReader();
-        if (!$reader->open($file_path)) {
+        if (!$reader->open($file_path, 'UTF-8', LIBXML_NOERROR | LIBXML_NOWARNING)) {
             return new WP_Error('xml_open', 'Não foi possível abrir o XML.');
         }
 
@@ -190,7 +190,7 @@ class UPT_Imobiliaria_Importer
         $gallery_field_id = $schema_slug . '_' . sanitize_title('Galeria de Fotos');
 
         $reader = new XMLReader();
-        if (!$reader->open($file_path)) {
+        if (!$reader->open($file_path, 'UTF-8', LIBXML_NOERROR | LIBXML_NOWARNING)) {
             return new WP_Error('xml_open', 'Não foi possível abrir o XML.');
         }
 

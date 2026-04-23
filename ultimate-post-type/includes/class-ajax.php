@@ -3118,7 +3118,7 @@ public static function delete_category() {
     }
 
     public static function imob_upload() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'upload_files' ) ) {
             wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
         }
 
@@ -3167,7 +3167,7 @@ public static function delete_category() {
     }
 
     public static function imob_count() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'upload_files' ) ) {
             wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
         }
 
@@ -3188,7 +3188,7 @@ public static function delete_category() {
     }
 
     public static function imob_batch() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'upload_files' ) ) {
             wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
         }
 
@@ -3219,7 +3219,7 @@ public static function delete_category() {
     }
 
     public static function imob_status() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'upload_files' ) ) {
             wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
         }
 
@@ -3236,7 +3236,7 @@ public static function delete_category() {
     }
 
     public static function imob_cancel() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'upload_files' ) ) {
             wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
         }
 

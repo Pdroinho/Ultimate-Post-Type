@@ -1209,9 +1209,10 @@ class UPT_Admin
             </style>
 
             <div class="upt-card">
-                <div class="upt-card__header"><h2>Importar dados (XML)</h2></div>
+                <div class="upt-card__header"><h2>Importar dados (XML / JSON / WXR)</h2></div>
                 <div class="upt-card__body">
-                                        <p>Envie o arquivo XML exportado do WordPress (formato WXR). O conteúdo será lido e exibido dinamicamente para que você possa mapear os dados para os campos do esquema.</p>
+                                        <p>Envie o arquivo XML exportado do próprio upt ou JSON. O conteúdo será lido e exibido dinamicamente para que você possa mapear os dados para os campos do esquema.</p>
+                    <p style="color:#dc2626;font-weight:600;"><strong>Atenção:</strong> Para importar XML de imobiliárias (OKE, Zap, Viva Real, etc.), use a seção <strong>"Importar XML de Imobiliária"</strong> abaixo.</p>
                     <form method="post" action="" enctype="multipart/form-data">
                         <?php wp_nonce_field('upt_import_nonce'); ?>
                         <input type="hidden" name="action" value="upt_import_data">
