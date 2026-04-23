@@ -5879,24 +5879,77 @@ function uptSetBulkMode(isActive) {
             uptSetBulkMode(true);
         });
 
-        // Select all (current view)
+        // Select all (current view + all pages via AJAX)
         $('body').on('click', '.upt-bulk-delete-selectall', function (e) {
             e.preventDefault();
             if (!$('body').hasClass('upt-bulk-select-mode')) return;
 
-            uptEnsureBulkCheckboxes();
-
+            var $btn = $(this);
             var $scope = uptGetBulkScope();
-            var $checkboxes = $scope.find('.upt-bulk-select');
-            if (!$checkboxes.length) return;
-
-            // Toggle: if every visible checkbox is checked -> uncheck all; else check all.
+            var $visibleBoxes = $scope.find('.upt-bulk-select');
             var allChecked = true;
-            $checkboxes.each(function () {
+            $visibleBoxes.each(function () {
                 if (!$(this).prop('checked')) { allChecked = false; return false; }
             });
 
-            $checkboxes.prop('checked', !allChecked).trigger('change');
+            if (allChecked) {
+                $visibleBoxes.prop('checked', false).trigger('change');
+                $scope.find('.upt-bulk-select-extra').remove();
+                return;
+            }
+
+            $visibleBoxes.prop('checked', true).trigger('change');
+
+            var schema = $scope.data('schema') || $scope.find('[data-schema]').data('schema') || '';
+            if (!schema) {
+                var $schemaTab = $scope.closest('.upt-tab-pane').find('.upt-filter-schema-btn.active');
+                if ($schemaTab.length) schema = $schemaTab.data('schema') || '';
+            }
+
+            if (!schema) return;
+
+            $btn.prop('disabled', true).text('Carregando...');
+
+            var ajaxUrl = (typeof upt_ajax !== 'undefined') ? upt_ajax.ajax_url : '/wp-admin/admin-ajax.php';
+            var nonce = (typeof upt_ajax !== 'undefined') ? upt_ajax.nonce : '';
+
+            $.post(ajaxUrl, {
+                action: 'upt_get_all_item_ids',
+                nonce: nonce,
+                schema: schema
+            }, function(resp) {
+                $btn.prop('disabled', false).text('Tudo');
+                if (!resp.success || !resp.data || !resp.data.ids || !resp.data.ids.length) return;
+
+                var $container = $scope.find('.upt-bulk-extra-container');
+                if (!$container.length) {
+                    $container = $('<div class="upt-bulk-extra-container" style="display:none;"></div>');
+                    $scope.append($container);
+                }
+                $container.empty();
+
+                var existingIds = [];
+                $scope.find('.upt-bulk-select').each(function() {
+                    existingIds.push(parseInt($(this).val(), 10));
+                });
+
+                var addedCount = 0;
+                resp.data.ids.forEach(function(id) {
+                    if (existingIds.indexOf(id) === -1) {
+                        $container.append(
+                            $('<input type="checkbox" class="upt-bulk-select upt-bulk-select-extra" checked="checked">')
+                            .val(id)
+                        );
+                        addedCount++;
+                    }
+                });
+
+                if (addedCount > 0) {
+                    uptUpdateBulkDeleteCount();
+                }
+            }).fail(function() {
+                $btn.prop('disabled', false).text('Tudo');
+            });
         });
 
         // Cancel bulk delete mode

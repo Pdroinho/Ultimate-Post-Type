@@ -19,6 +19,7 @@ class UPT_Ajax {
         add_action( 'wp_ajax_upt_add_schema_option', [ self::class, 'add_schema_option' ] );
         add_action( 'wp_ajax_upt_delete_item', [ self::class, 'delete_item' ] );
         add_action( 'wp_ajax_upt_bulk_delete_items', [ self::class, 'bulk_delete_items' ] );
+        add_action( 'wp_ajax_upt_get_all_item_ids', [ self::class, 'get_all_item_ids' ] );
         add_action( 'wp_ajax_upt_get_schema_counts', [ self::class, 'get_schema_counts' ] );
         add_action( 'wp_ajax_upt_delete_category', [ self::class, 'delete_category' ] );
         add_action( 'wp_ajax_upt_delete_schema_option', [ self::class, 'delete_schema_option' ] );
@@ -51,6 +52,7 @@ class UPT_Ajax {
         add_action( 'wp_ajax_upt_imob_batch', [ self::class, 'imob_batch' ] );
         add_action( 'wp_ajax_upt_imob_status', [ self::class, 'imob_status' ] );
         add_action( 'wp_ajax_upt_imob_cancel', [ self::class, 'imob_cancel' ] );
+        add_action( 'wp_ajax_upt_save_card_settings', [ self::class, 'save_card_settings' ] );
     }
 
     private static function normalize_schema_slugs( $schema_slugs ) {
@@ -1820,6 +1822,22 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
 
                                 <h4 class="card-title" title="<?php echo esc_attr( get_the_title() ); ?>"><?php the_title(); ?></h4>
 
+                                <?php
+                                $preco_venda_id = $schema_slug . '_preco-de-venda';
+                                $preco_venda = get_post_meta($post_id, $preco_venda_id, true);
+                                if ($preco_venda !== '' && floatval($preco_venda) > 0) {
+                                    $preco_venda = floatval($preco_venda);
+                                    echo '<div class="upt-card-price" style="margin-top:4px;">R$ ' . number_format($preco_venda, 0, ',', '.') . '</div>';
+                                } elseif ($preco_venda === '' || floatval($preco_venda) <= 0) {
+                                    $preco_loc_id = $schema_slug . '_preco-de-aluguel';
+                                    $preco_loc = get_post_meta($post_id, $preco_loc_id, true);
+                                    if ($preco_loc !== '' && floatval($preco_loc) > 0) {
+                                        $preco_loc = floatval($preco_loc);
+                                        echo '<div class="upt-card-price" style="margin-top:4px;">R$ ' . number_format($preco_loc, 0, ',', '.') . '<span style="font-size:11px;color:#6b7280;margin-left:4px;">/mês</span></div>';
+                                    }
+                                }
+                                ?>
+
                                 <div class="card-actions upt-card-actions--inline">
                                     <a href="#" class="upt-card-btn open-edit-modal" data-item-id="<?php echo esc_attr( $post_id ); ?>" title="Editar">
                                         <?php if ( ! $is_form_submission_listing ) : ?>
@@ -2656,6 +2674,40 @@ public static function delete_category() {
         }
         wp_die();
     }
+    public static function get_all_item_ids() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! is_user_logged_in() ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        $schema = isset( $_POST['schema'] ) ? sanitize_title( $_POST['schema'] ) : '';
+        if ( $schema === '' ) {
+            wp_send_json_error( [ 'message' => 'Esquema não informado.' ] );
+        }
+
+        $args = [
+            'post_type'      => 'catalog_item',
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
+            'fields'         => 'ids',
+            'tax_query'      => [
+                [
+                    'taxonomy' => 'catalog_schema',
+                    'field'    => 'slug',
+                    'terms'    => $schema,
+                ],
+            ],
+        ];
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $args['author'] = get_current_user_id();
+        }
+
+        $query = new WP_Query( $args );
+        $ids = $query->posts;
+
+        wp_send_json_success( [ 'ids' => array_map( 'absint', $ids ), 'count' => count( $ids ) ] );
+    }
+
     public static function bulk_delete_items() {
         if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) ) { ob_clean(); wp_send_json_error(['message' => 'Falha de segurança.']); }
         if ( ! is_user_logged_in() ) { ob_clean(); wp_send_json_error(['message' => 'Você precisa estar logado.']); }
@@ -3164,6 +3216,20 @@ public static function delete_category() {
         }
 
         wp_send_json_success( [ 'session_id' => $result ] );
+    }
+
+    public static function save_card_settings() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        $dashboard_fields = isset( $_POST['dashboard_fields'] ) && is_array( $_POST['dashboard_fields'] ) ? array_map( 'sanitize_key', $_POST['dashboard_fields'] ) : [];
+        $site_fields = isset( $_POST['site_fields'] ) && is_array( $_POST['site_fields'] ) ? array_map( 'sanitize_text_field', $_POST['site_fields'] ) : [];
+
+        update_option( 'upt_card_dashboard_fields', $dashboard_fields );
+        update_option( 'upt_card_site_fields', $site_fields );
+
+        wp_send_json_success( [ 'message' => 'Configurações salvas.' ] );
     }
 
     public static function imob_count() {

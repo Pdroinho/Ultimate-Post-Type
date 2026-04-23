@@ -167,7 +167,19 @@ case 'blog_post':
                             break;
                         case 'select':
                             if (isset($field['options'])) {
-                                $options = explode('|', $field['options']);
+                                if (is_array($field['options'])) {
+                                    $opt_strings = [];
+                                    foreach ($field['options'] as $opt) {
+                                        if (is_array($opt)) {
+                                            $opt_strings[] = isset($opt['label']) ? $opt['label'] : (isset($opt['value']) ? $opt['value'] : '');
+                                        } else {
+                                            $opt_strings[] = (string)$opt;
+                                        }
+                                    }
+                                    $options = $opt_strings;
+                                } else {
+                                    $options = explode('|', $field['options']);
+                                }
                                 $is_multiple = !empty($field['multiple']);
                                 $allow_new = !empty($field['allow_new']);
                                 $allow_rename_option = !empty($field['allow_rename_option']);

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       upt - Catálogo Front-End
  * Description:       Gerenciador de itens de catálogo com submissão e gerenciamento via front-end.
- * Version: V20.7.34-wizard
+ * Version: V20.7.35-wizard
  * Author:            Pedro
  */
 
@@ -15,6 +15,16 @@
  * Todas as alterações devem seguir estritamente as regras documentadas lá.
  *
  * CHANGELOG:
+ * [V20.7.35-wizard]
+ * - Importação XML: categorias automáticas criadas a partir de TipoImovel + Cidade (ex: Casa > Aracaju).
+ * - Importação XML: campo "Status do Imóvel" criado automaticamente (Venda / Aluguel / Venda e Aluguel / Consulte).
+ * - Importação XML: campos PrecoLocacao e PrecoLocacaoTemporada agora importados.
+ * - Importação XML: campo Empreendimento importado.
+ * - Importação XML: preços formatados como moeda brasileira (ex: 410.000,00).
+ * - Importação XML: sync incremental — re-importação preserva galeria e thumbnail existentes.
+ * - Importação XML: corrigido bug onde todos os imóveis ficavam com todas as categorias.
+ * - Importação XML: importação disponível também no /painel (tab "Importar XML").
+ *
  * [V20.7.34-wizard]
  * - Importação XML de Imobiliária: reescrita completa para processamento em lotes via AJAX.
  * - Upload do XML salva como arquivo temporário; processamento em lotes de N imóveis por vez.

@@ -1278,10 +1278,16 @@ endif; ?>
                 </li>
             <?php endif; ?>
 
+            <?php if (current_user_can('manage_options')): ?>
+                <li class="upt-tab-card-settings">
+                    <a href="#tab-card-settings">
+                        <span class="upt-tab-icon" aria-hidden="true">🎨</span>
+                        Cards
+                    </a>
+                </li>
+            <?php endif; ?>
+
         </ul>
-        <div class="upt-saas-sidebar-footer">
-             <a href="https://devlevelup.online" target="_blank" class="upt-saas-help-link">Suporte</a>
-        </div>
     </aside>
     <?php
 endif; ?>
@@ -2031,6 +2037,66 @@ endif; ?>
                     </div>
                     <?php endif; ?>
 
+                    <?php if (current_user_can('manage_options')): ?>
+                    <div id="tab-card-settings" class="upt-tab-pane">
+                        <div style="max-width:700px;">
+                            <h3 style="margin:0 0 4px;">Aparência dos Cards</h3>
+                            <p style="color:#6b7280;margin:0 0 24px;font-size:13px;">Escolha quais campos aparecem nos cards.</p>
+
+                            <div style="margin-bottom:32px;">
+                                <h4 style="margin:0 0 12px;font-size:15px;">Cards do Dashboard</h4>
+                                <p style="color:#6b7280;font-size:12px;margin:0 0 8px;">Campos exibidos nos cards da aba Dashboard e Listagem.</p>
+                                <?php
+                                $upt_card_dashboard_fields = get_option('upt_card_dashboard_fields', ['title','price','status']);
+                                $upt_dashboard_field_options = [
+                                    'title'   => 'Título do imóvel',
+                                    'price'   => 'Preço (venda ou aluguel)',
+                                    'status'  => 'Badge de status (publicado/pendente)',
+                                    'category'=> 'Badge de categoria',
+                                ];
+                                foreach ($upt_dashboard_field_options as $opt_val => $opt_label):
+                                ?>
+                                <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:14px;">
+                                    <input type="checkbox" name="upt_card_dashboard_fields[]" value="<?php echo esc_attr($opt_val); ?>" <?php checked(in_array($opt_val, $upt_card_dashboard_fields)); ?>>
+                                    <?php echo esc_html($opt_label); ?>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div style="margin-bottom:32px;">
+                                <h4 style="margin:0 0 12px;font-size:15px;">Campos do Card do Site</h4>
+                                <p style="color:#6b7280;font-size:12px;margin:0 0 8px;">Estes campos serão adicionados automaticamente ao card padrão do Listing Widget (Elementor) caso ele esteja com a estrutura padrão (não customizada).</p>
+                                <?php
+                                $upt_card_site_fields = get_option('upt_card_site_fields', []);
+                                $all_schemas_defs = UPT_Schema_Store::get_schemas();
+                                $upt_site_field_choices = [];
+                                foreach ($all_schemas_defs as $sk => $sd) {
+                                    if (!empty($sd['fields']) && is_array($sd['fields'])) {
+                                        foreach ($sd['fields'] as $f) {
+                                            if (empty($f['id']) || empty($f['label'])) continue;
+                                            $upt_site_field_choices[$f['id']] = $f['label'] . ' (' . $sk . ')';
+                                        }
+                                    }
+                                }
+                                $upt_site_field_choices['core_title'] = 'Título';
+                                $upt_site_field_choices['core_featured_image'] = 'Imagem Destacada';
+                                $upt_site_field_choices['core_category'] = 'Categoria';
+                                asort($upt_site_field_choices);
+                                foreach ($upt_site_field_choices as $f_id => $f_label):
+                                ?>
+                                <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:14px;">
+                                    <input type="checkbox" name="upt_card_site_fields[]" value="<?php echo esc_attr($f_id); ?>" <?php checked(in_array($f_id, $upt_card_site_fields)); ?>>
+                                    <?php echo esc_html($f_label); ?>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <button type="button" id="upt-save-card-settings" class="button button-primary">Salvar Configurações</button>
+                            <span id="upt-card-settings-saved" style="margin-left:12px;color:#16a34a;font-weight:600;display:none;">Salvo!</span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     </div>
 
                 </div>
@@ -2623,6 +2689,45 @@ var dashboardChart = new Chart($dashboardCanvas, {
         // aplica filtro inicial nos envios de formulário
         uptFilterSubmissionsByRange();
     }
+
+    // ===== Card Settings =====
+    (function() {
+        var $saveBtn = jQuery('#upt-save-card-settings');
+        if (!$saveBtn.length) return;
+
+        var ajaxUrl = (typeof upt_ajax !== 'undefined') ? upt_ajax.ajax_url : '/wp-admin/admin-ajax.php';
+        var nonce = (typeof upt_ajax !== 'undefined') ? upt_ajax.nonce : '';
+
+        $saveBtn.on('click', function() {
+            var dashFields = [];
+            jQuery('[name="upt_card_dashboard_fields[]"]:checked').each(function() {
+                dashFields.push(jQuery(this).val());
+            });
+            var siteFields = [];
+            jQuery('[name="upt_card_site_fields[]"]:checked').each(function() {
+                siteFields.push(jQuery(this).val());
+            });
+
+            $saveBtn.prop('disabled', true).text('Salvando...');
+
+            jQuery.post(ajaxUrl, {
+                action: 'upt_save_card_settings',
+                nonce: nonce,
+                dashboard_fields: dashFields,
+                site_fields: siteFields
+            }, function(resp) {
+                $saveBtn.prop('disabled', false).text('Salvar Configurações');
+                if (resp.success) {
+                    jQuery('#upt-card-settings-saved').show().fadeOut(2000);
+                } else {
+                    alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'));
+                }
+            }).fail(function() {
+                $saveBtn.prop('disabled', false).text('Salvar Configurações');
+                alert('Erro de conexão.');
+            });
+        });
+    })();
 
     // ===== Importador XML de Imobiliária =====
     (function() {
