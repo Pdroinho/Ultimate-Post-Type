@@ -182,6 +182,7 @@ class UPT_Imobiliaria_Importer
             return new WP_Error('no_schema', 'Sessão inválida.');
         }
 
+        delete_transient('upt_schemas_cache');
         $schema_fields = UPT_Schema_Store::get_fields_for_schema($schema_slug);
         if (empty($schema_fields)) {
             $all_schemas = UPT_Schema_Store::get_schemas();
@@ -205,6 +206,7 @@ class UPT_Imobiliaria_Importer
 
         $global_index = 0;
         $processed = 0;
+        $post_ids_to_clean = [];
         $batch_imported = 0;
         $batch_skipped = 0;
         $batch_photos = 0;
@@ -224,6 +226,9 @@ class UPT_Imobiliaria_Importer
                             $batch_skipped++;
                         } else {
                             $batch_imported++;
+                            if (isset($result['_post_id']) && $result['_post_id'] > 0) {
+                                $post_ids_to_clean[] = $result['_post_id'];
+                            }
                             if (isset($result['_photos'])) {
                                 $batch_photos += $result['_photos'];
                             }
@@ -277,6 +282,9 @@ class UPT_Imobiliaria_Importer
                             $batch_skipped++;
                         } else {
                             $batch_imported++;
+                            if (isset($result['_post_id']) && $result['_post_id'] > 0) {
+                                $post_ids_to_clean[] = $result['_post_id'];
+                            }
                             if (isset($result['_photos'])) {
                                 $batch_photos += $result['_photos'];
                             }
@@ -345,7 +353,15 @@ class UPT_Imobiliaria_Importer
         }
 
         $reader->close();
-        wp_cache_flush();
+
+        wp_cache_delete('upt_schemas', 'options');
+        wp_cache_delete('upt_schemas_cache', 'transient');
+        clean_post_cache(empty($post_ids_to_clean) ? [] : $post_ids_to_clean);
+        if (function_exists('wp_cache_flush_group')) {
+            wp_cache_flush_group('terms');
+        } else {
+            wp_cache_flush();
+        }
 
         $is_finished = ($processed < $limit) || ($global_index <= 0);
 
@@ -412,41 +428,48 @@ class UPT_Imobiliaria_Importer
         $all_schemas[$schema_slug]['label'] = $schema_label;
         $all_schemas[$schema_slug]['items_limit'] = 0;
 
-        if ($custom_fields_mode !== 'existing' || empty($all_schemas[$schema_slug]['fields'])) {
-            $new_fields = [];
+        $new_fields = [];
 
-            foreach (self::$fields_map as $tag => $def) {
-                $new_fields[] = [
-                    'id'       => $schema_slug . '_' . sanitize_title($def['label']),
-                    'type'     => $def['type'],
-                    'label'    => $def['label'],
-                    'required' => false,
-                ];
-            }
-
+        foreach (self::$fields_map as $tag => $def) {
             $new_fields[] = [
-                'id'       => $schema_slug . '_' . sanitize_title('Observação'),
-                'type'     => 'wysiwyg',
-                'label'    => 'Observação',
+                'id'       => $schema_slug . '_' . sanitize_title($def['label']),
+                'type'     => $def['type'],
+                'label'    => $def['label'],
                 'required' => false,
             ];
+        }
 
-            $new_fields[] = [
-                'id'       => $schema_slug . '_' . sanitize_title('Galeria de Fotos'),
-                'type'     => 'gallery',
-                'label'    => 'Galeria de Fotos',
-                'required' => false,
-            ];
+        $new_fields[] = [
+            'id'       => $schema_slug . '_' . sanitize_title('Observação'),
+            'type'     => 'wysiwyg',
+            'label'    => 'Observação',
+            'required' => false,
+        ];
 
+        $new_fields[] = [
+            'id'       => $schema_slug . '_' . sanitize_title('Galeria de Fotos'),
+            'type'     => 'gallery',
+            'label'    => 'Galeria de Fotos',
+            'required' => false,
+        ];
+
+        $new_fields[] = [
+            'id'       => $schema_slug . '_status-do-imovel',
+            'type'     => 'select',
+            'label'    => 'Status do Imóvel',
+            'required' => false,
+            'options'  => 'Venda|Aluguel|Venda e Aluguel|Consulte',
+        ];
+
+        if (empty($all_schemas[$schema_slug]['fields'])) {
+            $all_schemas[$schema_slug]['fields'] = $new_fields;
+        } else {
             $existing_ids = [];
-            if (!empty($all_schemas[$schema_slug]['fields'])) {
-                foreach ($all_schemas[$schema_slug]['fields'] as $ef) {
-                    if (isset($ef['id'])) {
-                        $existing_ids[$ef['id']] = true;
-                    }
+            foreach ($all_schemas[$schema_slug]['fields'] as $ef) {
+                if (isset($ef['id'])) {
+                    $existing_ids[$ef['id']] = true;
                 }
             }
-
             foreach ($new_fields as $nf) {
                 if (!isset($existing_ids[$nf['id']])) {
                     $all_schemas[$schema_slug]['fields'][] = $nf;
@@ -478,21 +501,15 @@ class UPT_Imobiliaria_Importer
         $preco_temporada = isset($fields['PrecoLocacaoTemporada']) ? floatval(preg_replace('/[^0-9.,\-]/', '', str_replace('.', '', $fields['PrecoLocacaoTemporada']))) : 0;
         $empreendimento = isset($fields['Empreendimento']) ? trim($fields['Empreendimento']) : '';
 
-        if ($preco_venda > 0) {
-            $preco_venda = str_replace('.', ',', number_format($preco_venda, 2, ',', '.'));
-        }
-        if ($preco_locacao > 0) {
-            $preco_locacao = str_replace('.', ',', number_format($preco_locacao, 2, ',', '.'));
-        }
-        if ($preco_temporada > 0) {
-            $preco_temporada = str_replace('.', ',', number_format($preco_temporada, 2, ',', '.'));
-        }
+        $preco_venda_raw = $preco_venda;
+        $preco_locacao_raw = $preco_locacao;
+        $preco_temporada_raw = $preco_temporada;
 
-        if ($preco_venda > 0 && $preco_locacao <= 0 && $preco_temporada <= 0) {
+        if ($preco_venda_raw > 0 && $preco_locacao_raw <= 0 && $preco_temporada_raw <= 0) {
             $status_imovel = 'Venda';
-        } elseif ($preco_venda <= 0 && $preco_locacao > 0) {
+        } elseif ($preco_venda_raw <= 0 && $preco_locacao_raw > 0) {
             $status_imovel = 'Aluguel';
-        } elseif ($preco_venda > 0 && ($preco_locacao > 0 || $preco_temporada > 0)) {
+        } elseif ($preco_venda_raw > 0 && ($preco_locacao_raw > 0 || $preco_temporada_raw > 0)) {
             $status_imovel = 'Venda e Aluguel';
         } else {
             $status_imovel = 'Consulte';
@@ -522,6 +539,7 @@ class UPT_Imobiliaria_Importer
         }
 
         wp_set_object_terms($post_id, $schema_slug, 'catalog_schema', false);
+        $result['_post_id'] = (int)$post_id;
 
         $existing_cats = wp_get_object_terms($post_id, 'catalog_category', ['fields' => 'ids']);
         $existing_cat_ids = [];
@@ -576,7 +594,7 @@ class UPT_Imobiliaria_Importer
             wp_set_object_terms($post_id, $final_cat_ids, 'catalog_category', false);
         }
 
-        $result = ['_photos' => 0];
+        $result = ['_photos' => 0, '_post_id' => 0];
 
         $has_gallery_field = false;
         foreach ($schema_fields as $sf) {
@@ -587,11 +605,9 @@ class UPT_Imobiliaria_Importer
         }
 
         if ($has_gallery_field && !empty($fotos)) {
-            if ($existing_id > 0) {
-                $old_gallery = get_post_meta($existing_id, $gallery_field_id, true);
-                if (!empty($old_gallery)) {
-                    $result['_photos'] = count(explode(',', $old_gallery));
-                }
+            $old_gallery = get_post_meta($post_id, $gallery_field_id, true);
+            if (!empty($old_gallery)) {
+                $result['_photos'] = count(explode(',', $old_gallery));
             } else {
                 $gallery_ids = self::download_fotos($fotos, $post_id);
 
@@ -603,7 +619,7 @@ class UPT_Imobiliaria_Importer
                 }
             }
         } elseif (!empty($fotos)) {
-            if ($existing_id <= 0 || !has_post_thumbnail($post_id)) {
+            if (!has_post_thumbnail($post_id)) {
                 $first_foto = null;
                 foreach ($fotos as $foto) {
                     if (!empty($foto['principal'])) {
@@ -658,26 +674,6 @@ class UPT_Imobiliaria_Importer
         }
 
         $status_field_id = $schema_slug . '_status-do-imovel';
-        $has_status_field = false;
-        foreach ($schema_fields as $sf) {
-            if (isset($sf['id']) && $sf['id'] === $status_field_id) {
-                $has_status_field = true;
-                break;
-            }
-        }
-        if (!$has_status_field) {
-            $all_schemas = UPT_Schema_Store::get_schemas();
-            if (isset($all_schemas[$schema_slug]['fields'])) {
-                $all_schemas[$schema_slug]['fields'][] = [
-                    'id'       => $status_field_id,
-                    'type'     => 'select',
-                    'label'    => 'Status do Imóvel',
-                    'required' => false,
-                    'options'  => 'Venda|Aluguel|Venda e Aluguel|Consulte',
-                ];
-                UPT_Schema_Store::save_schemas($all_schemas);
-            }
-        }
         update_post_meta($post_id, $status_field_id, $status_imovel);
 
         if ($codigo !== '') {

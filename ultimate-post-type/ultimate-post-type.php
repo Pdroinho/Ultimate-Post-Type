@@ -141,6 +141,7 @@ final class UPT
     }
     private function __construct()
     {
+        load_plugin_textdomain('ultimate-post-type', false, dirname(plugin_basename(__FILE__)) . '/languages');
         $this->load_dependencies();
         $this->init_hooks();
     }
@@ -191,12 +192,123 @@ final class UPT
         UPT_Image_WebP::init();
         UPT_Shortcodes::init();
         UPT_Cache::init();
+
+        add_action('upt_imob_cron_import', [$this, 'run_cron_import']);
+        add_filter('cron_schedules', [$this, 'add_cron_schedules']);
+
         if (did_action('elementor/loaded')) {
             UPT_Elementor::init();
         }
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
+
+    public function add_cron_schedules($schedules)
+    {
+        $schedules['sixhourly'] = [
+            'interval' => 21600,
+            'display'  => 'A cada 6 horas',
+        ];
+        return $schedules;
+    }
+
+    public function run_cron_import()
+    {
+        $config = get_option('upt_imob_cron_config', []);
+        if (empty($config['url']) || empty($config['schema']) || empty($config['active'])) {
+            return;
+        }
+
+        $lock_key = 'upt_imob_cron_lock';
+        $lock = get_transient($lock_key);
+        if ($lock) {
+            return;
+        }
+        set_transient($lock_key, '1', 30 * MINUTE_IN_SECONDS);
+
+        require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
+
+        set_time_limit(300);
+        ini_set('memory_limit', '512M');
+
+        $tmp = download_url($config['url'], 120);
+
+        if (is_wp_error($tmp)) {
+            $config['last_run'] = current_time('mysql') . ' (Erro: download falhou)';
+            update_option('upt_imob_cron_config', $config);
+            delete_transient($lock_key);
+            return;
+        }
+
+        $result = UPT_Imobiliaria_Importer::prepare_upload($tmp, $config['schema'], $config['schema'], 'existing');
+
+        @unlink($tmp);
+
+        if (is_wp_error($result)) {
+            $config['last_run'] = current_time('mysql') . ' (Erro: ' . $result->get_error_message() . ')';
+            update_option('upt_imob_cron_config', $config);
+            delete_transient($lock_key);
+            return;
+        }
+
+        $session_id = $result;
+        $total = 0;
+        $offset = 0;
+        $imported = 0;
+        $photos = 0;
+        $errors = 0;
+
+        $count_result = UPT_Imobiliaria_Importer::ajax_count($session_id);
+        if (!is_wp_error($count_result)) {
+            $total = $count_result['total'];
+        }
+
+        $batch_limit = 10;
+        $max_batches = 50;
+        $batch_num = 0;
+
+        while ($offset < $total && $batch_num < $max_batches) {
+            $batch_result = UPT_Imobiliaria_Importer::ajax_process_batch($session_id, $offset, $batch_limit);
+
+            if (is_wp_error($batch_result)) {
+                $errors++;
+                $offset += $batch_limit;
+                $batch_num++;
+                sleep(2);
+                continue;
+            }
+
+            $imported += $batch_result['imported'];
+            $photos += $batch_result['photos'];
+            $errors += $batch_result['errors'];
+
+            if (!empty($batch_result['is_finished'])) {
+                break;
+            }
+
+            $offset = $batch_result['next_offset'];
+            $batch_num++;
+            sleep(1);
+        }
+
+        $stats = get_option('upt_imob_cron_stats', ['total' => 0, 'imported' => 0, 'errors' => 0]);
+        $stats['imported'] = (isset($stats['imported']) ? $stats['imported'] : 0) + $imported;
+        $stats['total'] = $total;
+        $stats['errors'] = (isset($stats['errors']) ? $stats['errors'] : 0) + $errors;
+        update_option('upt_imob_cron_stats', $stats);
+
+        $config['last_run'] = current_time('mysql') . " (Importados: {$imported}, Fotos: {$photos}, Erros: {$errors})";
+        update_option('upt_imob_cron_config', $config);
+
+        UPT_Imobiliaria_Importer::ajax_cancel($session_id);
+
+        delete_transient($lock_key);
+
+        wp_clear_scheduled_hook('upt_imob_cron_import');
+        $freq = isset($config['frequency']) ? $config['frequency'] : 'sixhourly';
+        wp_schedule_event(time(), $freq, 'upt_imob_cron_import');
+    }
 }
+
 function upt()
 {
     return UPT::instance();
@@ -215,11 +327,13 @@ function upt_activate()
         ob_end_clean();
     }
 }
+
 register_activation_hook(__FILE__, 'upt_activate');
 
 function upt_deactivate()
 {
     require_once UPT_PLUGIN_DIR . 'includes/class-roles.php';
     UPT_Roles::remove_roles();
+    wp_clear_scheduled_hook('upt_imob_cron_import');
 }
 register_deactivation_hook(__FILE__, 'upt_deactivate');

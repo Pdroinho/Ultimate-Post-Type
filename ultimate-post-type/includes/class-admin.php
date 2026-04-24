@@ -414,6 +414,46 @@ class UPT_Admin
                 return $mimes;
             });
 
+            add_filter('wp_handle_upload', function ($upload) {
+                if (isset($upload['type']) && $upload['type'] === 'image/svg+xml' && isset($upload['file']) && file_exists($upload['file'])) {
+                    $content = file_get_contents($upload['file']);
+                    if ($content !== false) {
+                        $dangerous_patterns = [
+                            '/<script[\s>]/i',
+                            '/\bon\w+\s*=\s*["\']?\s*(?:javascript|data|vbscript)/i',
+                            '/<iframe[\s>]/i',
+                            '/<embed[\s>]/i',
+                            '/<object[\s>]/i',
+                            '/<applet[\s>]/i',
+                            '/<form[\s>]/i',
+                            '/<input[\s>]/i',
+                            '/<button[\s>]/i',
+                            '/<textarea[\s>]/i',
+                            '/<select[\s>]/i',
+                            '/xlink:href\s*=\s*["\']?\s*(?:javascript|data):/i',
+                            '/<foreignObject/i',
+                            '/<set[\s>]/i',
+                            '/<use[\s>]/i',
+                            '/<animate[\s>]/i',
+                            '/<animateTransform/i',
+                        ];
+                        foreach ($dangerous_patterns as $pattern) {
+                            if (preg_match($pattern, $content)) {
+                                @unlink($upload['file']);
+                                $upload['error'] = 'O arquivo SVG contém conteúdo não permitido. Scripts e elementos interativos são bloqueados por segurança.';
+                                return $upload;
+                            }
+                        }
+                        $sanitized = preg_replace('/<\?xml[^>]*\?>/i', '', $content);
+                        $sanitized = preg_replace('/<!--.*?-->/s', '', $sanitized);
+                        $sanitized = preg_replace('/<(!DOCTYPE)[^>]*>/i', '', $sanitized);
+                        $sanitized = preg_replace('/\son\w+\s*=\s*["\'][^"\']*["\']/i', '', $sanitized);
+                        file_put_contents($upload['file'], $sanitized);
+                    }
+                }
+                return $upload;
+            });
+
         }
     }
 

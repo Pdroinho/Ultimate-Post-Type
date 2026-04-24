@@ -2031,6 +2031,61 @@ endif; ?>
                                     <p style="margin:0 0 6px;font-weight:600;color:#16a34a;">Importação concluída!</p>
                                     <p id="upt-imob-done-stats" style="margin:0;color:#475569;font-size:13px;"></p>
                                 </div>
+                            <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;">
+                                <h4 style="margin:0 0 4px;font-size:15px;">Importação Automática (CRON)</h4>
+                                <p style="color:#6b7280;font-size:12px;margin:0 0 16px;">Configure uma URL de webservice para importar automaticamente. Requer ping externo (VPS, cron-job.org) ou visitas regulares ao site.</p>
+
+                                <?php
+                                $upt_cron_config = get_option('upt_imob_cron_config', []);
+                                $upt_cron_url = isset($upt_cron_config['url']) ? esc_url($upt_cron_config['url']) : '';
+                                $upt_cron_schema = isset($upt_cron_config['schema']) ? esc_attr($upt_cron_config['schema']) : '';
+                                $upt_cron_freq = isset($upt_cron_config['frequency']) ? esc_attr($upt_cron_config['frequency']) : 'sixhourly';
+                                $upt_cron_active = isset($upt_cron_config['active']) ? (bool)$upt_cron_config['active'] : false;
+                                $upt_cron_last = isset($upt_cron_config['last_run']) ? esc_html($upt_cron_config['last_run']) : 'Nunca';
+                                $upt_cron_next = wp_next_scheduled('upt_imob_cron_import');
+                                $upt_cron_next_fmt = $upt_cron_next ? esc_html(date('d/m/Y H:i', $upt_cron_next)) : 'Não agendado';
+                                $upt_cron_stats = get_option('upt_imob_cron_stats', ['total' => 0, 'imported' => 0, 'errors' => 0]);
+                                ?>
+
+                                <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+                                    <div style="flex:1;min-width:250px;">
+                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">URL do Webservice:</label>
+                                        <input type="url" id="upt-cron-url" value="<?php echo $upt_cron_url; ?>" placeholder="https://okeimoveis.com.br/gestao/webservices/..." style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
+                                    </div>
+                                    <div style="min-width:160px;">
+                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">Esquema:</label>
+                                        <select id="upt-cron-schema" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
+                                            <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
+                                                <option value="<?php echo esc_attr($s->slug); ?>" <?php selected($upt_cron_schema, $s->slug); ?>><?php echo esc_html($s->name); ?></option>
+                                            <?php endforeach; endif; ?>
+                                        </select>
+                                    </div>
+                                    <div style="min-width:160px;">
+                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">Frequência:</label>
+                                        <select id="upt-cron-freq" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
+                                            <option value="hourly" <?php selected($upt_cron_freq, 'hourly'); ?>>A cada 1 hora</option>
+                                            <option value="twicedaily" <?php selected($upt_cron_freq, 'twicedaily'); ?>>A cada 12 horas</option>
+                                            <option value="sixhourly" <?php selected($upt_cron_freq, 'sixhourly'); ?>>A cada 6 horas</option>
+                                            <option value="daily" <?php selected($upt_cron_freq, 'daily'); ?>>Diariamente</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:8px;margin-bottom:16px;">
+                                    <button type="button" id="upt-cron-save" class="button button-primary" style="font-size:13px;">Salvar e <?php echo $upt_cron_active ? 'Desativar' : 'Ativar'; ?></button>
+                                    <button type="button" id="upt-cron-test" class="button" style="font-size:13px;">Testar Agora</button>
+                                </div>
+
+                                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:12px;color:#475569;">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;">
+                                        <span>Status: <strong id="upt-cron-status-label" style="color:<?php echo $upt_cron_active ? '#16a34a' : '#dc2626'; ?>;"><?php echo $upt_cron_active ? 'Ativo' : 'Inativo'; ?></strong></span>
+                                        <span>Última execução: <strong><?php echo $upt_cron_last; ?></strong></span>
+                                        <span>Próxima execução: <strong><?php echo $upt_cron_next_fmt; ?></strong></span>
+                                        <span>Total importados: <strong><?php echo (int)$upt_cron_stats['imported']; ?></strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
                                 <button type="button" id="upt-imob-new-btn" class="button">Importar Outro XML</button>
                             </div>
                         </div>
@@ -2689,6 +2744,58 @@ var dashboardChart = new Chart($dashboardCanvas, {
         // aplica filtro inicial nos envios de formulário
         uptFilterSubmissionsByRange();
     }
+
+    // ===== CRON Settings =====
+    (function() {
+        var $saveBtn = jQuery('#upt-cron-save');
+        if (!$saveBtn.length) return;
+
+        var ajaxUrl = (typeof upt_ajax !== 'undefined') ? upt_ajax.ajax_url : '/wp-admin/admin-ajax.php';
+        var nonce = (typeof upt_ajax !== 'undefined') ? upt_ajax.nonce : '';
+
+        $saveBtn.on('click', function() {
+            var $btn = jQuery(this);
+            $btn.prop('disabled', true).text('Salvando...');
+            jQuery.post(ajaxUrl, {
+                action: 'upt_save_cron_config',
+                nonce: nonce,
+                url: jQuery('#upt-cron-url').val(),
+                schema: jQuery('#upt-cron-schema').val(),
+                frequency: jQuery('#upt-cron-freq').val()
+            }, function(resp) {
+                $btn.prop('disabled', false);
+                if (resp.success) {
+                    location.reload();
+                } else {
+                    alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'));
+                    $btn.text('Salvar e Ativar');
+                }
+            }).fail(function() {
+                $btn.prop('disabled', false).text('Salvar e Ativar');
+                alert('Erro de conexão.');
+            });
+        });
+
+        jQuery('#upt-cron-test').on('click', function() {
+            var $btn = jQuery(this);
+            $btn.prop('disabled', true).text('Testando...');
+            jQuery.post(ajaxUrl, {
+                action: 'upt_test_cron_import',
+                nonce: nonce
+            }, function(resp) {
+                $btn.prop('disabled', false).text('Testar Agora');
+                if (resp.success) {
+                    alert('Teste iniciado! Verifique o status em instantes.');
+                    setTimeout(function() { location.reload(); }, 3000);
+                } else {
+                    alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'));
+                }
+            }).fail(function() {
+                $btn.prop('disabled', false).text('Testar Agora');
+                alert('Erro de conexão.');
+            });
+        });
+    })();
 
     // ===== Card Settings =====
     (function() {

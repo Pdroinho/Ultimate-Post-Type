@@ -53,6 +53,8 @@ class UPT_Ajax {
         add_action( 'wp_ajax_upt_imob_status', [ self::class, 'imob_status' ] );
         add_action( 'wp_ajax_upt_imob_cancel', [ self::class, 'imob_cancel' ] );
         add_action( 'wp_ajax_upt_save_card_settings', [ self::class, 'save_card_settings' ] );
+        add_action( 'wp_ajax_upt_save_cron_config', [ self::class, 'save_cron_config' ] );
+        add_action( 'wp_ajax_upt_test_cron_import', [ self::class, 'test_cron_import' ] );
     }
 
     private static function normalize_schema_slugs( $schema_slugs ) {
@@ -1836,6 +1838,36 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                                         echo '<div class="upt-card-price" style="margin-top:4px;">R$ ' . number_format($preco_loc, 0, ',', '.') . '<span style="font-size:11px;color:#6b7280;margin-left:4px;">/mês</span></div>';
                                     }
                                 }
+
+                                $upt_card_meta = [];
+                                $upt_card_meta_fields = [
+                                    'cidade'        => ['id' => $schema_slug . '_cidade', 'icon' => '📍'],
+                                    'bairro'        => ['id' => $schema_slug . '_bairro', 'icon' => '🏘️'],
+                                    'area-util'     => ['id' => $schema_slug . '_area-util', 'icon' => '📐', 'suffix' => ' m²'],
+                                    'quartos'       => ['id' => $schema_slug . '_quartos', 'icon' => '🛏️', 'suffix' => ' quartos'],
+                                    'suites'        => ['id' => $schema_slug . '_suites', 'icon' => '🚿', 'suffix' => ' suítes'],
+                                    'vagas'         => ['id' => $schema_slug . '_vagas', 'icon' => '🚗', 'suffix' => ' vagas'],
+                                ];
+                                foreach ($upt_card_meta_fields as $fkey => $fdef) {
+                                    $fval = get_post_meta($post_id, $fdef['id'], true);
+                                    if ($fval !== '' && floatval($fval) > 0) {
+                                        $display = $fdef['icon'] . ' ' . (is_numeric($fval) ? number_format(floatval($fval), 0, ',', '.') : esc_html($fval));
+                                        if (isset($fdef['suffix'])) $display .= $fdef['suffix'];
+                                        $upt_card_meta[] = $display;
+                                    }
+                                }
+                                if (!empty($upt_card_meta)) {
+                                    echo '<div class="upt-card-meta" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:12px;color:#6b7280;">';
+                                    foreach ($upt_card_meta as $meta_item) {
+                                        echo '<span>' . $meta_item . '</span>';
+                                    }
+                                    echo '</div>';
+                                }
+
+                                $status_imovel_val = get_post_meta($post_id, $schema_slug . '_status-do-imovel', true);
+                                if ($status_imovel_val && $status_imovel_val !== 'Venda') {
+                                    echo '<div style="margin-top:4px;"><span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:11px;padding:1px 8px;border-radius:4px;font-weight:500;">' . esc_html($status_imovel_val) . '</span></div>';
+                                }
                                 ?>
 
                                 <div class="card-actions upt-card-actions--inline">
@@ -3178,6 +3210,12 @@ public static function delete_category() {
             wp_send_json_error( [ 'message' => 'Nenhum arquivo enviado ou erro no upload.' ] );
         }
 
+        $max_size = 50 * 1024 * 1024;
+        if ( $_FILES['imob_xml_file']['size'] > $max_size ) {
+            $size_mb = round( $_FILES['imob_xml_file']['size'] / 1024 / 1024, 1 );
+            wp_send_json_error( [ 'message' => "O arquivo XML excede o limite de 50MB (enviado: {$size_mb}MB)." ] );
+        }
+
         require_once UPT_PLUGIN_DIR . 'includes/class-imobiliaria-importer.php';
 
         $schema_mode = isset( $_POST['imob_schema_mode'] ) ? sanitize_key( $_POST['imob_schema_mode'] ) : 'new';
@@ -3216,6 +3254,59 @@ public static function delete_category() {
         }
 
         wp_send_json_success( [ 'session_id' => $result ] );
+    }
+
+    public static function save_cron_config() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        $url = isset( $_POST['url'] ) ? esc_url_raw( $_POST['url'] ) : '';
+        $schema = isset( $_POST['schema'] ) ? sanitize_title( $_POST['schema'] ) : '';
+        $frequency = isset( $_POST['frequency'] ) ? sanitize_key( $_POST['frequency'] ) : 'sixhourly';
+        $valid_freqs = [ 'hourly', 'twicedaily', 'sixhourly', 'daily' ];
+
+        if ( ! in_array( $frequency, $valid_freqs, true ) ) {
+            $frequency = 'sixhourly';
+        }
+
+        $existing = get_option( 'upt_imob_cron_config', [] );
+        $was_active = ! empty( $existing['active'] );
+
+        $config = [
+            'url'       => $url,
+            'schema'    => $schema,
+            'frequency' => $frequency,
+            'active'    => true,
+            'updated_at' => current_time( 'mysql' ),
+        ];
+
+        if ( $was_active ) {
+            wp_clear_scheduled_hook( 'upt_imob_cron_import' );
+        }
+
+        update_option( 'upt_imob_cron_config', $config );
+
+        if ( ! empty( $url ) && ! empty( $schema ) ) {
+            wp_schedule_event( time() + 300, $frequency, 'upt_imob_cron_import' );
+        }
+
+        wp_send_json_success( [ 'message' => 'Configuração salva.' ] );
+    }
+
+    public static function test_cron_import() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
+        }
+
+        $config = get_option( 'upt_imob_cron_config', [] );
+        if ( empty( $config['url'] ) || empty( $config['schema'] ) ) {
+            wp_send_json_error( [ 'message' => 'Configure a URL e o esquema primeiro.' ] );
+        }
+
+        do_action( 'upt_imob_cron_import' );
+
+        wp_send_json_success( [ 'message' => 'Teste disparado.' ] );
     }
 
     public static function save_card_settings() {
