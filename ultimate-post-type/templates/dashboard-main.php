@@ -2031,6 +2031,9 @@ endif; ?>
                                     <p style="margin:0 0 6px;font-weight:600;color:#16a34a;">Importação concluída!</p>
                                     <p id="upt-imob-done-stats" style="margin:0;color:#475569;font-size:13px;"></p>
                                 </div>
+                                <button type="button" id="upt-imob-new-btn" class="button">Importar Outro XML</button>
+                            </div>
+
                             <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;">
                                 <h4 style="margin:0 0 4px;font-size:15px;">Importação Automática (CRON)</h4>
                                 <p style="color:#6b7280;font-size:12px;margin:0 0 16px;">Configure uma URL de webservice para importar automaticamente. Requer ping externo (VPS, cron-job.org) ou visitas regulares ao site.</p>
@@ -2086,8 +2089,6 @@ endif; ?>
                                 </div>
                             </div>
 
-                                <button type="button" id="upt-imob-new-btn" class="button">Importar Outro XML</button>
-                            </div>
                         </div>
                     </div>
                     <?php endif; ?>
