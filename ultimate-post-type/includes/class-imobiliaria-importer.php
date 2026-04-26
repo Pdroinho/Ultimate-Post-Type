@@ -681,7 +681,142 @@ class UPT_Imobiliaria_Importer
         }
         update_post_meta($post_id, '_upt_imob_imported', '1');
 
+        self::fill_combined_fields($post_id, $schema_slug, $schema_fields, $fields);
+
         return $result;
+    }
+
+    private static function fill_combined_fields($post_id, $schema_slug, $schema_fields, $xml_fields)
+    {
+        $location_keywords = ['localizacao', 'localização', 'endereco', 'endereço', 'localizacao-completa', 'endereço-completo'];
+        $area_keywords = ['area', 'área', 'area-util', 'área-util', 'area-total', 'área-total', 'metragem', 'tamanho'];
+        $price_keywords = ['preco', 'preço'];
+
+        $endereco = isset($xml_fields['Endereco']) ? trim($xml_fields['Endereco']) : '';
+        $numero = isset($xml_fields['Numero']) ? trim($xml_fields['Numero']) : '';
+        $complemento = isset($xml_fields['Complemento']) ? trim($xml_fields['Complemento']) : '';
+        $bairro = isset($xml_fields['Bairro']) ? trim($xml_fields['Bairro']) : '';
+        $cidade = isset($xml_fields['Cidade']) ? trim($xml_fields['Cidade']) : '';
+        $uf = isset($xml_fields['UF']) ? trim($xml_fields['UF']) : '';
+        $cep = isset($xml_fields['CEP']) ? trim($xml_fields['CEP']) : '';
+
+        if (!empty($endereco) || !empty($bairro) || !empty($cidade)) {
+            $parts = [];
+            if (!empty($endereco)) {
+                $parts[] = $endereco;
+                if (!empty($numero)) $parts[] = $numero;
+                if (!empty($complemento)) $parts[] = '- ' . $complemento;
+            }
+            if (!empty($bairro)) $parts[] = $bairro;
+            if (!empty($cidade)) {
+                $cidade_str = $cidade;
+                if (!empty($uf)) $cidade_str .= '/' . $uf;
+                $parts[] = $cidade_str;
+            }
+            if (!empty($cep)) $parts[] = 'CEP: ' . $cep;
+
+            $location_str = implode(', ', $parts);
+
+            foreach ($schema_fields as $sf) {
+                if (!isset($sf['id']) || !isset($sf['label'])) continue;
+                $label_lower = function_exists('mb_strtolower') ? mb_strtolower($sf['label'], 'UTF-8') : strtolower($sf['label']);
+                $id_lower = strtolower($sf['id']);
+
+                $is_location = false;
+                foreach ($location_keywords as $kw) {
+                    if (strpos($label_lower, $kw) !== false || strpos($id_lower, $kw) !== false) {
+                        $is_location = true;
+                        break;
+                    }
+                }
+
+                if ($is_location) {
+                    $existing = get_post_meta($post_id, $sf['id'], true);
+                    if (empty($existing)) {
+                        update_post_meta($post_id, $sf['id'], $location_str);
+                    }
+                }
+            }
+        }
+
+        $area_raw = '';
+        if (isset($xml_fields['AreaUtil']) && !empty($xml_fields['AreaUtil'])) {
+            $area_raw = $xml_fields['AreaUtil'];
+        } elseif (isset($xml_fields['Metragem']) && !empty($xml_fields['Metragem'])) {
+            $area_raw = $xml_fields['Metragem'];
+        } elseif (isset($xml_fields['AreaTotal']) && !empty($xml_fields['AreaTotal'])) {
+            $area_raw = $xml_fields['AreaTotal'];
+        }
+
+        if (!empty($area_raw)) {
+            $area_clean = preg_replace('/[^0-9.,]/', '', $area_raw);
+            $area_clean = str_replace('.', '', $area_clean);
+            $area_clean = str_replace(',', '.', $area_clean);
+            $area_val = floatval($area_clean);
+
+            if ($area_val > 0) {
+                foreach ($schema_fields as $sf) {
+                    if (!isset($sf['id']) || !isset($sf['label'])) continue;
+                    $label_lower = function_exists('mb_strtolower') ? mb_strtolower($sf['label'], 'UTF-8') : strtolower($sf['label']);
+                    $id_lower = strtolower($sf['id']);
+
+                    $is_area = false;
+                    foreach ($area_keywords as $kw) {
+                        if (strpos($label_lower, $kw) !== false || strpos($id_lower, $kw) !== false) {
+                            $is_area = true;
+                            break;
+                        }
+                    }
+
+                    if ($is_area) {
+                        $existing = get_post_meta($post_id, $sf['id'], true);
+                        if (empty($existing)) {
+                            update_post_meta($post_id, $sf['id'], $area_val);
+                            update_post_meta($post_id, $sf['id'] . '_unit', 'm²');
+                        }
+                    }
+                }
+            }
+        }
+
+        $preco_venda = isset($xml_fields['PrecoVenda']) ? floatval(preg_replace('/[^0-9.,\-]/', '', str_replace('.', '', $xml_fields['PrecoVenda']))) : 0;
+        $preco_locacao = isset($xml_fields['PrecoLocacao']) ? floatval(preg_replace('/[^0-9.,\-]/', '', str_replace('.', '', $xml_fields['PrecoLocacao']))) : 0;
+
+        if ($preco_venda > 0 || $preco_locacao > 0) {
+            foreach ($schema_fields as $sf) {
+                if (!isset($sf['id']) || !isset($sf['label'])) continue;
+                $label_lower = function_exists('mb_strtolower') ? mb_strtolower($sf['label'], 'UTF-8') : strtolower($sf['label']);
+                $id_lower = strtolower($sf['id']);
+
+                $is_generic_price = false;
+                foreach ($price_keywords as $kw) {
+                    if (strpos($label_lower, $kw) !== false || strpos($id_lower, $kw) !== false) {
+                        if (
+                            strpos($label_lower, 'venda') === false &&
+                            strpos($label_lower, 'aluguel') === false &&
+                            strpos($label_lower, 'temporada') === false &&
+                            strpos($label_lower, 'condominio') === false &&
+                            strpos($label_lower, 'condomínio') === false &&
+                            strpos($label_lower, 'iptu') === false
+                        ) {
+                            $is_generic_price = true;
+                            break;
+                        }
+                    }
+                }
+
+                if ($is_generic_price) {
+                    $existing = get_post_meta($post_id, $sf['id'], true);
+                    if (empty($existing)) {
+                        if ($preco_venda > 0) {
+                            update_post_meta($post_id, $sf['id'], $preco_venda);
+                        } elseif ($preco_locacao > 0) {
+                            update_post_meta($post_id, $sf['id'], $preco_locacao);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private static function find_existing_item_by_codigo($codigo, $schema_slug)
