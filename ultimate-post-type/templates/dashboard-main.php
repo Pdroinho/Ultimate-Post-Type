@@ -2199,60 +2199,110 @@ endif; ?>
 
                     <?php if (current_user_can('manage_options')): ?>
                     <div id="tab-card-settings" class="upt-tab-pane">
-                        <div style="max-width:700px;">
-                            <h3 style="margin:0 0 4px;">Aparência dos Cards</h3>
-                            <p style="color:#6b7280;margin:0 0 24px;font-size:13px;">Escolha quais campos aparecem nos cards.</p>
-
-                            <div style="margin-bottom:32px;">
-                                <h4 style="margin:0 0 12px;font-size:15px;">Cards do Dashboard</h4>
-                                <p style="color:#6b7280;font-size:12px;margin:0 0 8px;">Campos exibidos nos cards da aba Dashboard e Listagem.</p>
-                                <?php
-                                $upt_card_dashboard_fields = get_option('upt_card_dashboard_fields', ['title','price','status']);
-                                $upt_dashboard_field_options = [
-                                    'title'   => 'Título do imóvel',
-                                    'price'   => 'Preço (venda ou aluguel)',
-                                    'status'  => 'Badge de status (publicado/pendente)',
-                                    'category'=> 'Badge de categoria',
-                                ];
-                                foreach ($upt_dashboard_field_options as $opt_val => $opt_label):
-                                ?>
-                                <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:14px;">
-                                    <input type="checkbox" name="upt_card_dashboard_fields[]" value="<?php echo esc_attr($opt_val); ?>" <?php checked(in_array($opt_val, $upt_card_dashboard_fields)); ?>>
-                                    <?php echo esc_html($opt_label); ?>
-                                </label>
-                                <?php endforeach; ?>
+                        <div class="upt-cards-settings">
+                            <div class="upt-cards-settings__header">
+                                <div class="upt-cards-settings__header-icon" aria-hidden="true">🎨</div>
+                                <div>
+                                    <h3 class="upt-cards-settings__title">Aparência dos Cards</h3>
+                                    <p class="upt-cards-settings__desc">Personalize quais informações aparecem nos cards do painel e do site público.</p>
+                                </div>
                             </div>
 
-                            <div style="margin-bottom:32px;">
-                                <h4 style="margin:0 0 12px;font-size:15px;">Campos do Card do Site</h4>
-                                <p style="color:#6b7280;font-size:12px;margin:0 0 8px;">Estes campos serão adicionados automaticamente ao card padrão do Listing Widget (Elementor) caso ele esteja com a estrutura padrão (não customizada).</p>
-                                <?php
-                                $upt_card_site_fields = get_option('upt_card_site_fields', []);
-                                $all_schemas_defs = UPT_Schema_Store::get_schemas();
-                                $upt_site_field_choices = [];
-                                foreach ($all_schemas_defs as $sk => $sd) {
-                                    if (!empty($sd['fields']) && is_array($sd['fields'])) {
-                                        foreach ($sd['fields'] as $f) {
-                                            if (empty($f['id']) || empty($f['label'])) continue;
-                                            $upt_site_field_choices[$f['id']] = $f['label'] . ' (' . $sk . ')';
+                            <div class="upt-cards-settings__layout">
+                                <div class="upt-cards-settings__form">
+                                    <div class="upt-cards-settings__section">
+                                        <div class="upt-cards-settings__section-header">
+                                            <div class="upt-cards-settings__section-icon" aria-hidden="true">📋</div>
+                                            <div>
+                                                <h4 class="upt-cards-settings__section-title">Cards do Painel</h4>
+                                                <p class="upt-cards-settings__section-desc">Escolha o que aparece nos cards da listagem aqui dentro.</p>
+                                            </div>
+                                        </div>
+                                        <?php
+                                        $upt_card_dashboard_fields = get_option('upt_card_dashboard_fields', ['title','price','status']);
+                                        $upt_dashboard_field_options = [
+                                            'title'   => ['label' => 'Título do imóvel',     'icon' => '📝', 'desc' => 'Nome do imóvel no topo do card'],
+                                            'price'   => ['label' => 'Preço',                'icon' => '💰', 'desc' => 'Valor de venda ou aluguel'],
+                                            'status'  => ['label' => 'Status',               'icon' => '🏷️', 'desc' => 'Badge de publicado, pendente, etc.'],
+                                            'category'=> ['label' => 'Categoria',            'icon' => '📂', 'desc' => 'Badge com a categoria do imóvel'],
+                                        ];
+                                        foreach ($upt_dashboard_field_options as $opt_val => $opt_info):
+                                        ?>
+                                        <label class="upt-cards-settings__option">
+                                            <input type="checkbox" name="upt_card_dashboard_fields[]" value="<?php echo esc_attr($opt_val); ?>" <?php checked(in_array($opt_val, $upt_card_dashboard_fields)); ?> class="upt-cards-settings__checkbox" data-preview-target="dash-<?php echo esc_attr($opt_val); ?>">
+                                            <span class="upt-cards-settings__option-check"></span>
+                                            <span class="upt-cards-settings__option-icon" aria-hidden="true"><?php echo $opt_info['icon']; ?></span>
+                                            <span class="upt-cards-settings__option-content">
+                                                <span class="upt-cards-settings__option-label"><?php echo esc_html($opt_info['label']); ?></span>
+                                                <span class="upt-cards-settings__option-desc"><?php echo esc_html($opt_info['desc']); ?></span>
+                                            </span>
+                                        </label>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <div class="upt-cards-settings__section">
+                                        <div class="upt-cards-settings__section-header">
+                                            <div class="upt-cards-settings__section-icon" aria-hidden="true">🌐</div>
+                                            <div>
+                                                <h4 class="upt-cards-settings__section-title">Cards do Site</h4>
+                                                <p class="upt-cards-settings__section-desc">Campos exibidos nos cards do site público (Grade do Catálogo). Estes campos são adicionados automaticamente ao card padrão.</p>
+                                            </div>
+                                        </div>
+                                        <?php
+                                        $upt_card_site_fields = get_option('upt_card_site_fields', []);
+                                        $all_schemas_defs = UPT_Schema_Store::get_schemas();
+                                        $upt_site_field_choices = [];
+                                        foreach ($all_schemas_defs as $sk => $sd) {
+                                            if (!empty($sd['fields']) && is_array($sd['fields'])) {
+                                                foreach ($sd['fields'] as $f) {
+                                                    if (empty($f['id']) || empty($f['label'])) continue;
+                                                    $upt_site_field_choices[$f['id']] = $f['label'] . ' (' . $sk . ')';
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                                $upt_site_field_choices['core_title'] = 'Título';
-                                $upt_site_field_choices['core_featured_image'] = 'Imagem Destacada';
-                                $upt_site_field_choices['core_category'] = 'Categoria';
-                                asort($upt_site_field_choices);
-                                foreach ($upt_site_field_choices as $f_id => $f_label):
-                                ?>
-                                <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:14px;">
-                                    <input type="checkbox" name="upt_card_site_fields[]" value="<?php echo esc_attr($f_id); ?>" <?php checked(in_array($f_id, $upt_card_site_fields)); ?>>
-                                    <?php echo esc_html($f_label); ?>
-                                </label>
-                                <?php endforeach; ?>
-                            </div>
+                                        $upt_site_field_choices['core_title'] = 'Título';
+                                        $upt_site_field_choices['core_featured_image'] = 'Imagem Destacada';
+                                        $upt_site_field_choices['core_category'] = 'Categoria';
+                                        asort($upt_site_field_choices);
+                                        foreach ($upt_site_field_choices as $f_id => $f_label):
+                                        ?>
+                                        <label class="upt-cards-settings__option upt-cards-settings__option--compact">
+                                            <input type="checkbox" name="upt_card_site_fields[]" value="<?php echo esc_attr($f_id); ?>" <?php checked(in_array($f_id, $upt_card_site_fields)); ?> class="upt-cards-settings__checkbox">
+                                            <span class="upt-cards-settings__option-check"></span>
+                                            <span class="upt-cards-settings__option-label"><?php echo esc_html($f_label); ?></span>
+                                        </label>
+                                        <?php endforeach; ?>
+                                    </div>
 
-                            <button type="button" id="upt-save-card-settings" class="button button-primary">Salvar Configurações</button>
-                            <span id="upt-card-settings-saved" style="margin-left:12px;color:#16a34a;font-weight:600;display:none;">Salvo!</span>
+                                    <div class="upt-cards-settings__actions">
+                                        <button type="button" id="upt-save-card-settings" class="upt-import-btn upt-import-btn--primary">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                            Salvar Configurações
+                                        </button>
+                                        <span id="upt-card-settings-saved" class="upt-cards-settings__saved" aria-live="polite">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                            Salvo com sucesso!
+                                        </span>
+                                        <span id="upt-card-settings-error" class="upt-cards-settings__error" role="alert" aria-live="assertive"></span>
+                                    </div>
+                                </div>
+
+                                <div class="upt-cards-settings__preview">
+                                    <h5 class="upt-cards-settings__preview-title">Pré-visualização</h5>
+                                    <div class="upt-cards-settings__preview-card" id="upt-card-preview">
+                                        <div class="upt-cards-settings__preview-img" aria-hidden="true">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                        </div>
+                                        <div class="upt-cards-settings__preview-body">
+                                            <span class="upt-preview-field" data-preview="dash-title" style="display:<?php echo in_array('title', $upt_card_dashboard_fields) ? 'block' : 'none'; ?>;"><strong>Apartamento 3 Quartos</strong></span>
+                                            <span class="upt-preview-field upt-preview-field--price" data-preview="dash-price" style="display:<?php echo in_array('price', $upt_card_dashboard_fields) ? 'block' : 'none'; ?>;">R$ 450.000</span>
+                                            <span class="upt-preview-field upt-preview-field--badge" data-preview="dash-status" style="display:<?php echo in_array('status', $upt_card_dashboard_fields) ? 'inline-flex' : 'none'; ?>;">Publicado</span>
+                                            <span class="upt-preview-field upt-preview-field--badge upt-preview-field--cat" data-preview="dash-category" style="display:<?php echo in_array('category', $upt_card_dashboard_fields) ? 'inline-flex' : 'none'; ?>;">Apartamento</span>
+                                        </div>
+                                    </div>
+                                    <p class="upt-cards-settings__preview-hint">Assim seus cards vão aparecer na listagem.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -2909,6 +2959,19 @@ var dashboardChart = new Chart($dashboardCanvas, {
 
         var ajaxUrl = (typeof upt_ajax !== 'undefined') ? upt_ajax.ajax_url : '/wp-admin/admin-ajax.php';
         var nonce = (typeof upt_ajax !== 'undefined') ? upt_ajax.nonce : '';
+        var $savedMsg = jQuery('#upt-card-settings-saved');
+        var $errorMsg = jQuery('#upt-card-settings-error');
+        var savedTimer = null;
+
+        jQuery('.upt-cards-settings__checkbox').on('change', function() {
+            var target = jQuery(this).data('preview-target');
+            if (target) {
+                var $field = jQuery('[data-preview="' + target + '"]');
+                if ($field.length) {
+                    $field.css('display', this.checked ? ($field.hasClass('upt-preview-field--badge') ? 'inline-flex' : 'block') : 'none');
+                }
+            }
+        });
 
         $saveBtn.on('click', function() {
             var dashFields = [];
@@ -2920,7 +2983,9 @@ var dashboardChart = new Chart($dashboardCanvas, {
                 siteFields.push(jQuery(this).val());
             });
 
-            $saveBtn.prop('disabled', true).text('Salvando...');
+            $savedMsg.removeClass('is-visible');
+            $errorMsg.removeClass('is-visible').text('');
+            $saveBtn.prop('disabled', true).html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:upt-spin 1s linear infinite" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Salvando...');
 
             jQuery.post(ajaxUrl, {
                 action: 'upt_save_card_settings',
@@ -2928,15 +2993,19 @@ var dashboardChart = new Chart($dashboardCanvas, {
                 dashboard_fields: dashFields,
                 site_fields: siteFields
             }, function(resp) {
-                $saveBtn.prop('disabled', false).text('Salvar Configurações');
+                $saveBtn.prop('disabled', false).html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Configurações');
                 if (resp.success) {
-                    jQuery('#upt-card-settings-saved').show().fadeOut(2000);
+                    $savedMsg.addClass('is-visible');
+                    if (savedTimer) clearTimeout(savedTimer);
+                    savedTimer = setTimeout(function() {
+                        $savedMsg.removeClass('is-visible');
+                    }, 3000);
                 } else {
-                    alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'));
+                    $errorMsg.text('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'não foi possível salvar.')).addClass('is-visible');
                 }
             }).fail(function() {
-                $saveBtn.prop('disabled', false).text('Salvar Configurações');
-                alert('Erro de conexão.');
+                $saveBtn.prop('disabled', false).html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Configurações');
+                $errorMsg.text('Erro de conexão. Verifique sua internet e tente novamente.').addClass('is-visible');
             });
         });
     })();
