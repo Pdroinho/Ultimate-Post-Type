@@ -1979,64 +1979,150 @@ endif; ?>
 
                     <?php if (current_user_can('manage_options')): ?>
                     <div id="tab-imob-import" class="upt-tab-pane">
-                        <div style="max-width:600px;">
-                            <h3 style="margin:0 0 4px;">Importar XML de Imobiliária</h3>
-                            <p style="color:#6b7280;margin:0 0 20px;font-size:13px;">Importe imóveis de um XML no formato OKE / Zap / Viva Real. As imagens são baixadas automaticamente.</p>
+                        <div class="upt-import-wizard">
+
+                            <div class="upt-import-header">
+                                <h3>Importar XML de Imobiliária</h3>
+                                <p>Importe imóveis a partir de um arquivo XML. Formatos aceitos: OKE, Zap, Viva Real. As imagens são baixadas automaticamente.</p>
+                            </div>
+
+                            <div class="upt-import-stepper" role="navigation" aria-label="Etapas da importação">
+                                <div class="upt-step upt-step--active" data-step="1">
+                                    <span class="upt-step__number">1</span>
+                                    <span class="upt-step__label">Arquivo XML</span>
+                                    <span class="upt-step__tip" role="tooltip" aria-label="Selecione ou arraste o arquivo XML do portal imobiliário">?</span>
+                                </div>
+                                <div class="upt-step__connector"></div>
+                                <div class="upt-step" data-step="2">
+                                    <span class="upt-step__number">2</span>
+                                    <span class="upt-step__label">Configuração</span>
+                                    <span class="upt-step__tip" role="tooltip" aria-label="Escolha o esquema onde os imóveis serão salvos">?</span>
+                                </div>
+                                <div class="upt-step__connector"></div>
+                                <div class="upt-step" data-step="3">
+                                    <span class="upt-step__number">3</span>
+                                    <span class="upt-step__label">Importação</span>
+                                    <span class="upt-step__tip" role="tooltip" aria-label="Acompanhe o progresso da importação em tempo real">?</span>
+                                </div>
+                            </div>
 
                             <div id="upt-imob-upload-section">
-                                <div style="margin-bottom:16px;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Esquema:</label>
-                                    <select id="upt-imob-schema-mode" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
-                                        <option value="new">Criar novo esquema</option>
-                                        <option value="existing">Usar esquema existente</option>
-                                    </select>
+
+                                <div id="upt-imob-dropzone" class="upt-import-dropzone" role="button" tabindex="0" aria-label="Arraste um arquivo XML aqui ou clique para selecionar">
+                                    <div class="upt-import-dropzone__icon" aria-hidden="true">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    </div>
+                                    <p class="upt-import-dropzone__text">Arraste o arquivo XML aqui</p>
+                                    <p class="upt-import-dropzone__subtext">ou clique para selecionar do computador</p>
+                                    <p class="upt-import-dropzone__hint">Formatos aceitos: .xml (máx. 50 MB)</p>
+                                    <input type="file" id="upt-imob-xml-file" accept=".xml,text/xml,application/xml" class="upt-import-dropzone__input" aria-label="Selecionar arquivo XML" tabindex="-1">
                                 </div>
-                                <div id="upt-imob-new-schema-field" style="margin-bottom:16px;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Nome do esquema:</label>
-                                    <input type="text" id="upt-imob-schema-name" value="Imóveis" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+
+                                <div id="upt-imob-file-info" class="upt-import-file-info" style="display:none;" role="status" aria-live="polite">
+                                    <div class="upt-import-file-info__icon" aria-hidden="true">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    </div>
+                                    <div class="upt-import-file-info__details">
+                                        <span id="upt-imob-file-name" class="upt-import-file-info__name"></span>
+                                        <span id="upt-imob-file-size" class="upt-import-file-info__size"></span>
+                                    </div>
+                                    <button type="button" id="upt-imob-file-remove" class="upt-import-file-info__remove" aria-label="Remover arquivo selecionado" title="Remover arquivo">&times;</button>
                                 </div>
-                                <div id="upt-imob-existing-schema-field" style="margin-bottom:16px;display:none;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Esquema:</label>
-                                    <select id="upt-imob-schema-existing" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
-                                        <option value="">— Selecione —</option>
-                                        <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
-                                            <option value="<?php echo esc_attr($s->slug); ?>"><?php echo esc_html($s->name); ?></option>
-                                        <?php endforeach; endif; ?>
-                                    </select>
+
+                                <div id="upt-imob-validation-msg" class="upt-import-msg upt-import-msg--error" style="display:none;" role="alert" aria-live="assertive"></div>
+
+                                <div id="upt-imob-schema-section" class="upt-import-form-section" style="display:none;">
+                                    <div class="upt-import-form-group">
+                                        <label for="upt-imob-schema-mode" class="upt-import-label">
+                                            Destino dos imóveis
+                                            <span class="upt-import-label__tip" role="tooltip" aria-label="Escolha se deseja criar um novo esquema ou adicionar a um já existente">?</span>
+                                        </label>
+                                        <select id="upt-imob-schema-mode" class="upt-import-select">
+                                            <option value="new">Criar novo esquema</option>
+                                            <option value="existing">Usar esquema existente</option>
+                                        </select>
+                                    </div>
+                                    <div id="upt-imob-new-schema-field" class="upt-import-form-group">
+                                        <label for="upt-imob-schema-name" class="upt-import-label">Nome do esquema</label>
+                                        <input type="text" id="upt-imob-schema-name" value="Imóveis" class="upt-import-input" placeholder="Ex: Imóveis, Apartamentos...">
+                                    </div>
+                                    <div id="upt-imob-existing-schema-field" class="upt-import-form-group" style="display:none;">
+                                        <label for="upt-imob-schema-existing" class="upt-import-label">Esquema existente</label>
+                                        <select id="upt-imob-schema-existing" class="upt-import-select">
+                                            <option value="">— Selecione um esquema —</option>
+                                            <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
+                                                <option value="<?php echo esc_attr($s->slug); ?>"><?php echo esc_html($s->name); ?></option>
+                                            <?php endforeach; endif; ?>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div style="margin-bottom:16px;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Arquivo XML:</label>
-                                    <input type="file" id="upt-imob-xml-file" accept=".xml,text/xml,application/xml" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
-                                </div>
-                                <button type="button" id="upt-imob-start-btn" class="button button-primary" style="width:100%;padding:10px;">Enviar e Iniciar Importação</button>
+
+                                <button type="button" id="upt-imob-start-btn" class="upt-import-btn upt-import-btn--primary" style="display:none;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                                    Iniciar Importação
+                                </button>
                             </div>
 
-                            <div id="upt-imob-progress-section" style="display:none;">
-                                <div style="background:#e2e8f0;border-radius:8px;overflow:hidden;height:28px;position:relative;margin:16px 0 10px;">
-                                    <div id="upt-imob-progress-bar" style="background:#6366f1;height:100%;width:0%;transition:width 0.4s ease;border-radius:8px;"></div>
-                                    <span id="upt-imob-progress-text" style="position:absolute;top:0;left:0;right:0;text-align:center;line-height:28px;color:#fff;font-size:13px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.2);">0%</span>
+                            <div id="upt-imob-progress-section" class="upt-import-progress" style="display:none;" role="status" aria-live="polite">
+                                <div class="upt-import-progress__header">
+                                    <span class="upt-import-progress__title">Importando imóveis...</span>
+                                    <span id="upt-imob-progress-text" class="upt-import-progress__pct">0%</span>
                                 </div>
-                                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:13px;color:#475569;">
-                                    <span>Total: <strong id="upt-imob-stat-total">—</strong></span>
-                                    <span>Importados: <strong id="upt-imob-stat-imported" style="color:#16a34a;">0</strong></span>
-                                    <span>Fotos: <strong id="upt-imob-stat-photos" style="color:#2563eb;">0</strong></span>
-                                    <span>Erros: <strong id="upt-imob-stat-errors" style="color:#dc2626;">0</strong></span>
+                                <div class="upt-import-progress__bar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso da importação">
+                                    <div id="upt-imob-progress-bar" class="upt-import-progress__bar-fill"></div>
                                 </div>
-                                <div id="upt-imob-status-msg" style="padding:10px 14px;border-radius:6px;background:#f1f5f9;margin-bottom:12px;font-size:13px;">Preparando...</div>
-                                <button type="button" id="upt-imob-cancel-btn" class="button" style="color:#dc2626;border-color:#dc2626;">Cancelar</button>
+                                <div class="upt-import-progress__stats">
+                                    <div class="upt-import-stat">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">📋</span>
+                                        <span class="upt-import-stat__label">Total</span>
+                                        <strong id="upt-imob-stat-total" class="upt-import-stat__value">—</strong>
+                                    </div>
+                                    <div class="upt-import-stat upt-import-stat--success">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">✅</span>
+                                        <span class="upt-import-stat__label">Importados</span>
+                                        <strong id="upt-imob-stat-imported" class="upt-import-stat__value">0</strong>
+                                    </div>
+                                    <div class="upt-import-stat upt-import-stat--info">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">📷</span>
+                                        <span class="upt-import-stat__label">Fotos</span>
+                                        <strong id="upt-imob-stat-photos" class="upt-import-stat__value">0</strong>
+                                    </div>
+                                    <div class="upt-import-stat upt-import-stat--danger">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">⚠️</span>
+                                        <span class="upt-import-stat__label">Erros</span>
+                                        <strong id="upt-imob-stat-errors" class="upt-import-stat__value">0</strong>
+                                    </div>
+                                </div>
+                                <div id="upt-imob-status-msg" class="upt-import-msg upt-import-msg--info">
+                                    <span class="upt-import-msg__icon" aria-hidden="true">⏳</span>
+                                    <span class="upt-import-msg__text">Preparando importação...</span>
+                                </div>
+                                <button type="button" id="upt-imob-cancel-btn" class="upt-import-btn upt-import-btn--danger-outline">
+                                    Cancelar Importação
+                                </button>
                             </div>
 
-                            <div id="upt-imob-done-section" style="display:none;">
-                                <div style="padding:16px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;margin:12px 0;">
-                                    <p style="margin:0 0 6px;font-weight:600;color:#16a34a;">Importação concluída!</p>
-                                    <p id="upt-imob-done-stats" style="margin:0;color:#475569;font-size:13px;"></p>
-                                </div>
-                                <button type="button" id="upt-imob-new-btn" class="button">Importar Outro XML</button>
+                            <div id="upt-imob-done-section" class="upt-import-done" style="display:none;" role="status" aria-live="polite">
+                                <div class="upt-import-done__icon" aria-hidden="true">🎉</div>
+                                <h4 class="upt-import-done__title">Importação concluída!</h4>
+                                <p id="upt-imob-done-stats" class="upt-import-done__stats"></p>
+                                <button type="button" id="upt-imob-new-btn" class="upt-import-btn upt-import-btn--secondary">
+                                    Importar Outro XML
+                                </button>
                             </div>
 
-                            <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;">
-                                <h4 style="margin:0 0 4px;font-size:15px;">Importação Automática (CRON)</h4>
-                                <p style="color:#6b7280;font-size:12px;margin:0 0 16px;">Configure uma URL de webservice para importar automaticamente. Requer ping externo (VPS, cron-job.org) ou visitas regulares ao site.</p>
+                            <div class="upt-import-divider" role="separator">
+                                <span class="upt-import-divider__text">ou configure a importação automática</span>
+                            </div>
+
+                            <div class="upt-import-cron">
+                                <div class="upt-import-cron__header">
+                                    <h4 class="upt-import-cron__title">
+                                        Importação Automática
+                                        <span class="upt-import-label__tip" role="tooltip" aria-label="Configure uma URL para importar automaticamente em intervalos regulares. O arquivo XML é baixado e processado sem intervenção manual.">?</span>
+                                    </h4>
+                                    <p class="upt-import-cron__desc">Configure uma URL de webservice para importar automaticamente. Requer ping externo (VPS, cron-job.org) ou visitas regulares ao site.</p>
+                                </div>
 
                                 <?php
                                 $upt_cron_config = get_option('upt_imob_cron_config', []);
@@ -2050,41 +2136,59 @@ endif; ?>
                                 $upt_cron_stats = get_option('upt_imob_cron_stats', ['total' => 0, 'imported' => 0, 'errors' => 0]);
                                 ?>
 
-                                <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-                                    <div style="flex:1;min-width:250px;">
-                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">URL do Webservice:</label>
-                                        <input type="url" id="upt-cron-url" value="<?php echo $upt_cron_url; ?>" placeholder="https://okeimoveis.com.br/gestao/webservices/..." style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
+                                <div class="upt-import-cron__fields">
+                                    <div class="upt-import-form-group upt-import-form-group--flex">
+                                        <label for="upt-cron-url" class="upt-import-label">URL do Webservice</label>
+                                        <input type="url" id="upt-cron-url" value="<?php echo $upt_cron_url; ?>" class="upt-import-input" placeholder="https://exemplo.com/webservices/...">
                                     </div>
-                                    <div style="min-width:160px;">
-                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">Esquema:</label>
-                                        <select id="upt-cron-schema" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
-                                            <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
-                                                <option value="<?php echo esc_attr($s->slug); ?>" <?php selected($upt_cron_schema, $s->slug); ?>><?php echo esc_html($s->name); ?></option>
-                                            <?php endforeach; endif; ?>
-                                        </select>
-                                    </div>
-                                    <div style="min-width:160px;">
-                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">Frequência:</label>
-                                        <select id="upt-cron-freq" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
-                                            <option value="hourly" <?php selected($upt_cron_freq, 'hourly'); ?>>A cada 1 hora</option>
-                                            <option value="twicedaily" <?php selected($upt_cron_freq, 'twicedaily'); ?>>A cada 12 horas</option>
-                                            <option value="sixhourly" <?php selected($upt_cron_freq, 'sixhourly'); ?>>A cada 6 horas</option>
-                                            <option value="daily" <?php selected($upt_cron_freq, 'daily'); ?>>Diariamente</option>
-                                        </select>
+                                    <div class="upt-import-form-group-row">
+                                        <div class="upt-import-form-group">
+                                            <label for="upt-cron-schema" class="upt-import-label">Esquema</label>
+                                            <select id="upt-cron-schema" class="upt-import-select">
+                                                <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
+                                                    <option value="<?php echo esc_attr($s->slug); ?>" <?php selected($upt_cron_schema, $s->slug); ?>><?php echo esc_html($s->name); ?></option>
+                                                <?php endforeach; endif; ?>
+                                            </select>
+                                        </div>
+                                        <div class="upt-import-form-group">
+                                            <label for="upt-cron-freq" class="upt-import-label">Frequência</label>
+                                            <select id="upt-cron-freq" class="upt-import-select">
+                                                <option value="hourly" <?php selected($upt_cron_freq, 'hourly'); ?>>A cada 1 hora</option>
+                                                <option value="twicedaily" <?php selected($upt_cron_freq, 'twicedaily'); ?>>A cada 12 horas</option>
+                                                <option value="sixhourly" <?php selected($upt_cron_freq, 'sixhourly'); ?>>A cada 6 horas</option>
+                                                <option value="daily" <?php selected($upt_cron_freq, 'daily'); ?>>Diariamente</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div style="display:flex;gap:8px;margin-bottom:16px;">
-                                    <button type="button" id="upt-cron-save" class="button button-primary" style="font-size:13px;">Salvar e <?php echo $upt_cron_active ? 'Desativar' : 'Ativar'; ?></button>
-                                    <button type="button" id="upt-cron-test" class="button" style="font-size:13px;">Testar Agora</button>
+                                <div class="upt-import-cron__actions">
+                                    <button type="button" id="upt-cron-save" class="upt-import-btn upt-import-btn--primary upt-import-btn--sm">
+                                        <?php echo $upt_cron_active ? 'Desativar' : 'Salvar e Ativar'; ?>
+                                    </button>
+                                    <button type="button" id="upt-cron-test" class="upt-import-btn upt-import-btn--secondary upt-import-btn--sm">
+                                        Testar Agora
+                                    </button>
                                 </div>
 
-                                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:12px;color:#475569;">
-                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;">
-                                        <span>Status: <strong id="upt-cron-status-label" style="color:<?php echo $upt_cron_active ? '#16a34a' : '#dc2626'; ?>;"><?php echo $upt_cron_active ? 'Ativo' : 'Inativo'; ?></strong></span>
-                                        <span>Última execução: <strong><?php echo $upt_cron_last; ?></strong></span>
-                                        <span>Próxima execução: <strong><?php echo $upt_cron_next_fmt; ?></strong></span>
-                                        <span>Total importados: <strong><?php echo (int)$upt_cron_stats['imported']; ?></strong></span>
+                                <div class="upt-import-cron__status">
+                                    <div class="upt-import-cron__status-grid">
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Status</span>
+                                            <strong id="upt-cron-status-label" class="upt-import-cron__status-value" style="color:<?php echo $upt_cron_active ? '#16a34a' : '#dc2626'; ?>;"><?php echo $upt_cron_active ? 'Ativo' : 'Inativo'; ?></strong>
+                                        </div>
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Última execução</span>
+                                            <strong class="upt-import-cron__status-value"><?php echo $upt_cron_last; ?></strong>
+                                        </div>
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Próxima execução</span>
+                                            <strong class="upt-import-cron__status-value"><?php echo $upt_cron_next_fmt; ?></strong>
+                                        </div>
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Total importados</span>
+                                            <strong class="upt-import-cron__status-value"><?php echo (int)$upt_cron_stats['imported']; ?></strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2853,8 +2957,130 @@ var dashboardChart = new Chart($dashboardCanvas, {
         var $doneSection = jQuery('#upt-imob-done-section');
         var $cancelBtn = jQuery('#upt-imob-cancel-btn');
         var $newBtn = jQuery('#upt-imob-new-btn');
+        var $dropzone = jQuery('#upt-imob-dropzone');
+        var $fileInput = jQuery('#upt-imob-xml-file');
+        var $fileInfo = jQuery('#upt-imob-file-info');
+        var $fileName = jQuery('#upt-imob-file-name');
+        var $fileSize = jQuery('#upt-imob-file-size');
+        var $fileRemove = jQuery('#upt-imob-file-remove');
+        var $validationMsg = jQuery('#upt-imob-validation-msg');
+        var $schemaSection = jQuery('#upt-imob-schema-section');
+        var $stepper = jQuery('.upt-import-stepper');
 
         var session_id = '', total_items = 0, imported_total = 0, photos_total = 0, errors_total = 0, current_offset = 0, is_running = false, batch_size = 5;
+        var selectedFile = null;
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function setStep(stepNum) {
+            $stepper.find('.upt-step').each(function() {
+                var s = parseInt(jQuery(this).data('step'));
+                jQuery(this).removeClass('upt-step--active upt-step--completed');
+                if (s < stepNum) jQuery(this).addClass('upt-step--completed');
+                else if (s === stepNum) jQuery(this).addClass('upt-step--active');
+            });
+        }
+
+        function showValidation(msg, type) {
+            $validationMsg.removeClass('upt-import-msg--error upt-import-msg--success upt-import-msg--warning upt-import-msg--info')
+                .addClass('upt-import-msg--' + (type || 'error'))
+                .html('<span class="upt-import-msg__icon" aria-hidden="true">' +
+                    (type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'info' ? 'ℹ️' : '❌') +
+                    '</span><span class="upt-import-msg__text">' + msg + '</span>')
+                .show();
+        }
+
+        function hideValidation() {
+            $validationMsg.hide();
+        }
+
+        function validateFile(file) {
+            if (!file) return { valid: false, msg: 'Nenhum arquivo selecionado.' };
+            var name = file.name || '';
+            var ext = name.split('.').pop().toLowerCase();
+            if (ext !== 'xml') {
+                return { valid: false, msg: 'Formato inválido. Por favor, selecione um arquivo <strong>.xml</strong>. Arquivo selecionado: <strong>' + name + '</strong>' };
+            }
+            var maxSize = 50 * 1024 * 1024;
+            if (file.size > maxSize) {
+                return { valid: false, msg: 'O arquivo excede o limite de <strong>50 MB</strong>. Tamanho atual: <strong>' + formatFileSize(file.size) + '</strong>. Tente compactar ou dividir o XML.' };
+            }
+            if (file.size === 0) {
+                return { valid: false, msg: 'O arquivo está <strong>vazio</strong> (0 bytes). Verifique se o XML foi exportado corretamente.' };
+            }
+            return { valid: true };
+        }
+
+        function onFileSelected(file) {
+            var result = validateFile(file);
+            if (!result.valid) {
+                showValidation(result.msg, 'error');
+                $dropzone.removeClass('upt-import-dropzone--has-file');
+                selectedFile = null;
+                $fileInfo.hide();
+                $schemaSection.hide();
+                $startBtn.hide();
+                setStep(1);
+                return;
+            }
+            hideValidation();
+            selectedFile = file;
+            $fileName.text(file.name);
+            $fileSize.text(formatFileSize(file.size));
+            $fileInfo.show();
+            $dropzone.addClass('upt-import-dropzone--has-file');
+            $schemaSection.show();
+            $startBtn.show();
+            setStep(2);
+        }
+
+        function resetUpload() {
+            selectedFile = null;
+            $fileInput.val('');
+            $fileInfo.hide();
+            $dropzone.removeClass('upt-import-dropzone--has-file');
+            $schemaSection.hide();
+            $startBtn.hide();
+            hideValidation();
+            setStep(1);
+        }
+
+        $dropzone.on('dragover dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $dropzone.addClass('upt-import-dropzone--dragover');
+        }).on('dragleave drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $dropzone.removeClass('upt-import-dropzone--dragover');
+        }).on('drop', function(e) {
+            var files = e.originalEvent.dataTransfer.files;
+            if (files && files.length > 0) {
+                onFileSelected(files[0]);
+            }
+        }).on('click', function() {
+            $fileInput.trigger('click');
+        }).on('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                $fileInput.trigger('click');
+            }
+        });
+
+        $fileInput.on('change', function() {
+            if (this.files && this.files.length > 0) {
+                onFileSelected(this.files[0]);
+            }
+        });
+
+        $fileRemove.on('click', function(e) {
+            e.stopPropagation();
+            resetUpload();
+        });
 
         $mode.on('change', function() {
             if (jQuery(this).val() === 'existing') { $newField.hide(); $existingField.show(); }
@@ -2862,24 +3088,29 @@ var dashboardChart = new Chart($dashboardCanvas, {
         });
 
         $startBtn.on('click', function() {
-            var fileInput = jQuery('#upt-imob-xml-file')[0];
-            if (!fileInput.files || fileInput.files.length === 0) { alert('Selecione um arquivo XML.'); return; }
-            $startBtn.prop('disabled', true).text('Enviando...');
-            uploadAndStart(fileInput.files[0]);
+            if (!selectedFile) {
+                showValidation('Selecione um arquivo XML antes de iniciar.', 'warning');
+                return;
+            }
+            $startBtn.prop('disabled', true).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:upt-spin 1s linear infinite" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Enviando...');
+            uploadAndStart(selectedFile);
         });
 
         $cancelBtn.on('click', function() {
-            if (!confirm('Cancelar importação?')) return;
+            if (!confirm('Deseja realmente cancelar a importação? Os imóveis já importados não serão afetados.')) return;
             is_running = false;
             jQuery.post(ajaxUrl, { action: 'upt_imob_cancel', nonce: nonce, session_id: session_id });
-            $progressSection.hide(); $uploadSection.show();
-            $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
+            $progressSection.hide();
+            $uploadSection.show();
+            resetUpload();
+            $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
         });
 
         $newBtn.on('click', function() {
-            $doneSection.hide(); $uploadSection.show();
-            $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
-            jQuery('#upt-imob-xml-file').val('');
+            $doneSection.hide();
+            $uploadSection.show();
+            resetUpload();
+            $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
         });
 
         function uploadAndStart(file) {
@@ -2895,16 +3126,29 @@ var dashboardChart = new Chart($dashboardCanvas, {
                 url: ajaxUrl, type: 'POST', data: formData,
                 processData: false, contentType: false, timeout: 300000,
                 success: function(resp) {
-                    $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
                     if (resp.success && resp.data && resp.data.session_id) {
                         session_id = resp.data.session_id;
-                        $uploadSection.hide(); $doneSection.hide(); $progressSection.show();
+                        $uploadSection.hide();
+                        $doneSection.hide();
+                        $progressSection.show();
+                        setStep(3);
                         imported_total = 0; photos_total = 0; errors_total = 0; current_offset = 0; is_running = true;
                         updateStats();
                         countAndProcess();
-                    } else { alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'Não foi possível iniciar.')); }
+                    } else {
+                        var errMsg = (resp.data && resp.data.message) ? resp.data.message : 'Não foi possível iniciar a importação.';
+                        showValidation(errMsg + '<br><small style="color:#6b7280">Verifique se o arquivo XML está no formato correto (OKE, Zap ou Viva Real) e tente novamente.</small>', 'error');
+                        $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
+                    }
                 },
-                error: function() { $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação'); alert('Erro ao enviar.'); }
+                error: function(xhr, status) {
+                    var msg = 'Erro de conexão ao enviar o arquivo.';
+                    if (status === 'timeout') {
+                        msg = 'O envio demorou demais (<strong>timeout</strong>). Tente com um arquivo menor ou verifique sua conexão.';
+                    }
+                    showValidation(msg, 'error');
+                    $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
+                }
             });
         }
 
@@ -2912,6 +3156,8 @@ var dashboardChart = new Chart($dashboardCanvas, {
             var pct = total_items > 0 ? Math.round((current_offset / total_items) * 100) : 0;
             jQuery('#upt-imob-progress-bar').css('width', pct + '%');
             jQuery('#upt-imob-progress-text').text(pct + '%');
+            var $track = jQuery('.upt-import-progress__bar-track');
+            $track.attr('aria-valuenow', pct);
             jQuery('#upt-imob-stat-total').text(total_items || '—');
             jQuery('#upt-imob-stat-imported').text(imported_total);
             jQuery('#upt-imob-stat-photos').text(photos_total);
@@ -2919,34 +3165,57 @@ var dashboardChart = new Chart($dashboardCanvas, {
         }
 
         function countAndProcess() {
-            setStatus('Contando imóveis...');
+            setStatus('Contando imóveis no XML...', 'info');
             jQuery.post(ajaxUrl, { action: 'upt_imob_count', nonce: nonce, session_id: session_id }, function(resp) {
-                if (!resp.success) { setStatus('Erro: ' + (resp.data && resp.data.message ? resp.data.message : '?'), true); return; }
-                total_items = resp.data.total; updateStats(); processNextBatch();
+                if (!resp.success) {
+                    setStatus('Erro ao contar: ' + (resp.data && resp.data.message ? resp.data.message : 'Erro desconhecido') + '. A importação será interrompida.', 'error');
+                    return;
+                }
+                total_items = resp.data.total;
+                updateStats();
+                setStatus(total_items + ' imóveis encontrados. Iniciando importação...', 'info');
+                setTimeout(processNextBatch, 600);
             });
         }
 
         function processNextBatch() {
             if (!is_running) return;
-            setStatus('Processando ' + (current_offset + 1) + '-' + Math.min(current_offset + batch_size, total_items) + ' de ' + total_items + '...');
+            var batchEnd = Math.min(current_offset + batch_size, total_items);
+            setStatus('Importando imóveis ' + (current_offset + 1) + ' a ' + batchEnd + ' de ' + total_items + '...', 'info');
             jQuery.post(ajaxUrl, { action: 'upt_imob_batch', nonce: nonce, session_id: session_id, offset: current_offset, limit: batch_size }, function(resp) {
                 if (!is_running) return;
                 if (!resp.success) {
-                    setStatus('Erro: ' + (resp.data && resp.data.message ? resp.data.message : '?') + '. Continuando...', true);
+                    setStatus('Erro no lote: ' + (resp.data && resp.data.message ? resp.data.message : '?') + '. Pulando e continuando...', 'warning');
                     current_offset += batch_size; updateStats(); setTimeout(processNextBatch, 2000); return;
                 }
                 var d = resp.data;
                 imported_total += d.imported; photos_total += d.photos; errors_total += d.errors; current_offset = d.next_offset; updateStats();
-                if (d.last_error) setStatus('Erro: ' + d.last_error + '. Continuando...', true);
-                else setStatus('Processados ' + current_offset + ' de ' + total_items + '. Fotos: ' + photos_total + '.');
-                if (d.is_finished) { is_running = false; $progressSection.hide(); $doneSection.show(); jQuery('#upt-imob-done-stats').text('Importados: ' + imported_total + ' | Erros: ' + errors_total + ' | Fotos: ' + photos_total); }
+                if (d.last_error) setStatus('Aviso: ' + d.last_error + '. Continuando...', 'warning');
+                else setStatus('Processados ' + current_offset + ' de ' + total_items + ' imóveis. ' + photos_total + ' fotos baixadas.', 'info');
+                if (d.is_finished) {
+                    is_running = false;
+                    $progressSection.hide();
+                    $doneSection.show();
+                    $stepper.find('.upt-step').addClass('upt-step--completed').removeClass('upt-step--active');
+                    jQuery('#upt-imob-done-stats').html(
+                        '<strong style="color:#16a34a">' + imported_total + '</strong> imóveis importados' +
+                        (errors_total > 0 ? ' &bull; <strong style="color:#dc2626">' + errors_total + ' erros</strong>' : '') +
+                        ' &bull; <strong style="color:#2563eb">' + photos_total + '</strong> fotos baixadas'
+                    );
+                }
                 else setTimeout(processNextBatch, 500);
-            }).fail(function() { if (!is_running) return; setStatus('Erro de conexão. Tentando...', true); setTimeout(processNextBatch, 3000); });
+            }).fail(function() {
+                if (!is_running) return;
+                setStatus('Erro de conexão. Tentando novamente em 3 segundos...', 'warning');
+                setTimeout(processNextBatch, 3000);
+            });
         }
 
-        function setStatus(msg, isError) {
-            var $el = jQuery('#upt-imob-status-msg'); $el.text(msg);
-            if (isError) $el.css({ background: '#fef2f2', color: '#991b1b' }); else $el.css({ background: '#f1f5f9', color: '#475569' });
+        function setStatus(msg, type) {
+            var $el = jQuery('#upt-imob-status-msg');
+            var icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : type === 'success' ? '✅' : '⏳';
+            $el.attr('class', 'upt-import-msg upt-import-msg--' + (type || 'info'))
+               .html('<span class="upt-import-msg__icon" aria-hidden="true">' + icon + '</span><span class="upt-import-msg__text">' + msg + '</span>');
         }
     })();
 
