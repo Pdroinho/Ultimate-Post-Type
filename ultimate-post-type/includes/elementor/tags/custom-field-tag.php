@@ -65,7 +65,7 @@ class UPT_Custom_Field_Tag extends \Elementor\Core\DynamicTags\Data_Tag {
                 return ['Item A', 'Item B', 'Item C'];
             }
             if ($field_def && $field_def['type'] === 'unit_measure') {
-                return '10,50 kg';
+                return '85,50 m²';
             }
         }
         // --- FIM DA MODIFICAÇÃO ---
@@ -144,7 +144,7 @@ class UPT_Custom_Field_Tag extends \Elementor\Core\DynamicTags\Data_Tag {
                 return;
             }
             if ($field_def && $field_def['type'] === 'unit_measure') {
-                echo '10,50 kg';
+                echo '85,50 m²';
                 return;
             }
         }
@@ -332,7 +332,28 @@ class UPT_Custom_Field_Tag extends \Elementor\Core\DynamicTags\Data_Tag {
                 $list = array_values(array_filter($list, function($v){ return $v !== ''; }));
                 return implode(', ', $list);
             default:
-                return is_array($value) ? implode(', ', $value) : $value;
+                $raw_value = is_array($value) ? implode(', ', $value) : $value;
+                if (is_numeric($raw_value)) {
+                    $label = isset($field_def['label']) ? $field_def['label'] : '';
+                    $label_lower = function_exists('mb_strtolower') ? mb_strtolower($label, 'UTF-8') : strtolower($label);
+                    $id_lower = strtolower($base_field_id);
+                    if (
+                        strpos($id_lower, 'preco') !== false ||
+                        strpos($id_lower, 'preço') !== false ||
+                        strpos($label_lower, 'preco') !== false ||
+                        strpos($label_lower, 'preço') !== false ||
+                        strpos($label_lower, 'valor') !== false ||
+                        (isset($field_def['type']) && $field_def['type'] === 'price')
+                    ) {
+                        $val = (float)$raw_value;
+                        if ($val <= 0) return '';
+                        if ($val >= 1000000) {
+                            return 'R$ ' . number_format($val, 2, ',', '.');
+                        }
+                        return 'R$ ' . number_format_i18n($val, 2);
+                    }
+                }
+                return $raw_value;
         }
     }
 
