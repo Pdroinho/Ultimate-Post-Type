@@ -1390,6 +1390,21 @@ jQuery(document).ready(function ($) {
                 listingWrapper.attr('data-upt-active-term', String(termId || '0'));
             }
 
+            var metaFilterKey = '';
+            var metaFilterVal = '';
+            var metaPill = listingWrapper.find('.upt-meta-filter-pill.active').first();
+            if (metaPill.length) {
+                metaFilterKey = metaPill.data('meta-field') || '';
+                metaFilterVal = metaPill.data('meta-value') || '';
+            } else {
+                metaFilterKey = listingWrapper.attr('data-upt-active-meta-key') || '';
+                metaFilterVal = listingWrapper.attr('data-upt-active-meta-val') || '';
+            }
+            if (listingWrapper.length) {
+                listingWrapper.attr('data-upt-active-meta-key', metaFilterKey);
+                listingWrapper.attr('data-upt-active-meta-val', metaFilterVal);
+            }
+
             var loopContainer = listingWrapper.find('.elementor-loop-container');
             if (!loopContainer.length) {
                 // Fallback: usa o próprio targetID ou o wrapper se a classe não estiver presente.
@@ -1441,6 +1456,14 @@ jQuery(document).ready(function ($) {
                         params.delete('upt_category');
                     }
 
+                    if (metaFilterKey && metaFilterVal) {
+                        params.set('upt_meta_key', metaFilterKey);
+                        params.set('upt_meta_filter', metaFilterVal);
+                    } else {
+                        params.delete('upt_meta_key');
+                        params.delete('upt_meta_filter');
+                    }
+
                     var qs = params.toString();
                     var newUrl = qs ? currentUrl + '?' + qs : currentUrl;
                     window.location.href = newUrl;
@@ -1476,7 +1499,9 @@ jQuery(document).ready(function ($) {
                     show_arrows: listingWrapper.data('show-arrows'),
                     load_more_text: listingWrapper.data('load-more-text'),
                     search_targets: searchTargets,
-                    search_slug: searchSlug
+                    search_slug: searchSlug,
+                    meta_filter_key: metaFilterKey,
+                    meta_filter_val: metaFilterVal
                 },
                 beforeSend: function () {
                     listingWrapper.css('opacity', 0.5);
@@ -1581,6 +1606,33 @@ if (role === 'parent') {
         performuptSearch(wrapper, 1);
     });
 
+    $('body').on('click', '.upt-meta-filter-pill', function (e) {
+        e.preventDefault();
+        var $pill = $(this);
+        var gridId = $pill.data('grid-id');
+        if (!gridId) return;
+
+        $pill.closest('.upt-builtin-filter-list').find('.upt-meta-filter-pill').removeClass('active');
+        $pill.addClass('active');
+
+        var listingWrapper = $('#' + gridId).closest('.upt-listing-wrapper');
+        if (!listingWrapper.length) {
+            listingWrapper = $('#' + gridId).parent();
+        }
+        if (!listingWrapper.length) return;
+        listingWrapper.attr('data-upt-active-meta-key', $pill.data('meta-field') || '');
+        listingWrapper.attr('data-upt-active-meta-val', $pill.data('meta-value') || '');
+
+        var triggerEl = listingWrapper.find('.upt-category-filter-wrapper').first();
+        if (!triggerEl.length) {
+            triggerEl = listingWrapper.find('.upt-search-wrapper').first();
+        }
+        if (!triggerEl.length) {
+            triggerEl = listingWrapper;
+        }
+        performuptSearch(triggerEl, 1);
+    });
+
     function setActiveFiltersFromURL() {
         var params = new URLSearchParams(window.location.search);
         var catIdFromUrl = params.get('upt_category');
@@ -1614,6 +1666,18 @@ if (role === 'parent') {
 
         if (searchTerm) {
             $('.upt-search-input').val(searchTerm);
+        }
+
+        var metaFilterFromUrl = params.get('upt_meta_filter');
+        var metaKeyFromUrl = params.get('upt_meta_key');
+        if (metaFilterFromUrl && metaKeyFromUrl) {
+            $('.upt-meta-filter-pill').each(function () {
+                var $pill = $(this);
+                if ($pill.data('meta-field') === metaKeyFromUrl && String($pill.data('meta-value') || '') === metaFilterFromUrl) {
+                    $pill.closest('.upt-builtin-filter-list').find('.upt-meta-filter-pill').removeClass('active');
+                    $pill.addClass('active');
+                }
+            });
         }
     }
     

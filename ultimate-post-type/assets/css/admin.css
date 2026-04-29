@@ -2497,6 +2497,32 @@ body.modal-open {
     box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--fc-primary-color) 40%, transparent);
 }
 
+.upt-meta-filter-separator {
+    width: 1px;
+    height: 24px;
+    background-color: var(--fc-border-color, #e5e7eb);
+    flex-shrink: 0;
+    margin: 0 4px;
+}
+
+.upt-meta-filter-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--fc-text-light, #9ca3af);
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+
+.upt-meta-filter-pill {
+    border-style: dashed;
+}
+
+.upt-meta-filter-pill.active {
+    border-style: solid;
+}
+
 /* Dashboard Wrapper SaaS Layout */
 .upt-tabs-wrapper {
     display: grid;

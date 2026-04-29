@@ -1354,6 +1354,18 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
 
         $search_slug = isset($_POST['search_slug']) ? sanitize_text_field($_POST['search_slug']) : self::normalize_search_slug( $search_term );
         
+        $meta_filter_key = isset($_POST['meta_filter_key']) ? sanitize_text_field($_POST['meta_filter_key']) : '';
+        $meta_filter_val = isset($_POST['meta_filter_val']) ? sanitize_text_field($_POST['meta_filter_val']) : '';
+
+        $meta_query = [];
+        if ( ! empty( $meta_filter_key ) && $meta_filter_val !== '' ) {
+            $meta_query[] = [
+                'key'     => $meta_filter_key,
+                'value'   => $meta_filter_val,
+                'compare' => '=',
+            ];
+        }
+        
         if ( ! $template_id ) {
             wp_send_json_error();
         }
@@ -1414,6 +1426,10 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                     $query_args['tax_query'] = $tax_query;
                 }
 
+                if ( ! empty( $meta_query ) ) {
+                    $query_args['meta_query'] = $meta_query;
+                }
+
                 $query        = new WP_Query( $query_args );
                 $total_pages  = ( $posts_per_page > 0 ) ? (int) ceil( count( $matching_ids ) / $posts_per_page ) : 1;
             } else {
@@ -1435,6 +1451,10 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
 
             if ( ! empty( $tax_query ) ) {
                 $args['tax_query'] = $tax_query;
+            }
+
+            if ( ! empty( $meta_query ) ) {
+                $args['meta_query'] = $meta_query;
             }
 
             $search_extended_closure = function( $search, $wp_query ) {
@@ -1483,6 +1503,10 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
         }
         if ( ! empty( $term_id ) ) {
             $add_args['upt_category'] = $term_id;
+        }
+        if ( ! empty( $meta_filter_key ) && $meta_filter_val !== '' ) {
+            $add_args['upt_meta_key'] = $meta_filter_key;
+            $add_args['upt_meta_filter'] = $meta_filter_val;
         }
 
         if ( $posts_per_page > 0 && $total_pages > 1 ) {

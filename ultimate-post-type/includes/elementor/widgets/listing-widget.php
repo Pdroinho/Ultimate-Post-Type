@@ -55,6 +55,49 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
         return $options;
     }
 
+    private function get_select_fields_options()
+    {
+        $options = ['' => '— Nenhum —'];
+        $schemas = UPT_Schema_Store::get_schemas();
+        if (empty($schemas)) return $options;
+        foreach ($schemas as $slug => $data) {
+            if (isset($data['fields']) && is_array($data['fields'])) {
+                $term = get_term_by('slug', $slug, 'catalog_schema');
+                $name = $term ? $term->name : $slug;
+                foreach ($data['fields'] as $field) {
+                    if ($field['type'] === 'select' && empty($field['multiple']) && !empty($field['options'])) {
+                        $options[$field['id']] = $name . ' - ' . $field['label'];
+                    }
+                }
+            }
+        }
+        return $options;
+    }
+
+    private function get_meta_filter_field_options()
+    {
+        $options = ['' => '— Selecione —'];
+        $schemas = UPT_Schema_Store::get_schemas();
+        if (empty($schemas)) return $options;
+        foreach ($schemas as $slug => $data) {
+            if (isset($data['fields']) && is_array($data['fields'])) {
+                foreach ($data['fields'] as $field) {
+                    if ($field['type'] === 'select' && empty($field['multiple']) && !empty($field['options'])) {
+                        $raw_opts = $field['options'];
+                        $opt_list = is_string($raw_opts) ? explode('|', $raw_opts) : (is_array($raw_opts) ? $raw_opts : []);
+                        foreach ($opt_list as $opt) {
+                            $opt = trim($opt);
+                            if ($opt !== '') {
+                                $options[$opt] = $opt;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $options;
+    }
+
     private function get_all_loop_templates()
     {
         $query = new WP_Query([
@@ -439,6 +482,48 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
             ],
             'default' => 'center',
             'condition' => ['enable_builtin_filter' => 'yes'],
+        ]);
+
+        $this->add_control('builtin_meta_filter_field', [
+            'label' => 'Filtro por Campo (ex: Status do Imóvel)',
+            'type' => \Elementor\Controls_Manager::SELECT,
+            'options' => $this->get_select_fields_options(),
+            'description' => 'Exibe um dropdown para filtrar por um campo do tipo select (ex: Venda, Aluguel).',
+            'condition' => ['enable_builtin_filter' => 'yes'],
+        ]);
+
+        $this->add_control('builtin_meta_filter_label', [
+            'label' => 'Rótulo do Filtro por Campo',
+            'type' => \Elementor\Controls_Manager::TEXT,
+            'default' => 'Status:',
+            'condition' => ['enable_builtin_filter' => 'yes', 'builtin_meta_filter_field!' => ''],
+        ]);
+
+        $this->add_control('builtin_meta_filter_all_text', [
+            'label' => 'Texto "Todos" do Filtro por Campo',
+            'type' => \Elementor\Controls_Manager::TEXT,
+            'default' => 'Todos',
+            'condition' => ['enable_builtin_filter' => 'yes', 'builtin_meta_filter_field!' => ''],
+        ]);
+
+        $this->add_control('builtin_meta_filter_mode', [
+            'label' => 'Modo do Filtro por Campo',
+            'type' => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'interactive' => 'Interativo (mostra pills)',
+                'fixed' => 'Fixo (oculto)',
+            ],
+            'default' => 'interactive',
+            'description' => '"Interativo" mostra as pills na barra de filtros. "Fixo" aplica o filtro automaticamente sem mostrar ao usuário.',
+            'condition' => ['enable_builtin_filter' => 'yes', 'builtin_meta_filter_field!' => ''],
+        ]);
+
+        $this->add_control('builtin_meta_filter_fixed_value', [
+            'label' => 'Valor Fixo do Filtro',
+            'type' => \Elementor\Controls_Manager::SELECT,
+            'options' => $this->get_meta_filter_field_options(),
+            'description' => 'Se o modo for "Fixo", aplica este valor automaticamente na query.',
+            'condition' => ['enable_builtin_filter' => 'yes', 'builtin_meta_filter_field!' => '', 'builtin_meta_filter_mode' => 'fixed'],
         ]);
 
         $this->end_controls_section();
@@ -969,6 +1054,31 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
             $args['tax_query'] = $tax_query;
         }
 
+        if (isset($_GET['upt_meta_filter']) && $_GET['upt_meta_filter'] !== '' && isset($_GET['upt_meta_key']) && $_GET['upt_meta_key'] !== '') {
+            $meta_key = sanitize_text_field($_GET['upt_meta_key']);
+            $meta_val = sanitize_text_field($_GET['upt_meta_filter']);
+            $args['meta_query'] = [
+                [
+                    'key' => $meta_key,
+                    'value' => $meta_val,
+                    'compare' => '=',
+                ],
+            ];
+        } else {
+            $fixed_field_id = isset($settings['builtin_meta_filter_field']) ? $settings['builtin_meta_filter_field'] : '';
+            $fixed_mode = isset($settings['builtin_meta_filter_mode']) ? $settings['builtin_meta_filter_mode'] : 'interactive';
+            $fixed_value = isset($settings['builtin_meta_filter_fixed_value']) ? $settings['builtin_meta_filter_fixed_value'] : '';
+            if ($fixed_mode === 'fixed' && !empty($fixed_field_id) && !empty($fixed_value)) {
+                $args['meta_query'] = [
+                    [
+                        'key' => $fixed_field_id,
+                        'value' => $fixed_value,
+                        'compare' => '=',
+                    ],
+                ];
+            }
+        }
+
         $use_targeted_search = (!empty($search_term) && !empty($search_targets) && class_exists('UPT_Ajax') && method_exists('UPT_Ajax', 'get_ids_for_targeted_search'));
 
         $schema_slugs_for_order = $is_wp_posts_mode ? [] : $this->get_schema_slugs_for_query($settings);
@@ -1151,10 +1261,53 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
                         $is_active = ((int)$t->term_id === $current_cat_builtin);
                         echo '<li><a href="#" class="upt-category-filter-item upt-builtin-pill ' . ($is_active ? 'active' : '') . '" data-term-id="' . esc_attr($t->term_id) . '">' . esc_html($label) . '</a></li>';
                     }
+
+                    $meta_field_id = isset($settings['builtin_meta_filter_field']) ? $settings['builtin_meta_filter_field'] : '';
+                    $meta_filter_mode = isset($settings['builtin_meta_filter_mode']) ? $settings['builtin_meta_filter_mode'] : 'interactive';
+
+                    if (!empty($meta_field_id) && $meta_filter_mode === 'interactive') {
+                        $meta_field_options = [];
+                        $schemas = UPT_Schema_Store::get_schemas();
+                        if (!empty($schemas)) {
+                            foreach ($schemas as $schema_data) {
+                                if (isset($schema_data['fields']) && is_array($schema_data['fields'])) {
+                                    foreach ($schema_data['fields'] as $sf) {
+                                        if (isset($sf['id']) && $sf['id'] === $meta_field_id && !empty($sf['options'])) {
+                                            $raw_opts = $sf['options'];
+                                            $opt_list = is_string($raw_opts) ? explode('|', $raw_opts) : (is_array($raw_opts) ? $raw_opts : []);
+                                            foreach ($opt_list as $opt) {
+                                                $opt = trim($opt);
+                                                if ($opt !== '') {
+                                                    $meta_field_options[$opt] = $opt;
+                                                }
+                                            }
+                                            break 2;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!empty($meta_field_options)) {
+                            $meta_filter_label = !empty($settings['builtin_meta_filter_label']) ? $settings['builtin_meta_filter_label'] : '';
+                            $meta_filter_all = !empty($settings['builtin_meta_filter_all_text']) ? $settings['builtin_meta_filter_all_text'] : 'Todos';
+                            $current_meta_val = isset($_GET['upt_meta_filter']) ? sanitize_text_field($_GET['upt_meta_filter']) : '';
+                            $grid_id_for_meta = 'upt-grid-' . $this->get_id();
+
+                            echo '<li class="upt-meta-filter-separator" aria-hidden="true"></li>';
+                            echo '<li class="upt-meta-filter-group-label">' . esc_html($meta_filter_label) . '</li>';
+                            echo '<li><a href="#" class="upt-meta-filter-pill upt-builtin-pill ' . ($current_meta_val === '' ? 'active' : '') . '" data-meta-field="' . esc_attr($meta_field_id) . '" data-meta-value="" data-grid-id="' . esc_attr($grid_id_for_meta) . '">' . esc_html($meta_filter_all) . '</a></li>';
+                            foreach ($meta_field_options as $opt_val => $opt_label) {
+                                $is_active = ($current_meta_val === $opt_val);
+                                echo '<li><a href="#" class="upt-meta-filter-pill upt-builtin-pill ' . ($is_active ? 'active' : '') . '" data-meta-field="' . esc_attr($meta_field_id) . '" data-meta-value="' . esc_attr($opt_val) . '" data-grid-id="' . esc_attr($grid_id_for_meta) . '">' . esc_html($opt_label) . '</a></li>';
+                            }
+                        }
+                    }
+
                     echo '</ul></div>';
                 }
             }
-            // End Built-in Filter Rendering
+            // End Built-in Meta Filter Rendering
 
             $grid_classes = 'elementor-loop-container elementor-grid';
             $columns_desktop = isset($settings['columns']) && $settings['columns'] ? (int)$settings['columns'] : 3;
@@ -1354,6 +1507,22 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
             }
             if (isset($_GET['upt_category']) && !empty($_GET['upt_category'])) {
                 $pagination_add_args['upt_category'] = absint($_GET['upt_category']);
+            }
+            if (isset($_GET['upt_meta_filter']) && $_GET['upt_meta_filter'] !== '') {
+                $pagination_add_args['upt_meta_filter'] = sanitize_text_field($_GET['upt_meta_filter']);
+            }
+            if (isset($_GET['upt_meta_key']) && $_GET['upt_meta_key'] !== '') {
+                $pagination_add_args['upt_meta_key'] = sanitize_text_field($_GET['upt_meta_key']);
+            }
+
+            if (empty($pagination_add_args['upt_meta_key']) && empty($pagination_add_args['upt_meta_filter'])) {
+                $pag_fixed_field = isset($settings['builtin_meta_filter_field']) ? $settings['builtin_meta_filter_field'] : '';
+                $pag_fixed_mode = isset($settings['builtin_meta_filter_mode']) ? $settings['builtin_meta_filter_mode'] : 'interactive';
+                $pag_fixed_value = isset($settings['builtin_meta_filter_fixed_value']) ? $settings['builtin_meta_filter_fixed_value'] : '';
+                if ($pag_fixed_mode === 'fixed' && !empty($pag_fixed_field) && !empty($pag_fixed_value)) {
+                    $pagination_add_args['upt_meta_key'] = $pag_fixed_field;
+                    $pagination_add_args['upt_meta_filter'] = $pag_fixed_value;
+                }
             }
 
             $pagination_links = paginate_links([
