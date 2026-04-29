@@ -2244,34 +2244,133 @@ endif; ?>
                                         <div class="upt-cards-settings__section-header">
                                             <div class="upt-cards-settings__section-icon" aria-hidden="true">🌐</div>
                                             <div>
-                                                <h4 class="upt-cards-settings__section-title">Cards do Site</h4>
-                                                <p class="upt-cards-settings__section-desc">Campos exibidos nos cards do site público (Grade do Catálogo). Estes campos são adicionados automaticamente ao card padrão.</p>
+                                                <h4 class="upt-cards-settings__section-title">Card Builder do Site</h4>
+                                                <p class="upt-cards-settings__section-desc">Monte o card do site público arrastando os elementos. Clique no lápis para editar cores e textos.</p>
                                             </div>
                                         </div>
                                         <?php
-                                        $upt_card_site_fields = get_option('upt_card_site_fields', []);
+                                        $upt_card_builder_data = get_option('upt_card_builder', []);
                                         $all_schemas_defs = UPT_Schema_Store::get_schemas();
-                                        $upt_site_field_choices = [];
+                                        $upt_all_fields = [
+                                            ['id' => 'image',   'label' => 'Imagem',       'icon' => '🖼️', 'type' => 'image'],
+                                            ['id' => 'title',   'label' => 'Título',       'icon' => '📝', 'type' => 'text'],
+                                            ['id' => 'price',   'label' => 'Preço',        'icon' => '💰', 'type' => 'price'],
+                                            ['id' => 'status',  'label' => 'Status',       'icon' => '🏷️', 'type' => 'badge'],
+                                            ['id' => 'category','label' => 'Categoria',    'icon' => '📂', 'type' => 'badge'],
+                                            ['id' => 'button',  'label' => 'Botão',        'icon' => '🔘', 'type' => 'button'],
+                                        ];
                                         foreach ($all_schemas_defs as $sk => $sd) {
                                             if (!empty($sd['fields']) && is_array($sd['fields'])) {
                                                 foreach ($sd['fields'] as $f) {
                                                     if (empty($f['id']) || empty($f['label'])) continue;
-                                                    $upt_site_field_choices[$f['id']] = $f['label'] . ' (' . $sk . ')';
+                                                    $f_id_lower = function_exists('mb_strtolower') ? mb_strtolower($f['id'], 'UTF-8') : strtolower($f['id']);
+                                                    $f_label_lower = function_exists('mb_strtolower') ? mb_strtolower($f['label'], 'UTF-8') : strtolower($f['label']);
+                                                    $icon = '📎';
+                                                    $ftype = 'text';
+                                                    if (strpos($f_id_lower, 'preco') !== false || strpos($f_id_lower, 'preço') !== false || strpos($f_label_lower, 'preço') !== false || strpos($f_label_lower, 'valor') !== false) { $icon = '💵'; $ftype = 'price'; }
+                                                    elseif (strpos($f_id_lower, 'area') !== false || strpos($f_id_lower, 'área') !== false || strpos($f_id_lower, 'metragem') !== false) { $icon = '📐'; $ftype = 'area'; }
+                                                    elseif (strpos($f_id_lower, 'quarto') !== false || strpos($f_id_lower, 'dormitor') !== false) { $icon = '🛏️'; $ftype = 'number'; }
+                                                    elseif (strpos($f_id_lower, 'banheiro') !== false || strpos($f_id_lower, 'suite') !== false || strpos($f_id_lower, 'suíte') !== false) { $icon = '🚿'; $ftype = 'number'; }
+                                                    elseif (strpos($f_id_lower, 'vaga') !== false || strpos($f_id_lower, 'garagem') !== false) { $icon = '🚗'; $ftype = 'number'; }
+                                                    elseif (strpos($f_id_lower, 'bairro') !== false || strpos($f_id_lower, 'cidade') !== false || strpos($f_id_lower, 'local') !== false || strpos($f_id_lower, 'endereco') !== false || strpos($f_id_lower, 'endereço') !== false) { $icon = '📍'; $ftype = 'location'; }
+                                                    elseif (strpos($f_id_lower, 'status') !== false || strpos($f_id_lower, 'tipo') !== false) { $icon = '🏷️'; $ftype = 'badge'; }
+                                                    $upt_all_fields[] = ['id' => $f['id'], 'label' => $f['label'] . ' (' . $sk . ')', 'icon' => $icon, 'type' => $ftype];
                                                 }
                                             }
                                         }
-                                        $upt_site_field_choices['core_title'] = 'Título';
-                                        $upt_site_field_choices['core_featured_image'] = 'Imagem Destacada';
-                                        $upt_site_field_choices['core_category'] = 'Categoria';
-                                        asort($upt_site_field_choices);
-                                        foreach ($upt_site_field_choices as $f_id => $f_label):
+                                        if (empty($upt_card_builder_data)) {
+                                            $upt_card_builder_data = [
+                                                ['id' => 'image',  'visible' => true, 'color' => '', 'prefix' => '', 'suffix' => '', 'fontSize' => '', 'fontWeight' => ''],
+                                                ['id' => 'title',  'visible' => true, 'color' => '#111827', 'prefix' => '', 'suffix' => '', 'fontSize' => '16', 'fontWeight' => '700'],
+                                                ['id' => 'price',  'visible' => true, 'color' => '#16a34a', 'prefix' => 'R$ ', 'suffix' => '', 'fontSize' => '18', 'fontWeight' => '700'],
+                                                ['id' => 'button', 'visible' => true, 'color' => '#6366f1', 'prefix' => 'Ver Detalhes', 'suffix' => '', 'fontSize' => '13', 'fontWeight' => '600'],
+                                            ];
+                                        }
                                         ?>
-                                        <label class="upt-cards-settings__option upt-cards-settings__option--compact">
-                                            <input type="checkbox" name="upt_card_site_fields[]" value="<?php echo esc_attr($f_id); ?>" <?php checked(in_array($f_id, $upt_card_site_fields)); ?> class="upt-cards-settings__checkbox">
-                                            <span class="upt-cards-settings__option-check"></span>
-                                            <span class="upt-cards-settings__option-label"><?php echo esc_html($f_label); ?></span>
-                                        </label>
-                                        <?php endforeach; ?>
+                                        <div id="upt-card-builder-list" class="upt-builder-list" role="list" aria-label="Elementos do card">
+                                            <?php foreach ($upt_card_builder_data as $i => $el):
+                                                $el_id = isset($el['id']) ? $el['id'] : '';
+                                                $el_info = null;
+                                                foreach ($upt_all_fields as $af) { if ($af['id'] === $el_id) { $el_info = $af; break; } }
+                                                if (!$el_info) continue;
+                                                $el_visible = isset($el['visible']) ? (bool)$el['visible'] : true;
+                                                $el_color = isset($el['color']) ? $el['color'] : '';
+                                                $el_prefix = isset($el['prefix']) ? $el['prefix'] : '';
+                                                $el_suffix = isset($el['suffix']) ? $el['suffix'] : '';
+                                                $el_fontSize = isset($el['fontSize']) ? $el['fontSize'] : '';
+                                                $el_fontWeight = isset($el['fontWeight']) ? $el['fontWeight'] : '';
+                                            ?>
+                                            <div class="upt-builder-item<?php echo !$el_visible ? ' upt-builder-item--hidden' : ''; ?>" data-index="<?php echo $i; ?>" role="listitem">
+                                                <span class="upt-builder-item__handle" aria-label="Arrastar para reordenar">☰</span>
+                                                <span class="upt-builder-item__icon" aria-hidden="true"><?php echo $el_info['icon']; ?></span>
+                                                <span class="upt-builder-item__label"><?php echo esc_html($el_info['label']); ?></span>
+                                                <input type="hidden" name="upt_builder_id[]" value="<?php echo esc_attr($el_id); ?>">
+                                                <input type="hidden" name="upt_builder_visible[]" value="<?php echo $el_visible ? '1' : '0'; ?>" class="upt-builder-visibility-input">
+                                                <input type="hidden" name="upt_builder_color[]" value="<?php echo esc_attr($el_color); ?>" class="upt-builder-color-input">
+                                                <input type="hidden" name="upt_builder_prefix[]" value="<?php echo esc_attr($el_prefix); ?>" class="upt-builder-prefix-input">
+                                                <input type="hidden" name="upt_builder_suffix[]" value="<?php echo esc_attr($el_suffix); ?>" class="upt-builder-suffix-input">
+                                                <input type="hidden" name="upt_builder_fontSize[]" value="<?php echo esc_attr($el_fontSize); ?>" class="upt-builder-fontsize-input">
+                                                <input type="hidden" name="upt_builder_fontWeight[]" value="<?php echo esc_attr($el_fontWeight); ?>" class="upt-builder-fontweight-input">
+                                                <div class="upt-builder-item__actions">
+                                                    <button type="button" class="upt-builder-toggle" title="<?php echo $el_visible ? 'Ocultar' : 'Mostrar'; ?>" aria-label="<?php echo $el_visible ? 'Ocultar elemento' : 'Mostrar elemento'; ?>">
+                                                        <?php echo $el_visible ? '👁️' : '👁️‍🗨️'; ?>
+                                                    </button>
+                                                    <button type="button" class="upt-builder-edit" title="Editar" aria-label="Editar elemento">✏️</button>
+                                                </div>
+                                            </div>
+                                            <?php endforeach; ?>
+                                        </div>
+
+                                        <div class="upt-builder-add">
+                                            <select id="upt-builder-add-select" class="upt-import-select upt-import-select--sm" aria-label="Adicionar campo">
+                                                <option value="">+ Adicionar campo...</option>
+                                                <?php
+                                                $upt_existing_ids = array_map(function($e) { return isset($e['id']) ? $e['id'] : ''; }, $upt_card_builder_data);
+                                                foreach ($upt_all_fields as $af):
+                                                    if (in_array($af['id'], $upt_existing_ids)) continue;
+                                                ?>
+                                                <option value="<?php echo esc_attr($af['id']); ?>" data-icon="<?php echo esc_attr($af['icon']); ?>" data-type="<?php echo esc_attr($af['type']); ?>"><?php echo $af['icon']; ?> <?php echo esc_html($af['label']); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <button type="button" id="upt-builder-add-btn" class="upt-import-btn upt-import-btn--secondary upt-import-btn--sm">Adicionar</button>
+                                        </div>
+
+                                        <div id="upt-builder-editor" class="upt-builder-editor" style="display:none;" role="dialog" aria-label="Editar elemento do card">
+                                            <div class="upt-builder-editor__header">
+                                                <span class="upt-builder-editor__title">Editar elemento</span>
+                                                <button type="button" class="upt-builder-editor__close" aria-label="Fechar">&times;</button>
+                                            </div>
+                                            <div class="upt-builder-editor__body">
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Cor</label>
+                                                    <input type="color" id="upt-editor-color" value="#111827" class="upt-builder-editor__color">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Prefixo</label>
+                                                    <input type="text" id="upt-editor-prefix" placeholder="Ex: R$ " class="upt-import-input">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Sufixo</label>
+                                                    <input type="text" id="upt-editor-suffix" placeholder="Ex: /mês" class="upt-import-input">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Tamanho da fonte (px)</label>
+                                                    <input type="number" id="upt-editor-fontsize" min="10" max="48" value="" class="upt-import-input" placeholder="Padrão">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Peso da fonte</label>
+                                                    <select id="upt-editor-fontweight" class="upt-import-select">
+                                                        <option value="">Padrão</option>
+                                                        <option value="400">Normal (400)</option>
+                                                        <option value="500">Médio (500)</option>
+                                                        <option value="600">Semi-negrito (600)</option>
+                                                        <option value="700">Negrito (700)</option>
+                                                        <option value="800">Extra negrito (800)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <button type="button" id="upt-editor-apply" class="upt-import-btn upt-import-btn--primary upt-import-btn--sm" style="width:100%;">Aplicar</button>
+                                        </div>
                                     </div>
 
                                     <div class="upt-cards-settings__actions">
@@ -2289,6 +2388,8 @@ endif; ?>
 
                                 <div class="upt-cards-settings__preview">
                                     <h5 class="upt-cards-settings__preview-title">Pré-visualização</h5>
+
+                                    <p class="upt-cards-settings__preview-label">📋 Card do Painel</p>
                                     <div class="upt-cards-settings__preview-card" id="upt-card-preview">
                                         <div class="upt-cards-settings__preview-img" aria-hidden="true">
                                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -2300,7 +2401,54 @@ endif; ?>
                                             <span class="upt-preview-field upt-preview-field--badge upt-preview-field--cat" data-preview="dash-category" style="display:<?php echo in_array('category', $upt_card_dashboard_fields) ? 'inline-flex' : 'none'; ?>;">Apartamento</span>
                                         </div>
                                     </div>
-                                    <p class="upt-cards-settings__preview-hint">Assim seus cards vão aparecer na listagem.</p>
+
+                                    <p class="upt-cards-settings__preview-label" style="margin-top:20px;">🌐 Card do Site</p>
+                                    <div class="upt-cards-settings__preview-card" id="upt-site-preview">
+                                        <div class="upt-builder-preview-img" aria-hidden="true">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                        </div>
+                                        <div class="upt-cards-settings__preview-body" id="upt-site-preview-body">
+                                            <?php foreach ($upt_card_builder_data as $el):
+                                                $el_id = isset($el['id']) ? $el['id'] : '';
+                                                $el_visible = isset($el['visible']) ? (bool)$el['visible'] : true;
+                                                $el_color = isset($el['color']) ? $el['color'] : '';
+                                                $el_prefix = isset($el['prefix']) ? $el['prefix'] : '';
+                                                $el_suffix = isset($el['suffix']) ? $el['suffix'] : '';
+                                                $el_fontSize = isset($el['fontSize']) ? $el['fontSize'] : '';
+                                                $el_fontWeight = isset($el['fontWeight']) ? $el['fontWeight'] : '';
+                                                $style = '';
+                                                if ($el_color) $style .= 'color:' . esc_attr($el_color) . ';';
+                                                if ($el_fontSize) $style .= 'font-size:' . intval($el_fontSize) . 'px;';
+                                                if ($el_fontWeight) $style .= 'font-weight:' . intval($el_fontWeight) . ';';
+                                                if (!$el_visible) $style .= 'display:none;';
+
+                                                if ($el_id === 'image') {
+                                                    echo '<div class="upt-builder-preview-img" data-builder-preview="' . esc_attr($el_id) . '" style="' . (!$el_visible ? 'display:none;' : '') . '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+                                                } elseif ($el_id === 'button') {
+                                                    $btn_text = !empty($el_prefix) ? $el_prefix : 'Ver Detalhes';
+                                                    $btn_color = !empty($el_color) ? $el_color : '#6366f1';
+                                                    echo '<div data-builder-preview="' . esc_attr($el_id) . '" style="' . (!$el_visible ? 'display:none;' : 'margin-top:8px;') . '"><span style="display:inline-block;padding:6px 16px;border-radius:6px;background:' . esc_attr($btn_color) . ';color:#fff;font-size:13px;font-weight:600;">' . esc_html($btn_text) . '</span></div>';
+                                                } elseif ($el_id === 'title') {
+                                                    $display_val = !$el_visible ? 'none' : 'block';
+                                                    echo '<span class="upt-builder-preview-el" data-builder-preview="' . esc_attr($el_id) . '" style="display:' . $display_val . ';' . $style . '">' . $el_prefix . 'Apartamento 3 Quartos' . $el_suffix . '</span>';
+                                                } elseif ($el_id === 'price') {
+                                                    $display_val = !$el_visible ? 'none' : 'block';
+                                                    echo '<span class="upt-builder-preview-el" data-builder-preview="' . esc_attr($el_id) . '" style="display:' . $display_val . ';' . $style . '">' . $el_prefix . '450.000' . $el_suffix . '</span>';
+                                                } else {
+                                                    $el_info = null;
+                                                    foreach ($upt_all_fields as $af) { if ($af['id'] === $el_id) { $el_info = $af; break; } }
+                                                    $sample = $el_info ? explode(' (', $el_info['label'])[0] : $el_id;
+                                                    $display_val = !$el_visible ? 'none' : 'block';
+                                                    $badge_style = '';
+                                                    if (isset($el_info['type']) && in_array($el_info['type'], ['badge', 'number', 'area'])) {
+                                                        $badge_style = 'display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:#f1f5f9;';
+                                                    }
+                                                    echo '<span class="upt-builder-preview-el" data-builder-preview="' . esc_attr($el_id) . '" style="display:' . $display_val . ';' . $style . $badge_style . '">' . $el_prefix . esc_html($sample) . $el_suffix . '</span>';
+                                                }
+                                            endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <p class="upt-cards-settings__preview-hint">O preview atualiza ao salvar.</p>
                                 </div>
                             </div>
                         </div>
@@ -2963,25 +3111,219 @@ var dashboardChart = new Chart($dashboardCanvas, {
         var $errorMsg = jQuery('#upt-card-settings-error');
         var savedTimer = null;
 
+        var $dashPreview = jQuery('#upt-card-preview');
+
         jQuery('.upt-cards-settings__checkbox').on('change', function() {
             var target = jQuery(this).data('preview-target');
             if (target) {
-                var $field = jQuery('[data-preview="' + target + '"]');
+                var $field = $dashPreview.find('[data-preview="' + target + '"]');
                 if ($field.length) {
                     $field.css('display', this.checked ? ($field.hasClass('upt-preview-field--badge') ? 'inline-flex' : 'block') : 'none');
                 }
             }
         });
 
+        // --- Card Builder ---
+        var $builderList = jQuery('#upt-card-builder-list');
+        var $editor = jQuery('#upt-builder-editor');
+        var $sitePreviewBody = jQuery('#upt-site-preview-body');
+        var $sitePreview = jQuery('#upt-site-preview');
+        var editingIndex = -1;
+
+        $builderList.sortable({
+            handle: '.upt-builder-item__handle',
+            placeholder: 'upt-builder-item ui-sortable-placeholder',
+            tolerance: 'pointer',
+            cursor: 'grabbing',
+            opacity: 0.85,
+            over: function() { $builderList.addClass('ui-sortable-over'); },
+            out: function() { $builderList.removeClass('ui-sortable-over'); },
+            update: function() {
+                $builderList.find('.upt-builder-item').each(function(i) {
+                    jQuery(this).attr('data-index', i);
+                });
+                refreshSitePreview();
+            }
+        });
+
+        $builderList.on('click', '.upt-builder-toggle', function(e) {
+            e.stopPropagation();
+            var $item = jQuery(this).closest('.upt-builder-item');
+            var isHidden = $item.hasClass('upt-builder-item--hidden');
+            $item.toggleClass('upt-builder-item--hidden', !isHidden);
+            $item.find('.upt-builder-visibility-input').val(isHidden ? '1' : '0');
+            jQuery(this).attr('title', isHidden ? 'Ocultar' : 'Mostrar')
+                       .attr('aria-label', isHidden ? 'Ocultar elemento' : 'Mostrar elemento')
+                       .text(isHidden ? '👁️' : '👁️‍🗨️');
+            refreshSitePreview();
+        });
+
+        $builderList.on('click', '.upt-builder-edit', function(e) {
+            e.stopPropagation();
+            var $item = jQuery(this).closest('.upt-builder-item');
+            var idx = $item.index();
+
+            $builderList.find('.upt-builder-item--editing').removeClass('upt-builder-item--editing');
+            $item.addClass('upt-builder-item--editing');
+
+            editingIndex = idx;
+            var color = $item.find('.upt-builder-color-input').val() || '#111827';
+            var prefix = $item.find('.upt-builder-prefix-input').val();
+            var suffix = $item.find('.upt-builder-suffix-input').val();
+            var fontSize = $item.find('.upt-builder-fontsize-input').val();
+            var fontWeight = $item.find('.upt-builder-fontweight-input').val();
+            var label = $item.find('.upt-builder-item__label').text();
+
+            jQuery('#upt-editor-color').val(color);
+            jQuery('#upt-editor-prefix').val(prefix);
+            jQuery('#upt-editor-suffix').val(suffix);
+            jQuery('#upt-editor-fontsize').val(fontSize);
+            jQuery('#upt-editor-fontweight').val(fontWeight);
+            $editor.find('.upt-builder-editor__title').text('Editar: ' + label);
+            $editor.slideDown(200);
+        });
+
+        $editor.on('click', '.upt-builder-editor__close', function() {
+            closeEditor();
+        });
+
+        jQuery('#upt-editor-apply').on('click', function() {
+            if (editingIndex < 0) return;
+            var $item = $builderList.find('.upt-builder-item').eq(editingIndex);
+            if (!$item.length) return;
+
+            var color = jQuery('#upt-editor-color').val();
+            var prefix = jQuery('#upt-editor-prefix').val();
+            var suffix = jQuery('#upt-editor-suffix').val();
+            var fontSize = jQuery('#upt-editor-fontsize').val();
+            var fontWeight = jQuery('#upt-editor-fontweight').val();
+
+            $item.find('.upt-builder-color-input').val(color);
+            $item.find('.upt-builder-prefix-input').val(prefix);
+            $item.find('.upt-builder-suffix-input').val(suffix);
+            $item.find('.upt-builder-fontsize-input').val(fontSize);
+            $item.find('.upt-builder-fontweight-input').val(fontWeight);
+
+            $item.removeClass('upt-builder-item--editing');
+            refreshSitePreview();
+            closeEditor();
+        });
+
+        function closeEditor() {
+            editingIndex = -1;
+            $builderList.find('.upt-builder-item--editing').removeClass('upt-builder-item--editing');
+            $editor.slideUp(150);
+        }
+
+        jQuery('#upt-builder-add-btn').on('click', function() {
+            var $select = jQuery('#upt-builder-add-select');
+            var fieldId = $select.val();
+            if (!fieldId) return;
+
+            var $opt = $select.find('option:selected');
+            var icon = $opt.data('icon') || '📎';
+            var label = $opt.text().replace(/^[^\s]+\s/, '');
+            var type = $opt.data('type') || 'text';
+
+            var html = '<div class="upt-builder-item upt-builder-item--custom" data-index="' + $builderList.children().length + '" role="listitem">';
+            html += '<span class="upt-builder-item__handle" aria-label="Arrastar para reordenar">☰</span>';
+            html += '<span class="upt-builder-item__icon" aria-hidden="true">' + icon + '</span>';
+            html += '<span class="upt-builder-item__label">' + label + '</span>';
+            html += '<input type="hidden" name="upt_builder_id[]" value="' + fieldId + '">';
+            html += '<input type="hidden" name="upt_builder_visible[]" value="1" class="upt-builder-visibility-input">';
+            html += '<input type="hidden" name="upt_builder_color[]" value="" class="upt-builder-color-input">';
+            html += '<input type="hidden" name="upt_builder_prefix[]" value="" class="upt-builder-prefix-input">';
+            html += '<input type="hidden" name="upt_builder_suffix[]" value="" class="upt-builder-suffix-input">';
+            html += '<input type="hidden" name="upt_builder_fontSize[]" value="" class="upt-builder-fontsize-input">';
+            html += '<input type="hidden" name="upt_builder_fontWeight[]" value="" class="upt-builder-fontweight-input">';
+            html += '<div class="upt-builder-item__actions">';
+            html += '<button type="button" class="upt-builder-toggle" title="Ocultar" aria-label="Ocultar elemento">👁️</button>';
+            html += '<button type="button" class="upt-builder-edit" title="Editar" aria-label="Editar elemento">✏️</button>';
+            html += '<button type="button" class="upt-builder-item__remove" title="Remover" aria-label="Remover elemento">✕</button>';
+            html += '</div></div>';
+
+            $builderList.append(html);
+            $opt.remove();
+            $select.val('');
+            refreshSitePreview();
+        });
+
+        $builderList.on('click', '.upt-builder-item__remove', function(e) {
+            e.stopPropagation();
+            var $item = jQuery(this).closest('.upt-builder-item');
+            var fieldId = $item.find('input[name="upt_builder_id[]"]').val();
+            var icon = $item.find('.upt-builder-item__icon').text();
+            var label = $item.find('.upt-builder-item__label').text();
+
+            $item.fadeOut(150, function() {
+                jQuery(this).remove();
+                $builderList.find('.upt-builder-item').each(function(i) {
+                    jQuery(this).attr('data-index', i);
+                });
+                refreshSitePreview();
+            });
+
+            var $select = jQuery('#upt-builder-add-select');
+            $select.append('<option value="' + fieldId + '" data-icon="' + icon + '">' + icon + ' ' + label + '</option>');
+        });
+
+        function getBuilderData() {
+            var items = [];
+            $builderList.find('.upt-builder-item').each(function() {
+                var $el = jQuery(this);
+                items.push({
+                    id: $el.find('input[name="upt_builder_id[]"]').val(),
+                    visible: $el.find('.upt-builder-visibility-input').val() === '1',
+                    color: $el.find('.upt-builder-color-input').val(),
+                    prefix: $el.find('.upt-builder-prefix-input').val(),
+                    suffix: $el.find('.upt-builder-suffix-input').val(),
+                    fontSize: $el.find('.upt-builder-fontsize-input').val(),
+                    fontWeight: $el.find('.upt-builder-fontweight-input').val()
+                });
+            });
+            return items;
+        }
+
+        function refreshSitePreview() {
+            var data = getBuilderData();
+            var html = '';
+            for (var i = 0; i < data.length; i++) {
+                var el = data[i];
+                var style = '';
+                if (el.color) style += 'color:' + el.color + ';';
+                if (el.fontSize) style += 'font-size:' + parseInt(el.fontSize) + 'px;';
+                if (el.fontWeight) style += 'font-weight:' + parseInt(el.fontWeight) + ';';
+                var display = el.visible ? '' : 'display:none;';
+
+                if (el.id === 'image') {
+                    html += '<div class="upt-builder-preview-img" data-builder-preview="' + el.id + '" style="' + display + '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+                } else if (el.id === 'button') {
+                    var btnText = el.prefix || 'Ver Detalhes';
+                    var btnColor = el.color || '#6366f1';
+                    html += '<div data-builder-preview="' + el.id + '" style="' + display + 'margin-top:8px;"><span style="display:inline-block;padding:6px 16px;border-radius:6px;background:' + btnColor + ';color:#fff;font-size:13px;font-weight:600;">' + btnText + '</span></div>';
+                } else if (el.id === 'title') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + style + '">' + (el.prefix || '') + 'Apartamento 3 Quartos' + (el.suffix || '') + '</span>';
+                } else if (el.id === 'price') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + style + '">' + (el.prefix || '') + '450.000' + (el.suffix || '') + '</span>';
+                } else if (el.id === 'status') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + 'display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:#eff6ff;color:#2563eb;' + style + '">' + (el.prefix || '') + 'Publicado' + (el.suffix || '') + '</span>';
+                } else if (el.id === 'category') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + 'display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:#fef3c7;color:#92400e;' + style + '">' + (el.prefix || '') + 'Apartamento' + (el.suffix || '') + '</span>';
+                } else {
+                    var sample = el.id.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + style + '">' + (el.prefix || '') + sample + (el.suffix || '') + '</span>';
+                }
+            }
+            $sitePreviewBody.html(html);
+        }
+
         $saveBtn.on('click', function() {
             var dashFields = [];
             jQuery('[name="upt_card_dashboard_fields[]"]:checked').each(function() {
                 dashFields.push(jQuery(this).val());
             });
-            var siteFields = [];
-            jQuery('[name="upt_card_site_fields[]"]:checked').each(function() {
-                siteFields.push(jQuery(this).val());
-            });
+
+            var builderData = getBuilderData();
 
             $savedMsg.removeClass('is-visible');
             $errorMsg.removeClass('is-visible').text('');
@@ -2991,7 +3333,7 @@ var dashboardChart = new Chart($dashboardCanvas, {
                 action: 'upt_save_card_settings',
                 nonce: nonce,
                 dashboard_fields: dashFields,
-                site_fields: siteFields
+                builder_data: JSON.stringify(builderData)
             }, function(resp) {
                 $saveBtn.prop('disabled', false).html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Configurações');
                 if (resp.success) {

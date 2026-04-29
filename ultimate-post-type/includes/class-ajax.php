@@ -1695,6 +1695,12 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
 
 
         ob_start();
+        $upt_dash_card_fields = get_option('upt_card_dashboard_fields', ['title','price','status']);
+        $upt_show_dash_title    = in_array('title', $upt_dash_card_fields);
+        $upt_show_dash_price    = in_array('price', $upt_dash_card_fields);
+        $upt_show_dash_status   = in_array('status', $upt_dash_card_fields);
+        $upt_show_dash_category = in_array('category', $upt_dash_card_fields);
+
         if ($items_query->have_posts()) :
             while ($items_query->have_posts()) : $items_query->the_post();
                 if ( $template_id > 0 && class_exists('\Elementor\Plugin') ) {
@@ -1839,15 +1845,22 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                             <?php endif; ?>
 
                             <div class="upt-item-card__body">
+                                <?php if ($upt_show_dash_category || $upt_show_dash_status) : ?>
                                 <div class="upt-item-card__status">
-                                    <?php if ( $category_label ) : ?>
+                                    <?php if ($upt_show_dash_category && $category_label) : ?>
                                         <span class="upt-badge upt-badge--muted upt-badge--category-<?php echo esc_attr( $category_class ); ?>"><?php echo esc_html( $category_label ); ?></span>
                                     <?php endif; ?>
+                                    <?php if ($upt_show_dash_status) : ?>
                                     <span class="upt-badge upt-badge--status upt-badge--status-<?php echo esc_attr( $post_status ); ?>"><?php echo esc_html( $status_label ); ?></span>
+                                    <?php endif; ?>
                                 </div>
+                                <?php endif; ?>
 
+                                <?php if ($upt_show_dash_title) : ?>
                                 <h4 class="card-title" title="<?php echo esc_attr( get_the_title() ); ?>"><?php the_title(); ?></h4>
+                                <?php endif; ?>
 
+                                <?php if ($upt_show_dash_price) : ?>
                                 <?php
                                 $preco_venda_id = $schema_slug . '_preco-de-venda';
                                 $preco_venda = get_post_meta($post_id, $preco_venda_id, true);
@@ -1862,7 +1875,10 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                                         echo '<div class="upt-card-price" style="margin-top:4px;">R$ ' . number_format($preco_loc, 0, ',', '.') . '<span style="font-size:11px;color:#6b7280;margin-left:4px;">/mês</span></div>';
                                     }
                                 }
+                                ?>
+                                <?php endif; ?>
 
+                                <?php
                                 $upt_card_meta = [];
                                 $upt_card_meta_fields = [
                                     'cidade'        => ['id' => $schema_slug . '_cidade', 'icon' => '📍'],
@@ -1924,10 +1940,14 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                             </div>
                             <?php endif; ?>
                             <div class="card-content">
+                                <?php if ($upt_show_dash_title) : ?>
                                 <h4 class="card-title" title="<?php echo esc_attr( get_the_title() ); ?>"><?php the_title(); ?></h4>
+                                <?php endif; ?>
+                                <?php if ($upt_show_dash_status) : ?>
                                 <div class="card-meta">
                                     <span><?php echo get_post_status_object(get_post_status())->label; ?></span>
                                 </div>
+                                <?php endif; ?>
                             </div>
                             <div class="card-actions">
                                 <a href="#" class="open-edit-modal" data-item-id="<?php echo get_the_ID(); ?>" title="Editar"></a>
@@ -3339,10 +3359,29 @@ public static function delete_category() {
         }
 
         $dashboard_fields = isset( $_POST['dashboard_fields'] ) && is_array( $_POST['dashboard_fields'] ) ? array_map( 'sanitize_key', $_POST['dashboard_fields'] ) : [];
-        $site_fields = isset( $_POST['site_fields'] ) && is_array( $_POST['site_fields'] ) ? array_map( 'sanitize_text_field', $_POST['site_fields'] ) : [];
-
         update_option( 'upt_card_dashboard_fields', $dashboard_fields );
-        update_option( 'upt_card_site_fields', $site_fields );
+
+        $builder_raw = isset( $_POST['builder_data'] ) ? stripslashes( $_POST['builder_data'] ) : '';
+        $builder_data = json_decode( $builder_raw, true );
+        if ( is_array( $builder_data ) ) {
+            $sanitized = [];
+            $allowed_keys = [ 'id', 'visible', 'color', 'prefix', 'suffix', 'fontSize', 'fontWeight' ];
+            foreach ( $builder_data as $item ) {
+                $clean = [];
+                foreach ( $allowed_keys as $key ) {
+                    if ( ! isset( $item[ $key ] ) ) continue;
+                    if ( $key === 'id' ) $clean[ $key ] = sanitize_key( $item[ $key ] );
+                    elseif ( $key === 'visible' ) $clean[ $key ] = (bool) $item[ $key ];
+                    elseif ( $key === 'color' ) $clean[ $key ] = sanitize_hex_color( $item[ $key ] );
+                    elseif ( $key === 'fontSize' || $key === 'fontWeight' ) $clean[ $key ] = intval( $item[ $key ] ) > 0 ? strval( intval( $item[ $key ] ) ) : '';
+                    else $clean[ $key ] = sanitize_text_field( $item[ $key ] );
+                }
+                if ( ! empty( $clean['id'] ) ) {
+                    $sanitized[] = $clean;
+                }
+            }
+            update_option( 'upt_card_builder', $sanitized );
+        }
 
         wp_send_json_success( [ 'message' => 'Configurações salvas.' ] );
     }

@@ -1336,8 +1336,19 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
                 // Neste widget, precisamos manter a mesma estrutura usada no AJAX (get_builder_content)
                 // para garantir que o CSS do template seja aplicado já no carregamento inicial.
                 echo '<div class="elementor-grid-item">';
-                if (!empty($template_id)) {
-                    // Mesmo método usado no AJAX (UPT_Ajax::get_items_list_html).
+                $upt_builder_raw = get_option('upt_card_builder', []);
+                if (empty($upt_builder_raw) || !is_array($upt_builder_raw)) {
+                    $upt_builder_raw = [
+                        ['id' => 'image',  'visible' => true, 'color' => '', 'prefix' => '', 'suffix' => '', 'fontSize' => '', 'fontWeight' => ''],
+                        ['id' => 'title',  'visible' => true, 'color' => '#111827', 'prefix' => '', 'suffix' => '', 'fontSize' => '16', 'fontWeight' => '700'],
+                        ['id' => 'price',  'visible' => true, 'color' => '#16a34a', 'prefix' => '', 'suffix' => '', 'fontSize' => '18', 'fontWeight' => '700'],
+                        ['id' => 'button', 'visible' => true, 'color' => '#6366f1', 'prefix' => 'Ver Detalhes', 'suffix' => '', 'fontSize' => '13', 'fontWeight' => '600'],
+                    ];
+                }
+                $upt_use_builder = true;
+                $upt_builder_elements = $upt_builder_raw;
+
+                if (!empty($template_id) && !$upt_use_builder) {
                     echo \Elementor\Plugin::instance()->frontend->get_builder_content($template_id, true);
                 }
                 else {
@@ -1350,11 +1361,145 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
                         echo '<a href="' . get_permalink() . '" class="upt-card-link-wrapper">';
                     }
 ?>
-                        <div class="upt-card">
-                            <div class="upt-card-content">
+                        <div class="upt-card" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e5e7eb;transition:transform 0.2s,box-shadow 0.2s;">
+                            <div class="upt-card-content" style="padding:0;display:flex;flex-direction:column;">
                                 <?php
-                    if (!empty($settings['card_structure'])) {
-                        foreach ($settings['card_structure'] as $item) {
+
+                    if ($upt_use_builder) {
+                            foreach ($upt_builder_elements as $upt_be) {
+                                if (empty($upt_be['id'])) continue;
+                                if (isset($upt_be['visible']) && !$upt_be['visible']) continue;
+                                $upt_be_id = $upt_be['id'];
+                                $upt_be_style = '';
+                                if (!empty($upt_be['color'])) $upt_be_style .= 'color:' . esc_attr($upt_be['color']) . ';';
+                                if (!empty($upt_be['fontSize'])) $upt_be_style .= 'font-size:' . intval($upt_be['fontSize']) . 'px;';
+                                if (!empty($upt_be['fontWeight'])) $upt_be_style .= 'font-weight:' . intval($upt_be['fontWeight']) . ';';
+
+                                $upt_el_padding = ($upt_be_id === 'image') ? '' : 'padding:0 14px;';
+                                echo '<div class="upt-element-wrapper" style="' . $upt_el_padding . '">';
+
+                                if ($upt_be_id === 'image') {
+                                    if (has_post_thumbnail()) {
+                                        $image_html = get_the_post_thumbnail($post_id, 'medium_large');
+                                        echo $is_card_linked
+                                            ? '<a href="' . get_permalink() . '" class="upt-card-thumbnail" style="display:block;width:100%;overflow:hidden;"><img src="' . esc_url(get_the_post_thumbnail_url($post_id, 'medium_large')) . '" style="width:100%;height:200px;object-fit:cover;display:block;" alt="' . esc_attr(get_the_title()) . '"></a>'
+                                            : '<div class="upt-card-thumbnail" style="display:block;width:100%;overflow:hidden;"><img src="' . esc_url(get_the_post_thumbnail_url($post_id, 'medium_large')) . '" style="width:100%;height:200px;object-fit:cover;display:block;" alt="' . esc_attr(get_the_title()) . '"></div>';
+                                    } else {
+                                        $fallback_image_id = 0;
+                                        if (!empty($schema_slug) && isset($all_schemas_definitions[$schema_slug]['fields'])) {
+                                            $fields = $all_schemas_definitions[$schema_slug]['fields'];
+                                            $has_core_featured = false;
+                                            $first_image_field_id = '';
+                                            foreach ($fields as $field_def) {
+                                                if (empty($field_def['type']) || empty($field_def['id'])) continue;
+                                                if ($field_def['type'] === 'core_featured_image') { $has_core_featured = true; break; }
+                                                if ($first_image_field_id === '' && $field_def['type'] === 'image') $first_image_field_id = $field_def['id'];
+                                            }
+                                            if (!$has_core_featured && $first_image_field_id !== '') {
+                                                $meta_val = get_post_meta($post_id, $first_image_field_id, true);
+                                                $fallback_image_id = is_array($meta_val) ? 0 : absint($meta_val);
+                                            }
+                                        }
+                                        if ($fallback_image_id > 0) {
+                                            $fallback_url = wp_get_attachment_image_url($fallback_image_id, 'medium_large');
+                                            if ($fallback_url) {
+                                                echo $is_card_linked
+                                                    ? '<a href="' . get_permalink() . '" class="upt-card-thumbnail" style="display:block;width:100%;overflow:hidden;"><img src="' . esc_url($fallback_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;" alt="' . esc_attr(get_the_title()) . '"></a>'
+                                                    : '<div class="upt-card-thumbnail" style="display:block;width:100%;overflow:hidden;"><img src="' . esc_url($fallback_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;" alt="' . esc_attr(get_the_title()) . '"></div>';
+                                            }
+                                        }
+                                    }
+                                } elseif ($upt_be_id === 'title') {
+                                    $upt_title = get_the_title();
+                                    if (!empty($upt_title)) {
+                                        $upt_title_style = 'margin:8px 0 4px;font-size:15px;font-weight:700;line-height:1.3;color:#111827;' . $upt_be_style;
+                                        echo '<h3 class="upt-card-title" style="' . $upt_title_style . '">';
+                                        echo $is_card_linked ? '<a href="' . get_permalink() . '" style="text-decoration:none;color:inherit;">' . esc_html($upt_title) . '</a>' : esc_html($upt_title);
+                                        echo '</h3>';
+                                    }
+                                } elseif ($upt_be_id === 'price') {
+                                    $upt_price_display = '';
+                                    $upt_price_suffix = '';
+                                    if (!empty($schema_slug)) {
+                                        $pv_id = $schema_slug . '_preco-de-venda';
+                                        $pv = get_post_meta($post_id, $pv_id, true);
+                                        if ($pv !== '' && floatval($pv) > 0) {
+                                            $upt_price_display = 'R$ ' . number_format(floatval($pv), 0, ',', '.');
+                                        } else {
+                                            $pl_id = $schema_slug . '_preco-de-aluguel';
+                                            $pl = get_post_meta($post_id, $pl_id, true);
+                                            if ($pl !== '' && floatval($pl) > 0) {
+                                                $upt_price_display = 'R$ ' . number_format(floatval($pl), 0, ',', '.');
+                                                $upt_price_suffix = '/mês';
+                                            }
+                                        }
+                                    }
+                                    if (empty($upt_price_display) && !empty($schema_slug) && isset($all_schemas_definitions[$schema_slug]['fields'])) {
+                                        foreach ($all_schemas_definitions[$schema_slug]['fields'] as $upt_pfd) {
+                                            $upt_pfid_lower = function_exists('mb_strtolower') ? mb_strtolower($upt_pfd['id'], 'UTF-8') : strtolower($upt_pfd['id']);
+                                            $upt_pfl_lower = function_exists('mb_strtolower') ? mb_strtolower($upt_pfd['label'], 'UTF-8') : strtolower($upt_pfd['label']);
+                                            if (strpos($upt_pfid_lower, 'preco') !== false || strpos($upt_pfid_lower, 'preço') !== false || strpos($upt_pfl_lower, 'preço') !== false || strpos($upt_pfl_lower, 'valor') !== false) {
+                                                $upt_price_raw = get_post_meta($post_id, $upt_pfd['id'], true);
+                                                if ($upt_price_raw !== '' && floatval($upt_price_raw) > 0) {
+                                                    $upt_price_display = 'R$ ' . number_format(floatval($upt_price_raw), 0, ',', '.');
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (!empty($upt_price_display)) {
+                                        $upt_price_style = 'margin:4px 0;font-size:18px;font-weight:700;color:#16a34a;' . $upt_be_style;
+                                        echo '<div class="upt-meta-item" style="' . $upt_price_style . '">';
+                                        if (!empty($upt_be['prefix'])) echo '<span class="meta-prefix" style="font-size:14px;">' . esc_html($upt_be['prefix']) . '</span>';
+                                        echo esc_html($upt_price_display);
+                                        if (!empty($upt_be['suffix'])) echo '<span class="meta-suffix" style="font-size:12px;color:#6b7280;">' . esc_html($upt_be['suffix']) . '</span>';
+                                        if (!empty($upt_price_suffix)) echo '<span class="meta-suffix" style="font-size:11px;color:#6b7280;margin-left:4px;">' . esc_html($upt_price_suffix) . '</span>';
+                                        echo '</div>';
+                                    }
+                                } elseif ($upt_be_id === 'status') {
+                                    $upt_status_val = get_post_status($post_id);
+                                    if ($upt_status_val === 'publish') $upt_status_val = 'Publicado';
+                                    echo '<div class="upt-meta-item" style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#eff6ff;color:#2563eb;margin:4px 2px;' . $upt_be_style . '">';
+                                    if (!empty($upt_be['prefix'])) echo esc_html($upt_be['prefix']);
+                                    echo esc_html($upt_status_val);
+                                    if (!empty($upt_be['suffix'])) echo esc_html($upt_be['suffix']);
+                                    echo '</div>';
+                                } elseif ($upt_be_id === 'category') {
+                                    $upt_cat_terms = get_the_terms($post_id, 'catalog_category');
+                                    if (!empty($upt_cat_terms)) {
+                                        echo '<div class="upt-meta-item" style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#fef3c7;color:#92400e;margin:4px 2px;' . $upt_be_style . '">';
+                                        if (!empty($upt_be['prefix'])) echo esc_html($upt_be['prefix']);
+                                        echo esc_html(implode(', ', wp_list_pluck($upt_cat_terms, 'name')));
+                                        if (!empty($upt_be['suffix'])) echo esc_html($upt_be['suffix']);
+                                        echo '</div>';
+                                    }
+                                } elseif ($upt_be_id === 'button') {
+                                    $upt_btn_text = !empty($upt_be['prefix']) ? $upt_be['prefix'] : 'Ver Detalhes';
+                                    $upt_btn_color = !empty($upt_be['color']) ? $upt_be['color'] : '#6366f1';
+                                    echo '<div class="upt-button-wrapper" style="margin-top:8px;"><a href="' . get_permalink() . '" class="upt-card-button" style="background:' . esc_attr($upt_btn_color) . ' !important;color:#fff !important;border:none;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;text-align:center;font-size:13px;font-weight:600;transition:opacity 0.2s;" onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'">' . esc_html($upt_btn_text) . '</a></div>';
+                                } else {
+                                    $upt_meta_val = get_post_meta($post_id, $upt_be_id, true);
+                                    if (empty($upt_meta_val)) {
+                                        $upt_terms = get_the_terms($post_id, $upt_be_id);
+                                        if (!empty($upt_terms) && !is_wp_error($upt_terms)) {
+                                            $upt_meta_val = implode(', ', wp_list_pluck($upt_terms, 'name'));
+                                        }
+                                    }
+                                    if (!empty($upt_meta_val)) {
+                                        $upt_meta_style = 'margin:2px 0;font-size:13px;color:#374151;' . $upt_be_style;
+                                        echo '<div class="upt-meta-item" style="' . $upt_meta_style . '">';
+                                        if (!empty($upt_be['prefix'])) echo '<span class="meta-prefix" style="font-weight:600;margin-right:4px;">' . esc_html($upt_be['prefix']) . '</span>';
+                                        echo esc_html($upt_meta_val);
+                                        if (!empty($upt_be['suffix'])) echo '<span class="meta-suffix">' . esc_html($upt_be['suffix']) . '</span>';
+                                        echo '</div>';
+                                    }
+                                }
+
+                                echo '</div>';
+                            }
+                            echo '<div style="padding-bottom:14px;"></div>';
+                        } else {
+                            foreach ($settings['card_structure'] as $item) {
                             $style = '';
                             $element_type = $item['element'];
                             if ($element_type === 'individual_meta' || $element_type === 'category') {
