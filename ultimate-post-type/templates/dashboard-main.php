@@ -1979,64 +1979,150 @@ endif; ?>
 
                     <?php if (current_user_can('manage_options')): ?>
                     <div id="tab-imob-import" class="upt-tab-pane">
-                        <div style="max-width:600px;">
-                            <h3 style="margin:0 0 4px;">Importar XML de Imobiliária</h3>
-                            <p style="color:#6b7280;margin:0 0 20px;font-size:13px;">Importe imóveis de um XML no formato OKE / Zap / Viva Real. As imagens são baixadas automaticamente.</p>
+                        <div class="upt-import-wizard">
+
+                            <div class="upt-import-header">
+                                <h3>Importar XML de Imobiliária</h3>
+                                <p>Importe imóveis a partir de um arquivo XML. Formatos aceitos: OKE, Zap, Viva Real. As imagens são baixadas automaticamente.</p>
+                            </div>
+
+                            <div class="upt-import-stepper" role="navigation" aria-label="Etapas da importação">
+                                <div class="upt-step upt-step--active" data-step="1">
+                                    <span class="upt-step__number">1</span>
+                                    <span class="upt-step__label">Arquivo XML</span>
+                                    <span class="upt-step__tip" role="tooltip" aria-label="Selecione ou arraste o arquivo XML do portal imobiliário">?</span>
+                                </div>
+                                <div class="upt-step__connector"></div>
+                                <div class="upt-step" data-step="2">
+                                    <span class="upt-step__number">2</span>
+                                    <span class="upt-step__label">Configuração</span>
+                                    <span class="upt-step__tip" role="tooltip" aria-label="Escolha o esquema onde os imóveis serão salvos">?</span>
+                                </div>
+                                <div class="upt-step__connector"></div>
+                                <div class="upt-step" data-step="3">
+                                    <span class="upt-step__number">3</span>
+                                    <span class="upt-step__label">Importação</span>
+                                    <span class="upt-step__tip" role="tooltip" aria-label="Acompanhe o progresso da importação em tempo real">?</span>
+                                </div>
+                            </div>
 
                             <div id="upt-imob-upload-section">
-                                <div style="margin-bottom:16px;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Esquema:</label>
-                                    <select id="upt-imob-schema-mode" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
-                                        <option value="new">Criar novo esquema</option>
-                                        <option value="existing">Usar esquema existente</option>
-                                    </select>
+
+                                <div id="upt-imob-dropzone" class="upt-import-dropzone" role="button" tabindex="0" aria-label="Arraste um arquivo XML aqui ou clique para selecionar">
+                                    <div class="upt-import-dropzone__icon" aria-hidden="true">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    </div>
+                                    <p class="upt-import-dropzone__text">Arraste o arquivo XML aqui</p>
+                                    <p class="upt-import-dropzone__subtext">ou clique para selecionar do computador</p>
+                                    <p class="upt-import-dropzone__hint">Formatos aceitos: .xml (máx. 50 MB)</p>
+                                    <input type="file" id="upt-imob-xml-file" accept=".xml,text/xml,application/xml" class="upt-import-dropzone__input" aria-label="Selecionar arquivo XML" tabindex="-1">
                                 </div>
-                                <div id="upt-imob-new-schema-field" style="margin-bottom:16px;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Nome do esquema:</label>
-                                    <input type="text" id="upt-imob-schema-name" value="Imóveis" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+
+                                <div id="upt-imob-file-info" class="upt-import-file-info" style="display:none;" role="status" aria-live="polite">
+                                    <div class="upt-import-file-info__icon" aria-hidden="true">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    </div>
+                                    <div class="upt-import-file-info__details">
+                                        <span id="upt-imob-file-name" class="upt-import-file-info__name"></span>
+                                        <span id="upt-imob-file-size" class="upt-import-file-info__size"></span>
+                                    </div>
+                                    <button type="button" id="upt-imob-file-remove" class="upt-import-file-info__remove" aria-label="Remover arquivo selecionado" title="Remover arquivo">&times;</button>
                                 </div>
-                                <div id="upt-imob-existing-schema-field" style="margin-bottom:16px;display:none;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Esquema:</label>
-                                    <select id="upt-imob-schema-existing" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
-                                        <option value="">— Selecione —</option>
-                                        <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
-                                            <option value="<?php echo esc_attr($s->slug); ?>"><?php echo esc_html($s->name); ?></option>
-                                        <?php endforeach; endif; ?>
-                                    </select>
+
+                                <div id="upt-imob-validation-msg" class="upt-import-msg upt-import-msg--error" style="display:none;" role="alert" aria-live="assertive"></div>
+
+                                <div id="upt-imob-schema-section" class="upt-import-form-section" style="display:none;">
+                                    <div class="upt-import-form-group">
+                                        <label for="upt-imob-schema-mode" class="upt-import-label">
+                                            Destino dos imóveis
+                                            <span class="upt-import-label__tip" role="tooltip" aria-label="Escolha se deseja criar um novo esquema ou adicionar a um já existente">?</span>
+                                        </label>
+                                        <select id="upt-imob-schema-mode" class="upt-import-select">
+                                            <option value="new">Criar novo esquema</option>
+                                            <option value="existing">Usar esquema existente</option>
+                                        </select>
+                                    </div>
+                                    <div id="upt-imob-new-schema-field" class="upt-import-form-group">
+                                        <label for="upt-imob-schema-name" class="upt-import-label">Nome do esquema</label>
+                                        <input type="text" id="upt-imob-schema-name" value="Imóveis" class="upt-import-input" placeholder="Ex: Imóveis, Apartamentos...">
+                                    </div>
+                                    <div id="upt-imob-existing-schema-field" class="upt-import-form-group" style="display:none;">
+                                        <label for="upt-imob-schema-existing" class="upt-import-label">Esquema existente</label>
+                                        <select id="upt-imob-schema-existing" class="upt-import-select">
+                                            <option value="">— Selecione um esquema —</option>
+                                            <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
+                                                <option value="<?php echo esc_attr($s->slug); ?>"><?php echo esc_html($s->name); ?></option>
+                                            <?php endforeach; endif; ?>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div style="margin-bottom:16px;">
-                                    <label style="display:block;font-weight:600;margin-bottom:4px;">Arquivo XML:</label>
-                                    <input type="file" id="upt-imob-xml-file" accept=".xml,text/xml,application/xml" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
-                                </div>
-                                <button type="button" id="upt-imob-start-btn" class="button button-primary" style="width:100%;padding:10px;">Enviar e Iniciar Importação</button>
+
+                                <button type="button" id="upt-imob-start-btn" class="upt-import-btn upt-import-btn--primary" style="display:none;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                                    Iniciar Importação
+                                </button>
                             </div>
 
-                            <div id="upt-imob-progress-section" style="display:none;">
-                                <div style="background:#e2e8f0;border-radius:8px;overflow:hidden;height:28px;position:relative;margin:16px 0 10px;">
-                                    <div id="upt-imob-progress-bar" style="background:#6366f1;height:100%;width:0%;transition:width 0.4s ease;border-radius:8px;"></div>
-                                    <span id="upt-imob-progress-text" style="position:absolute;top:0;left:0;right:0;text-align:center;line-height:28px;color:#fff;font-size:13px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.2);">0%</span>
+                            <div id="upt-imob-progress-section" class="upt-import-progress" style="display:none;" role="status" aria-live="polite">
+                                <div class="upt-import-progress__header">
+                                    <span class="upt-import-progress__title">Importando imóveis...</span>
+                                    <span id="upt-imob-progress-text" class="upt-import-progress__pct">0%</span>
                                 </div>
-                                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:13px;color:#475569;">
-                                    <span>Total: <strong id="upt-imob-stat-total">—</strong></span>
-                                    <span>Importados: <strong id="upt-imob-stat-imported" style="color:#16a34a;">0</strong></span>
-                                    <span>Fotos: <strong id="upt-imob-stat-photos" style="color:#2563eb;">0</strong></span>
-                                    <span>Erros: <strong id="upt-imob-stat-errors" style="color:#dc2626;">0</strong></span>
+                                <div class="upt-import-progress__bar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso da importação">
+                                    <div id="upt-imob-progress-bar" class="upt-import-progress__bar-fill"></div>
                                 </div>
-                                <div id="upt-imob-status-msg" style="padding:10px 14px;border-radius:6px;background:#f1f5f9;margin-bottom:12px;font-size:13px;">Preparando...</div>
-                                <button type="button" id="upt-imob-cancel-btn" class="button" style="color:#dc2626;border-color:#dc2626;">Cancelar</button>
+                                <div class="upt-import-progress__stats">
+                                    <div class="upt-import-stat">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">📋</span>
+                                        <span class="upt-import-stat__label">Total</span>
+                                        <strong id="upt-imob-stat-total" class="upt-import-stat__value">—</strong>
+                                    </div>
+                                    <div class="upt-import-stat upt-import-stat--success">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">✅</span>
+                                        <span class="upt-import-stat__label">Importados</span>
+                                        <strong id="upt-imob-stat-imported" class="upt-import-stat__value">0</strong>
+                                    </div>
+                                    <div class="upt-import-stat upt-import-stat--info">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">📷</span>
+                                        <span class="upt-import-stat__label">Fotos</span>
+                                        <strong id="upt-imob-stat-photos" class="upt-import-stat__value">0</strong>
+                                    </div>
+                                    <div class="upt-import-stat upt-import-stat--danger">
+                                        <span class="upt-import-stat__icon" aria-hidden="true">⚠️</span>
+                                        <span class="upt-import-stat__label">Erros</span>
+                                        <strong id="upt-imob-stat-errors" class="upt-import-stat__value">0</strong>
+                                    </div>
+                                </div>
+                                <div id="upt-imob-status-msg" class="upt-import-msg upt-import-msg--info">
+                                    <span class="upt-import-msg__icon" aria-hidden="true">⏳</span>
+                                    <span class="upt-import-msg__text">Preparando importação...</span>
+                                </div>
+                                <button type="button" id="upt-imob-cancel-btn" class="upt-import-btn upt-import-btn--danger-outline">
+                                    Cancelar Importação
+                                </button>
                             </div>
 
-                            <div id="upt-imob-done-section" style="display:none;">
-                                <div style="padding:16px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;margin:12px 0;">
-                                    <p style="margin:0 0 6px;font-weight:600;color:#16a34a;">Importação concluída!</p>
-                                    <p id="upt-imob-done-stats" style="margin:0;color:#475569;font-size:13px;"></p>
-                                </div>
-                                <button type="button" id="upt-imob-new-btn" class="button">Importar Outro XML</button>
+                            <div id="upt-imob-done-section" class="upt-import-done" style="display:none;" role="status" aria-live="polite">
+                                <div class="upt-import-done__icon" aria-hidden="true">🎉</div>
+                                <h4 class="upt-import-done__title">Importação concluída!</h4>
+                                <p id="upt-imob-done-stats" class="upt-import-done__stats"></p>
+                                <button type="button" id="upt-imob-new-btn" class="upt-import-btn upt-import-btn--secondary">
+                                    Importar Outro XML
+                                </button>
                             </div>
 
-                            <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;">
-                                <h4 style="margin:0 0 4px;font-size:15px;">Importação Automática (CRON)</h4>
-                                <p style="color:#6b7280;font-size:12px;margin:0 0 16px;">Configure uma URL de webservice para importar automaticamente. Requer ping externo (VPS, cron-job.org) ou visitas regulares ao site.</p>
+                            <div class="upt-import-divider" role="separator">
+                                <span class="upt-import-divider__text">ou configure a importação automática</span>
+                            </div>
+
+                            <div class="upt-import-cron">
+                                <div class="upt-import-cron__header">
+                                    <h4 class="upt-import-cron__title">
+                                        Importação Automática
+                                        <span class="upt-import-label__tip" role="tooltip" aria-label="Configure uma URL para importar automaticamente em intervalos regulares. O arquivo XML é baixado e processado sem intervenção manual.">?</span>
+                                    </h4>
+                                    <p class="upt-import-cron__desc">Configure uma URL de webservice para importar automaticamente. Requer ping externo (VPS, cron-job.org) ou visitas regulares ao site.</p>
+                                </div>
 
                                 <?php
                                 $upt_cron_config = get_option('upt_imob_cron_config', []);
@@ -2050,41 +2136,59 @@ endif; ?>
                                 $upt_cron_stats = get_option('upt_imob_cron_stats', ['total' => 0, 'imported' => 0, 'errors' => 0]);
                                 ?>
 
-                                <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-                                    <div style="flex:1;min-width:250px;">
-                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">URL do Webservice:</label>
-                                        <input type="url" id="upt-cron-url" value="<?php echo $upt_cron_url; ?>" placeholder="https://okeimoveis.com.br/gestao/webservices/..." style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
+                                <div class="upt-import-cron__fields">
+                                    <div class="upt-import-form-group upt-import-form-group--flex">
+                                        <label for="upt-cron-url" class="upt-import-label">URL do Webservice</label>
+                                        <input type="url" id="upt-cron-url" value="<?php echo $upt_cron_url; ?>" class="upt-import-input" placeholder="https://exemplo.com/webservices/...">
                                     </div>
-                                    <div style="min-width:160px;">
-                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">Esquema:</label>
-                                        <select id="upt-cron-schema" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
-                                            <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
-                                                <option value="<?php echo esc_attr($s->slug); ?>" <?php selected($upt_cron_schema, $s->slug); ?>><?php echo esc_html($s->name); ?></option>
-                                            <?php endforeach; endif; ?>
-                                        </select>
-                                    </div>
-                                    <div style="min-width:160px;">
-                                        <label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">Frequência:</label>
-                                        <select id="upt-cron-freq" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:13px;">
-                                            <option value="hourly" <?php selected($upt_cron_freq, 'hourly'); ?>>A cada 1 hora</option>
-                                            <option value="twicedaily" <?php selected($upt_cron_freq, 'twicedaily'); ?>>A cada 12 horas</option>
-                                            <option value="sixhourly" <?php selected($upt_cron_freq, 'sixhourly'); ?>>A cada 6 horas</option>
-                                            <option value="daily" <?php selected($upt_cron_freq, 'daily'); ?>>Diariamente</option>
-                                        </select>
+                                    <div class="upt-import-form-group-row">
+                                        <div class="upt-import-form-group">
+                                            <label for="upt-cron-schema" class="upt-import-label">Esquema</label>
+                                            <select id="upt-cron-schema" class="upt-import-select">
+                                                <?php if (!empty($schemas) && !is_wp_error($schemas)): foreach ($schemas as $s): ?>
+                                                    <option value="<?php echo esc_attr($s->slug); ?>" <?php selected($upt_cron_schema, $s->slug); ?>><?php echo esc_html($s->name); ?></option>
+                                                <?php endforeach; endif; ?>
+                                            </select>
+                                        </div>
+                                        <div class="upt-import-form-group">
+                                            <label for="upt-cron-freq" class="upt-import-label">Frequência</label>
+                                            <select id="upt-cron-freq" class="upt-import-select">
+                                                <option value="hourly" <?php selected($upt_cron_freq, 'hourly'); ?>>A cada 1 hora</option>
+                                                <option value="twicedaily" <?php selected($upt_cron_freq, 'twicedaily'); ?>>A cada 12 horas</option>
+                                                <option value="sixhourly" <?php selected($upt_cron_freq, 'sixhourly'); ?>>A cada 6 horas</option>
+                                                <option value="daily" <?php selected($upt_cron_freq, 'daily'); ?>>Diariamente</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div style="display:flex;gap:8px;margin-bottom:16px;">
-                                    <button type="button" id="upt-cron-save" class="button button-primary" style="font-size:13px;">Salvar e <?php echo $upt_cron_active ? 'Desativar' : 'Ativar'; ?></button>
-                                    <button type="button" id="upt-cron-test" class="button" style="font-size:13px;">Testar Agora</button>
+                                <div class="upt-import-cron__actions">
+                                    <button type="button" id="upt-cron-save" class="upt-import-btn upt-import-btn--primary upt-import-btn--sm">
+                                        <?php echo $upt_cron_active ? 'Desativar' : 'Salvar e Ativar'; ?>
+                                    </button>
+                                    <button type="button" id="upt-cron-test" class="upt-import-btn upt-import-btn--secondary upt-import-btn--sm">
+                                        Testar Agora
+                                    </button>
                                 </div>
 
-                                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:12px;color:#475569;">
-                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;">
-                                        <span>Status: <strong id="upt-cron-status-label" style="color:<?php echo $upt_cron_active ? '#16a34a' : '#dc2626'; ?>;"><?php echo $upt_cron_active ? 'Ativo' : 'Inativo'; ?></strong></span>
-                                        <span>Última execução: <strong><?php echo $upt_cron_last; ?></strong></span>
-                                        <span>Próxima execução: <strong><?php echo $upt_cron_next_fmt; ?></strong></span>
-                                        <span>Total importados: <strong><?php echo (int)$upt_cron_stats['imported']; ?></strong></span>
+                                <div class="upt-import-cron__status">
+                                    <div class="upt-import-cron__status-grid">
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Status</span>
+                                            <strong id="upt-cron-status-label" class="upt-import-cron__status-value" style="color:<?php echo $upt_cron_active ? '#16a34a' : '#dc2626'; ?>;"><?php echo $upt_cron_active ? 'Ativo' : 'Inativo'; ?></strong>
+                                        </div>
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Última execução</span>
+                                            <strong class="upt-import-cron__status-value"><?php echo $upt_cron_last; ?></strong>
+                                        </div>
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Próxima execução</span>
+                                            <strong class="upt-import-cron__status-value"><?php echo $upt_cron_next_fmt; ?></strong>
+                                        </div>
+                                        <div class="upt-import-cron__status-item">
+                                            <span class="upt-import-cron__status-label">Total importados</span>
+                                            <strong class="upt-import-cron__status-value"><?php echo (int)$upt_cron_stats['imported']; ?></strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2095,60 +2199,258 @@ endif; ?>
 
                     <?php if (current_user_can('manage_options')): ?>
                     <div id="tab-card-settings" class="upt-tab-pane">
-                        <div style="max-width:700px;">
-                            <h3 style="margin:0 0 4px;">Aparência dos Cards</h3>
-                            <p style="color:#6b7280;margin:0 0 24px;font-size:13px;">Escolha quais campos aparecem nos cards.</p>
-
-                            <div style="margin-bottom:32px;">
-                                <h4 style="margin:0 0 12px;font-size:15px;">Cards do Dashboard</h4>
-                                <p style="color:#6b7280;font-size:12px;margin:0 0 8px;">Campos exibidos nos cards da aba Dashboard e Listagem.</p>
-                                <?php
-                                $upt_card_dashboard_fields = get_option('upt_card_dashboard_fields', ['title','price','status']);
-                                $upt_dashboard_field_options = [
-                                    'title'   => 'Título do imóvel',
-                                    'price'   => 'Preço (venda ou aluguel)',
-                                    'status'  => 'Badge de status (publicado/pendente)',
-                                    'category'=> 'Badge de categoria',
-                                ];
-                                foreach ($upt_dashboard_field_options as $opt_val => $opt_label):
-                                ?>
-                                <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:14px;">
-                                    <input type="checkbox" name="upt_card_dashboard_fields[]" value="<?php echo esc_attr($opt_val); ?>" <?php checked(in_array($opt_val, $upt_card_dashboard_fields)); ?>>
-                                    <?php echo esc_html($opt_label); ?>
-                                </label>
-                                <?php endforeach; ?>
+                        <div class="upt-cards-settings">
+                            <div class="upt-cards-settings__header">
+                                <div class="upt-cards-settings__header-icon" aria-hidden="true">🎨</div>
+                                <div>
+                                    <h3 class="upt-cards-settings__title">Aparência dos Cards</h3>
+                                    <p class="upt-cards-settings__desc">Personalize quais informações aparecem nos cards do painel e do site público.</p>
+                                </div>
                             </div>
 
-                            <div style="margin-bottom:32px;">
-                                <h4 style="margin:0 0 12px;font-size:15px;">Campos do Card do Site</h4>
-                                <p style="color:#6b7280;font-size:12px;margin:0 0 8px;">Estes campos serão adicionados automaticamente ao card padrão do Listing Widget (Elementor) caso ele esteja com a estrutura padrão (não customizada).</p>
-                                <?php
-                                $upt_card_site_fields = get_option('upt_card_site_fields', []);
-                                $all_schemas_defs = UPT_Schema_Store::get_schemas();
-                                $upt_site_field_choices = [];
-                                foreach ($all_schemas_defs as $sk => $sd) {
-                                    if (!empty($sd['fields']) && is_array($sd['fields'])) {
-                                        foreach ($sd['fields'] as $f) {
-                                            if (empty($f['id']) || empty($f['label'])) continue;
-                                            $upt_site_field_choices[$f['id']] = $f['label'] . ' (' . $sk . ')';
+                            <div class="upt-cards-settings__layout">
+                                <div class="upt-cards-settings__form">
+                                    <div class="upt-cards-settings__section">
+                                        <div class="upt-cards-settings__section-header">
+                                            <div class="upt-cards-settings__section-icon" aria-hidden="true">📋</div>
+                                            <div>
+                                                <h4 class="upt-cards-settings__section-title">Cards do Painel</h4>
+                                                <p class="upt-cards-settings__section-desc">Escolha o que aparece nos cards da listagem aqui dentro.</p>
+                                            </div>
+                                        </div>
+                                        <?php
+                                        $upt_card_dashboard_fields = get_option('upt_card_dashboard_fields', ['title','price','status']);
+                                        $upt_dashboard_field_options = [
+                                            'title'   => ['label' => 'Título do imóvel',     'icon' => '📝', 'desc' => 'Nome do imóvel no topo do card'],
+                                            'price'   => ['label' => 'Preço',                'icon' => '💰', 'desc' => 'Valor de venda ou aluguel'],
+                                            'status'  => ['label' => 'Status',               'icon' => '🏷️', 'desc' => 'Badge de publicado, pendente, etc.'],
+                                            'category'=> ['label' => 'Categoria',            'icon' => '📂', 'desc' => 'Badge com a categoria do imóvel'],
+                                        ];
+                                        foreach ($upt_dashboard_field_options as $opt_val => $opt_info):
+                                        ?>
+                                        <label class="upt-cards-settings__option">
+                                            <input type="checkbox" name="upt_card_dashboard_fields[]" value="<?php echo esc_attr($opt_val); ?>" <?php checked(in_array($opt_val, $upt_card_dashboard_fields)); ?> class="upt-cards-settings__checkbox" data-preview-target="dash-<?php echo esc_attr($opt_val); ?>">
+                                            <span class="upt-cards-settings__option-check"></span>
+                                            <span class="upt-cards-settings__option-icon" aria-hidden="true"><?php echo $opt_info['icon']; ?></span>
+                                            <span class="upt-cards-settings__option-content">
+                                                <span class="upt-cards-settings__option-label"><?php echo esc_html($opt_info['label']); ?></span>
+                                                <span class="upt-cards-settings__option-desc"><?php echo esc_html($opt_info['desc']); ?></span>
+                                            </span>
+                                        </label>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <div class="upt-cards-settings__section">
+                                        <div class="upt-cards-settings__section-header">
+                                            <div class="upt-cards-settings__section-icon" aria-hidden="true">🌐</div>
+                                            <div>
+                                                <h4 class="upt-cards-settings__section-title">Card Builder do Site</h4>
+                                                <p class="upt-cards-settings__section-desc">Monte o card do site público arrastando os elementos. Clique no lápis para editar cores e textos.</p>
+                                            </div>
+                                        </div>
+                                        <?php
+                                        $upt_card_builder_data = get_option('upt_card_builder', []);
+                                        $all_schemas_defs = UPT_Schema_Store::get_schemas();
+                                        $upt_all_fields = [
+                                            ['id' => 'image',   'label' => 'Imagem',       'icon' => '🖼️', 'type' => 'image'],
+                                            ['id' => 'title',   'label' => 'Título',       'icon' => '📝', 'type' => 'text'],
+                                            ['id' => 'price',   'label' => 'Preço',        'icon' => '💰', 'type' => 'price'],
+                                            ['id' => 'status',  'label' => 'Status',       'icon' => '🏷️', 'type' => 'badge'],
+                                            ['id' => 'category','label' => 'Categoria',    'icon' => '📂', 'type' => 'badge'],
+                                            ['id' => 'button',  'label' => 'Botão',        'icon' => '🔘', 'type' => 'button'],
+                                        ];
+                                        foreach ($all_schemas_defs as $sk => $sd) {
+                                            if (!empty($sd['fields']) && is_array($sd['fields'])) {
+                                                foreach ($sd['fields'] as $f) {
+                                                    if (empty($f['id']) || empty($f['label'])) continue;
+                                                    $f_id_lower = function_exists('mb_strtolower') ? mb_strtolower($f['id'], 'UTF-8') : strtolower($f['id']);
+                                                    $f_label_lower = function_exists('mb_strtolower') ? mb_strtolower($f['label'], 'UTF-8') : strtolower($f['label']);
+                                                    $icon = '📎';
+                                                    $ftype = 'text';
+                                                    if (strpos($f_id_lower, 'preco') !== false || strpos($f_id_lower, 'preço') !== false || strpos($f_label_lower, 'preço') !== false || strpos($f_label_lower, 'valor') !== false) { $icon = '💵'; $ftype = 'price'; }
+                                                    elseif (strpos($f_id_lower, 'area') !== false || strpos($f_id_lower, 'área') !== false || strpos($f_id_lower, 'metragem') !== false) { $icon = '📐'; $ftype = 'area'; }
+                                                    elseif (strpos($f_id_lower, 'quarto') !== false || strpos($f_id_lower, 'dormitor') !== false) { $icon = '🛏️'; $ftype = 'number'; }
+                                                    elseif (strpos($f_id_lower, 'banheiro') !== false || strpos($f_id_lower, 'suite') !== false || strpos($f_id_lower, 'suíte') !== false) { $icon = '🚿'; $ftype = 'number'; }
+                                                    elseif (strpos($f_id_lower, 'vaga') !== false || strpos($f_id_lower, 'garagem') !== false) { $icon = '🚗'; $ftype = 'number'; }
+                                                    elseif (strpos($f_id_lower, 'bairro') !== false || strpos($f_id_lower, 'cidade') !== false || strpos($f_id_lower, 'local') !== false || strpos($f_id_lower, 'endereco') !== false || strpos($f_id_lower, 'endereço') !== false) { $icon = '📍'; $ftype = 'location'; }
+                                                    elseif (strpos($f_id_lower, 'status') !== false || strpos($f_id_lower, 'tipo') !== false) { $icon = '🏷️'; $ftype = 'badge'; }
+                                                    $upt_all_fields[] = ['id' => $f['id'], 'label' => $f['label'] . ' (' . $sk . ')', 'icon' => $icon, 'type' => $ftype];
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                                $upt_site_field_choices['core_title'] = 'Título';
-                                $upt_site_field_choices['core_featured_image'] = 'Imagem Destacada';
-                                $upt_site_field_choices['core_category'] = 'Categoria';
-                                asort($upt_site_field_choices);
-                                foreach ($upt_site_field_choices as $f_id => $f_label):
-                                ?>
-                                <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:14px;">
-                                    <input type="checkbox" name="upt_card_site_fields[]" value="<?php echo esc_attr($f_id); ?>" <?php checked(in_array($f_id, $upt_card_site_fields)); ?>>
-                                    <?php echo esc_html($f_label); ?>
-                                </label>
-                                <?php endforeach; ?>
-                            </div>
+                                        if (empty($upt_card_builder_data)) {
+                                            $upt_card_builder_data = [
+                                                ['id' => 'image',  'visible' => true, 'color' => '', 'prefix' => '', 'suffix' => '', 'fontSize' => '', 'fontWeight' => ''],
+                                                ['id' => 'title',  'visible' => true, 'color' => '#111827', 'prefix' => '', 'suffix' => '', 'fontSize' => '16', 'fontWeight' => '700'],
+                                                ['id' => 'price',  'visible' => true, 'color' => '#16a34a', 'prefix' => 'R$ ', 'suffix' => '', 'fontSize' => '18', 'fontWeight' => '700'],
+                                                ['id' => 'button', 'visible' => true, 'color' => '#6366f1', 'prefix' => 'Ver Detalhes', 'suffix' => '', 'fontSize' => '13', 'fontWeight' => '600'],
+                                            ];
+                                        }
+                                        ?>
+                                        <div id="upt-card-builder-list" class="upt-builder-list" role="list" aria-label="Elementos do card">
+                                            <?php foreach ($upt_card_builder_data as $i => $el):
+                                                $el_id = isset($el['id']) ? $el['id'] : '';
+                                                $el_info = null;
+                                                foreach ($upt_all_fields as $af) { if ($af['id'] === $el_id) { $el_info = $af; break; } }
+                                                if (!$el_info) continue;
+                                                $el_visible = isset($el['visible']) ? (bool)$el['visible'] : true;
+                                                $el_color = isset($el['color']) ? $el['color'] : '';
+                                                $el_prefix = isset($el['prefix']) ? $el['prefix'] : '';
+                                                $el_suffix = isset($el['suffix']) ? $el['suffix'] : '';
+                                                $el_fontSize = isset($el['fontSize']) ? $el['fontSize'] : '';
+                                                $el_fontWeight = isset($el['fontWeight']) ? $el['fontWeight'] : '';
+                                            ?>
+                                            <div class="upt-builder-item<?php echo !$el_visible ? ' upt-builder-item--hidden' : ''; ?>" data-index="<?php echo $i; ?>" role="listitem">
+                                                <span class="upt-builder-item__handle" aria-label="Arrastar para reordenar">☰</span>
+                                                <span class="upt-builder-item__icon" aria-hidden="true"><?php echo $el_info['icon']; ?></span>
+                                                <span class="upt-builder-item__label"><?php echo esc_html($el_info['label']); ?></span>
+                                                <input type="hidden" name="upt_builder_id[]" value="<?php echo esc_attr($el_id); ?>">
+                                                <input type="hidden" name="upt_builder_visible[]" value="<?php echo $el_visible ? '1' : '0'; ?>" class="upt-builder-visibility-input">
+                                                <input type="hidden" name="upt_builder_color[]" value="<?php echo esc_attr($el_color); ?>" class="upt-builder-color-input">
+                                                <input type="hidden" name="upt_builder_prefix[]" value="<?php echo esc_attr($el_prefix); ?>" class="upt-builder-prefix-input">
+                                                <input type="hidden" name="upt_builder_suffix[]" value="<?php echo esc_attr($el_suffix); ?>" class="upt-builder-suffix-input">
+                                                <input type="hidden" name="upt_builder_fontSize[]" value="<?php echo esc_attr($el_fontSize); ?>" class="upt-builder-fontsize-input">
+                                                <input type="hidden" name="upt_builder_fontWeight[]" value="<?php echo esc_attr($el_fontWeight); ?>" class="upt-builder-fontweight-input">
+                                                <div class="upt-builder-item__actions">
+                                                    <button type="button" class="upt-builder-toggle" title="<?php echo $el_visible ? 'Ocultar' : 'Mostrar'; ?>" aria-label="<?php echo $el_visible ? 'Ocultar elemento' : 'Mostrar elemento'; ?>">
+                                                        <?php echo $el_visible ? '👁️' : '👁️‍🗨️'; ?>
+                                                    </button>
+                                                    <button type="button" class="upt-builder-edit" title="Editar" aria-label="Editar elemento">✏️</button>
+                                                </div>
+                                            </div>
+                                            <?php endforeach; ?>
+                                        </div>
 
-                            <button type="button" id="upt-save-card-settings" class="button button-primary">Salvar Configurações</button>
-                            <span id="upt-card-settings-saved" style="margin-left:12px;color:#16a34a;font-weight:600;display:none;">Salvo!</span>
+                                        <div class="upt-builder-add">
+                                            <select id="upt-builder-add-select" class="upt-import-select upt-import-select--sm" aria-label="Adicionar campo">
+                                                <option value="">+ Adicionar campo...</option>
+                                                <?php
+                                                $upt_existing_ids = array_map(function($e) { return isset($e['id']) ? $e['id'] : ''; }, $upt_card_builder_data);
+                                                foreach ($upt_all_fields as $af):
+                                                    if (in_array($af['id'], $upt_existing_ids)) continue;
+                                                ?>
+                                                <option value="<?php echo esc_attr($af['id']); ?>" data-icon="<?php echo esc_attr($af['icon']); ?>" data-type="<?php echo esc_attr($af['type']); ?>"><?php echo $af['icon']; ?> <?php echo esc_html($af['label']); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <button type="button" id="upt-builder-add-btn" class="upt-import-btn upt-import-btn--secondary upt-import-btn--sm">Adicionar</button>
+                                        </div>
+
+                                        <div id="upt-builder-editor" class="upt-builder-editor" style="display:none;" role="dialog" aria-label="Editar elemento do card">
+                                            <div class="upt-builder-editor__header">
+                                                <span class="upt-builder-editor__title">Editar elemento</span>
+                                                <button type="button" class="upt-builder-editor__close" aria-label="Fechar">&times;</button>
+                                            </div>
+                                            <div class="upt-builder-editor__body">
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Cor</label>
+                                                    <input type="color" id="upt-editor-color" value="#111827" class="upt-builder-editor__color">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Prefixo</label>
+                                                    <input type="text" id="upt-editor-prefix" placeholder="Ex: R$ " class="upt-import-input">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Sufixo</label>
+                                                    <input type="text" id="upt-editor-suffix" placeholder="Ex: /mês" class="upt-import-input">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Tamanho da fonte (px)</label>
+                                                    <input type="number" id="upt-editor-fontsize" min="10" max="48" value="" class="upt-import-input" placeholder="Padrão">
+                                                </div>
+                                                <div class="upt-builder-editor__row">
+                                                    <label class="upt-import-label">Peso da fonte</label>
+                                                    <select id="upt-editor-fontweight" class="upt-import-select">
+                                                        <option value="">Padrão</option>
+                                                        <option value="400">Normal (400)</option>
+                                                        <option value="500">Médio (500)</option>
+                                                        <option value="600">Semi-negrito (600)</option>
+                                                        <option value="700">Negrito (700)</option>
+                                                        <option value="800">Extra negrito (800)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <button type="button" id="upt-editor-apply" class="upt-import-btn upt-import-btn--primary upt-import-btn--sm" style="width:100%;">Aplicar</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="upt-cards-settings__actions">
+                                        <button type="button" id="upt-save-card-settings" class="upt-import-btn upt-import-btn--primary">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                            Salvar Configurações
+                                        </button>
+                                        <span id="upt-card-settings-saved" class="upt-cards-settings__saved" aria-live="polite">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                            Salvo com sucesso!
+                                        </span>
+                                        <span id="upt-card-settings-error" class="upt-cards-settings__error" role="alert" aria-live="assertive"></span>
+                                    </div>
+                                </div>
+
+                                <div class="upt-cards-settings__preview">
+                                    <h5 class="upt-cards-settings__preview-title">Pré-visualização</h5>
+
+                                    <p class="upt-cards-settings__preview-label">📋 Card do Painel</p>
+                                    <div class="upt-cards-settings__preview-card" id="upt-card-preview">
+                                        <div class="upt-cards-settings__preview-img" aria-hidden="true">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                        </div>
+                                        <div class="upt-cards-settings__preview-body">
+                                            <span class="upt-preview-field" data-preview="dash-title" style="display:<?php echo in_array('title', $upt_card_dashboard_fields) ? 'block' : 'none'; ?>;"><strong>Apartamento 3 Quartos</strong></span>
+                                            <span class="upt-preview-field upt-preview-field--price" data-preview="dash-price" style="display:<?php echo in_array('price', $upt_card_dashboard_fields) ? 'block' : 'none'; ?>;">R$ 450.000</span>
+                                            <span class="upt-preview-field upt-preview-field--badge" data-preview="dash-status" style="display:<?php echo in_array('status', $upt_card_dashboard_fields) ? 'inline-flex' : 'none'; ?>;">Publicado</span>
+                                            <span class="upt-preview-field upt-preview-field--badge upt-preview-field--cat" data-preview="dash-category" style="display:<?php echo in_array('category', $upt_card_dashboard_fields) ? 'inline-flex' : 'none'; ?>;">Apartamento</span>
+                                        </div>
+                                    </div>
+
+                                    <p class="upt-cards-settings__preview-label" style="margin-top:20px;">🌐 Card do Site</p>
+                                    <div class="upt-cards-settings__preview-card" id="upt-site-preview">
+                                        <div class="upt-builder-preview-img" aria-hidden="true">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                        </div>
+                                        <div class="upt-cards-settings__preview-body" id="upt-site-preview-body">
+                                            <?php foreach ($upt_card_builder_data as $el):
+                                                $el_id = isset($el['id']) ? $el['id'] : '';
+                                                $el_visible = isset($el['visible']) ? (bool)$el['visible'] : true;
+                                                $el_color = isset($el['color']) ? $el['color'] : '';
+                                                $el_prefix = isset($el['prefix']) ? $el['prefix'] : '';
+                                                $el_suffix = isset($el['suffix']) ? $el['suffix'] : '';
+                                                $el_fontSize = isset($el['fontSize']) ? $el['fontSize'] : '';
+                                                $el_fontWeight = isset($el['fontWeight']) ? $el['fontWeight'] : '';
+                                                $style = '';
+                                                if ($el_color) $style .= 'color:' . esc_attr($el_color) . ';';
+                                                if ($el_fontSize) $style .= 'font-size:' . intval($el_fontSize) . 'px;';
+                                                if ($el_fontWeight) $style .= 'font-weight:' . intval($el_fontWeight) . ';';
+                                                if (!$el_visible) $style .= 'display:none;';
+
+                                                if ($el_id === 'image') {
+                                                    echo '<div class="upt-builder-preview-img" data-builder-preview="' . esc_attr($el_id) . '" style="' . (!$el_visible ? 'display:none;' : '') . '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+                                                } elseif ($el_id === 'button') {
+                                                    $btn_text = !empty($el_prefix) ? $el_prefix : 'Ver Detalhes';
+                                                    $btn_color = !empty($el_color) ? $el_color : '#6366f1';
+                                                    echo '<div data-builder-preview="' . esc_attr($el_id) . '" style="' . (!$el_visible ? 'display:none;' : 'margin-top:8px;') . '"><span style="display:inline-block;padding:6px 16px;border-radius:6px;background:' . esc_attr($btn_color) . ';color:#fff;font-size:13px;font-weight:600;">' . esc_html($btn_text) . '</span></div>';
+                                                } elseif ($el_id === 'title') {
+                                                    $display_val = !$el_visible ? 'none' : 'block';
+                                                    echo '<span class="upt-builder-preview-el" data-builder-preview="' . esc_attr($el_id) . '" style="display:' . $display_val . ';' . $style . '">' . $el_prefix . 'Apartamento 3 Quartos' . $el_suffix . '</span>';
+                                                } elseif ($el_id === 'price') {
+                                                    $display_val = !$el_visible ? 'none' : 'block';
+                                                    echo '<span class="upt-builder-preview-el" data-builder-preview="' . esc_attr($el_id) . '" style="display:' . $display_val . ';' . $style . '">' . $el_prefix . '450.000' . $el_suffix . '</span>';
+                                                } else {
+                                                    $el_info = null;
+                                                    foreach ($upt_all_fields as $af) { if ($af['id'] === $el_id) { $el_info = $af; break; } }
+                                                    $sample = $el_info ? explode(' (', $el_info['label'])[0] : $el_id;
+                                                    $display_val = !$el_visible ? 'none' : 'block';
+                                                    $badge_style = '';
+                                                    if (isset($el_info['type']) && in_array($el_info['type'], ['badge', 'number', 'area'])) {
+                                                        $badge_style = 'display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:#f1f5f9;';
+                                                    }
+                                                    echo '<span class="upt-builder-preview-el" data-builder-preview="' . esc_attr($el_id) . '" style="display:' . $display_val . ';' . $style . $badge_style . '">' . $el_prefix . esc_html($sample) . $el_suffix . '</span>';
+                                                }
+                                            endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <p class="upt-cards-settings__preview-hint">O preview atualiza ao salvar.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -2805,34 +3107,247 @@ var dashboardChart = new Chart($dashboardCanvas, {
 
         var ajaxUrl = (typeof upt_ajax !== 'undefined') ? upt_ajax.ajax_url : '/wp-admin/admin-ajax.php';
         var nonce = (typeof upt_ajax !== 'undefined') ? upt_ajax.nonce : '';
+        var $savedMsg = jQuery('#upt-card-settings-saved');
+        var $errorMsg = jQuery('#upt-card-settings-error');
+        var savedTimer = null;
+
+        var $dashPreview = jQuery('#upt-card-preview');
+
+        jQuery('.upt-cards-settings__checkbox').on('change', function() {
+            var target = jQuery(this).data('preview-target');
+            if (target) {
+                var $field = $dashPreview.find('[data-preview="' + target + '"]');
+                if ($field.length) {
+                    $field.css('display', this.checked ? ($field.hasClass('upt-preview-field--badge') ? 'inline-flex' : 'block') : 'none');
+                }
+            }
+        });
+
+        // --- Card Builder ---
+        var $builderList = jQuery('#upt-card-builder-list');
+        var $editor = jQuery('#upt-builder-editor');
+        var $sitePreviewBody = jQuery('#upt-site-preview-body');
+        var $sitePreview = jQuery('#upt-site-preview');
+        var editingIndex = -1;
+
+        $builderList.sortable({
+            handle: '.upt-builder-item__handle',
+            placeholder: 'upt-builder-item ui-sortable-placeholder',
+            tolerance: 'pointer',
+            cursor: 'grabbing',
+            opacity: 0.85,
+            over: function() { $builderList.addClass('ui-sortable-over'); },
+            out: function() { $builderList.removeClass('ui-sortable-over'); },
+            update: function() {
+                $builderList.find('.upt-builder-item').each(function(i) {
+                    jQuery(this).attr('data-index', i);
+                });
+                refreshSitePreview();
+            }
+        });
+
+        $builderList.on('click', '.upt-builder-toggle', function(e) {
+            e.stopPropagation();
+            var $item = jQuery(this).closest('.upt-builder-item');
+            var isHidden = $item.hasClass('upt-builder-item--hidden');
+            $item.toggleClass('upt-builder-item--hidden', !isHidden);
+            $item.find('.upt-builder-visibility-input').val(isHidden ? '1' : '0');
+            jQuery(this).attr('title', isHidden ? 'Ocultar' : 'Mostrar')
+                       .attr('aria-label', isHidden ? 'Ocultar elemento' : 'Mostrar elemento')
+                       .text(isHidden ? '👁️' : '👁️‍🗨️');
+            refreshSitePreview();
+        });
+
+        $builderList.on('click', '.upt-builder-edit', function(e) {
+            e.stopPropagation();
+            var $item = jQuery(this).closest('.upt-builder-item');
+            var idx = $item.index();
+
+            $builderList.find('.upt-builder-item--editing').removeClass('upt-builder-item--editing');
+            $item.addClass('upt-builder-item--editing');
+
+            editingIndex = idx;
+            var color = $item.find('.upt-builder-color-input').val() || '#111827';
+            var prefix = $item.find('.upt-builder-prefix-input').val();
+            var suffix = $item.find('.upt-builder-suffix-input').val();
+            var fontSize = $item.find('.upt-builder-fontsize-input').val();
+            var fontWeight = $item.find('.upt-builder-fontweight-input').val();
+            var label = $item.find('.upt-builder-item__label').text();
+
+            jQuery('#upt-editor-color').val(color);
+            jQuery('#upt-editor-prefix').val(prefix);
+            jQuery('#upt-editor-suffix').val(suffix);
+            jQuery('#upt-editor-fontsize').val(fontSize);
+            jQuery('#upt-editor-fontweight').val(fontWeight);
+            $editor.find('.upt-builder-editor__title').text('Editar: ' + label);
+            $editor.slideDown(200);
+        });
+
+        $editor.on('click', '.upt-builder-editor__close', function() {
+            closeEditor();
+        });
+
+        jQuery('#upt-editor-apply').on('click', function() {
+            if (editingIndex < 0) return;
+            var $item = $builderList.find('.upt-builder-item').eq(editingIndex);
+            if (!$item.length) return;
+
+            var color = jQuery('#upt-editor-color').val();
+            var prefix = jQuery('#upt-editor-prefix').val();
+            var suffix = jQuery('#upt-editor-suffix').val();
+            var fontSize = jQuery('#upt-editor-fontsize').val();
+            var fontWeight = jQuery('#upt-editor-fontweight').val();
+
+            $item.find('.upt-builder-color-input').val(color);
+            $item.find('.upt-builder-prefix-input').val(prefix);
+            $item.find('.upt-builder-suffix-input').val(suffix);
+            $item.find('.upt-builder-fontsize-input').val(fontSize);
+            $item.find('.upt-builder-fontweight-input').val(fontWeight);
+
+            $item.removeClass('upt-builder-item--editing');
+            refreshSitePreview();
+            closeEditor();
+        });
+
+        function closeEditor() {
+            editingIndex = -1;
+            $builderList.find('.upt-builder-item--editing').removeClass('upt-builder-item--editing');
+            $editor.slideUp(150);
+        }
+
+        jQuery('#upt-builder-add-btn').on('click', function() {
+            var $select = jQuery('#upt-builder-add-select');
+            var fieldId = $select.val();
+            if (!fieldId) return;
+
+            var $opt = $select.find('option:selected');
+            var icon = $opt.data('icon') || '📎';
+            var label = $opt.text().replace(/^[^\s]+\s/, '');
+            var type = $opt.data('type') || 'text';
+
+            var html = '<div class="upt-builder-item upt-builder-item--custom" data-index="' + $builderList.children().length + '" role="listitem">';
+            html += '<span class="upt-builder-item__handle" aria-label="Arrastar para reordenar">☰</span>';
+            html += '<span class="upt-builder-item__icon" aria-hidden="true">' + icon + '</span>';
+            html += '<span class="upt-builder-item__label">' + label + '</span>';
+            html += '<input type="hidden" name="upt_builder_id[]" value="' + fieldId + '">';
+            html += '<input type="hidden" name="upt_builder_visible[]" value="1" class="upt-builder-visibility-input">';
+            html += '<input type="hidden" name="upt_builder_color[]" value="" class="upt-builder-color-input">';
+            html += '<input type="hidden" name="upt_builder_prefix[]" value="" class="upt-builder-prefix-input">';
+            html += '<input type="hidden" name="upt_builder_suffix[]" value="" class="upt-builder-suffix-input">';
+            html += '<input type="hidden" name="upt_builder_fontSize[]" value="" class="upt-builder-fontsize-input">';
+            html += '<input type="hidden" name="upt_builder_fontWeight[]" value="" class="upt-builder-fontweight-input">';
+            html += '<div class="upt-builder-item__actions">';
+            html += '<button type="button" class="upt-builder-toggle" title="Ocultar" aria-label="Ocultar elemento">👁️</button>';
+            html += '<button type="button" class="upt-builder-edit" title="Editar" aria-label="Editar elemento">✏️</button>';
+            html += '<button type="button" class="upt-builder-item__remove" title="Remover" aria-label="Remover elemento">✕</button>';
+            html += '</div></div>';
+
+            $builderList.append(html);
+            $opt.remove();
+            $select.val('');
+            refreshSitePreview();
+        });
+
+        $builderList.on('click', '.upt-builder-item__remove', function(e) {
+            e.stopPropagation();
+            var $item = jQuery(this).closest('.upt-builder-item');
+            var fieldId = $item.find('input[name="upt_builder_id[]"]').val();
+            var icon = $item.find('.upt-builder-item__icon').text();
+            var label = $item.find('.upt-builder-item__label').text();
+
+            $item.fadeOut(150, function() {
+                jQuery(this).remove();
+                $builderList.find('.upt-builder-item').each(function(i) {
+                    jQuery(this).attr('data-index', i);
+                });
+                refreshSitePreview();
+            });
+
+            var $select = jQuery('#upt-builder-add-select');
+            $select.append('<option value="' + fieldId + '" data-icon="' + icon + '">' + icon + ' ' + label + '</option>');
+        });
+
+        function getBuilderData() {
+            var items = [];
+            $builderList.find('.upt-builder-item').each(function() {
+                var $el = jQuery(this);
+                items.push({
+                    id: $el.find('input[name="upt_builder_id[]"]').val(),
+                    visible: $el.find('.upt-builder-visibility-input').val() === '1',
+                    color: $el.find('.upt-builder-color-input').val(),
+                    prefix: $el.find('.upt-builder-prefix-input').val(),
+                    suffix: $el.find('.upt-builder-suffix-input').val(),
+                    fontSize: $el.find('.upt-builder-fontsize-input').val(),
+                    fontWeight: $el.find('.upt-builder-fontweight-input').val()
+                });
+            });
+            return items;
+        }
+
+        function refreshSitePreview() {
+            var data = getBuilderData();
+            var html = '';
+            for (var i = 0; i < data.length; i++) {
+                var el = data[i];
+                var style = '';
+                if (el.color) style += 'color:' + el.color + ';';
+                if (el.fontSize) style += 'font-size:' + parseInt(el.fontSize) + 'px;';
+                if (el.fontWeight) style += 'font-weight:' + parseInt(el.fontWeight) + ';';
+                var display = el.visible ? '' : 'display:none;';
+
+                if (el.id === 'image') {
+                    html += '<div class="upt-builder-preview-img" data-builder-preview="' + el.id + '" style="' + display + '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+                } else if (el.id === 'button') {
+                    var btnText = el.prefix || 'Ver Detalhes';
+                    var btnColor = el.color || '#6366f1';
+                    html += '<div data-builder-preview="' + el.id + '" style="' + display + 'margin-top:8px;"><span style="display:inline-block;padding:6px 16px;border-radius:6px;background:' + btnColor + ';color:#fff;font-size:13px;font-weight:600;">' + btnText + '</span></div>';
+                } else if (el.id === 'title') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + style + '">' + (el.prefix || '') + 'Apartamento 3 Quartos' + (el.suffix || '') + '</span>';
+                } else if (el.id === 'price') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + style + '">' + (el.prefix || '') + '450.000' + (el.suffix || '') + '</span>';
+                } else if (el.id === 'status') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + 'display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:#eff6ff;color:#2563eb;' + style + '">' + (el.prefix || '') + 'Publicado' + (el.suffix || '') + '</span>';
+                } else if (el.id === 'category') {
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + 'display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:#fef3c7;color:#92400e;' + style + '">' + (el.prefix || '') + 'Apartamento' + (el.suffix || '') + '</span>';
+                } else {
+                    var sample = el.id.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+                    html += '<span class="upt-builder-preview-el" data-builder-preview="' + el.id + '" style="' + display + style + '">' + (el.prefix || '') + sample + (el.suffix || '') + '</span>';
+                }
+            }
+            $sitePreviewBody.html(html);
+        }
 
         $saveBtn.on('click', function() {
             var dashFields = [];
             jQuery('[name="upt_card_dashboard_fields[]"]:checked').each(function() {
                 dashFields.push(jQuery(this).val());
             });
-            var siteFields = [];
-            jQuery('[name="upt_card_site_fields[]"]:checked').each(function() {
-                siteFields.push(jQuery(this).val());
-            });
 
-            $saveBtn.prop('disabled', true).text('Salvando...');
+            var builderData = getBuilderData();
+
+            $savedMsg.removeClass('is-visible');
+            $errorMsg.removeClass('is-visible').text('');
+            $saveBtn.prop('disabled', true).html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:upt-spin 1s linear infinite" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Salvando...');
 
             jQuery.post(ajaxUrl, {
                 action: 'upt_save_card_settings',
                 nonce: nonce,
                 dashboard_fields: dashFields,
-                site_fields: siteFields
+                builder_data: JSON.stringify(builderData)
             }, function(resp) {
-                $saveBtn.prop('disabled', false).text('Salvar Configurações');
+                $saveBtn.prop('disabled', false).html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Configurações');
                 if (resp.success) {
-                    jQuery('#upt-card-settings-saved').show().fadeOut(2000);
+                    $savedMsg.addClass('is-visible');
+                    if (savedTimer) clearTimeout(savedTimer);
+                    savedTimer = setTimeout(function() {
+                        $savedMsg.removeClass('is-visible');
+                    }, 3000);
                 } else {
-                    alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'));
+                    $errorMsg.text('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'não foi possível salvar.')).addClass('is-visible');
                 }
             }).fail(function() {
-                $saveBtn.prop('disabled', false).text('Salvar Configurações');
-                alert('Erro de conexão.');
+                $saveBtn.prop('disabled', false).html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Configurações');
+                $errorMsg.text('Erro de conexão. Verifique sua internet e tente novamente.').addClass('is-visible');
             });
         });
     })();
@@ -2853,8 +3368,130 @@ var dashboardChart = new Chart($dashboardCanvas, {
         var $doneSection = jQuery('#upt-imob-done-section');
         var $cancelBtn = jQuery('#upt-imob-cancel-btn');
         var $newBtn = jQuery('#upt-imob-new-btn');
+        var $dropzone = jQuery('#upt-imob-dropzone');
+        var $fileInput = jQuery('#upt-imob-xml-file');
+        var $fileInfo = jQuery('#upt-imob-file-info');
+        var $fileName = jQuery('#upt-imob-file-name');
+        var $fileSize = jQuery('#upt-imob-file-size');
+        var $fileRemove = jQuery('#upt-imob-file-remove');
+        var $validationMsg = jQuery('#upt-imob-validation-msg');
+        var $schemaSection = jQuery('#upt-imob-schema-section');
+        var $stepper = jQuery('.upt-import-stepper');
 
         var session_id = '', total_items = 0, imported_total = 0, photos_total = 0, errors_total = 0, current_offset = 0, is_running = false, batch_size = 5;
+        var selectedFile = null;
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function setStep(stepNum) {
+            $stepper.find('.upt-step').each(function() {
+                var s = parseInt(jQuery(this).data('step'));
+                jQuery(this).removeClass('upt-step--active upt-step--completed');
+                if (s < stepNum) jQuery(this).addClass('upt-step--completed');
+                else if (s === stepNum) jQuery(this).addClass('upt-step--active');
+            });
+        }
+
+        function showValidation(msg, type) {
+            $validationMsg.removeClass('upt-import-msg--error upt-import-msg--success upt-import-msg--warning upt-import-msg--info')
+                .addClass('upt-import-msg--' + (type || 'error'))
+                .html('<span class="upt-import-msg__icon" aria-hidden="true">' +
+                    (type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'info' ? 'ℹ️' : '❌') +
+                    '</span><span class="upt-import-msg__text">' + msg + '</span>')
+                .show();
+        }
+
+        function hideValidation() {
+            $validationMsg.hide();
+        }
+
+        function validateFile(file) {
+            if (!file) return { valid: false, msg: 'Nenhum arquivo selecionado.' };
+            var name = file.name || '';
+            var ext = name.split('.').pop().toLowerCase();
+            if (ext !== 'xml') {
+                return { valid: false, msg: 'Formato inválido. Por favor, selecione um arquivo <strong>.xml</strong>. Arquivo selecionado: <strong>' + name + '</strong>' };
+            }
+            var maxSize = 50 * 1024 * 1024;
+            if (file.size > maxSize) {
+                return { valid: false, msg: 'O arquivo excede o limite de <strong>50 MB</strong>. Tamanho atual: <strong>' + formatFileSize(file.size) + '</strong>. Tente compactar ou dividir o XML.' };
+            }
+            if (file.size === 0) {
+                return { valid: false, msg: 'O arquivo está <strong>vazio</strong> (0 bytes). Verifique se o XML foi exportado corretamente.' };
+            }
+            return { valid: true };
+        }
+
+        function onFileSelected(file) {
+            var result = validateFile(file);
+            if (!result.valid) {
+                showValidation(result.msg, 'error');
+                $dropzone.removeClass('upt-import-dropzone--has-file');
+                selectedFile = null;
+                $fileInfo.hide();
+                $schemaSection.hide();
+                $startBtn.hide();
+                setStep(1);
+                return;
+            }
+            hideValidation();
+            selectedFile = file;
+            $fileName.text(file.name);
+            $fileSize.text(formatFileSize(file.size));
+            $fileInfo.show();
+            $dropzone.addClass('upt-import-dropzone--has-file');
+            $schemaSection.show();
+            $startBtn.show();
+            setStep(2);
+        }
+
+        function resetUpload() {
+            selectedFile = null;
+            $fileInput.val('');
+            $fileInfo.hide();
+            $dropzone.removeClass('upt-import-dropzone--has-file');
+            $schemaSection.hide();
+            $startBtn.hide();
+            hideValidation();
+            setStep(1);
+        }
+
+        $dropzone.on('dragover dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $dropzone.addClass('upt-import-dropzone--dragover');
+        }).on('dragleave drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $dropzone.removeClass('upt-import-dropzone--dragover');
+        }).on('drop', function(e) {
+            var files = e.originalEvent.dataTransfer.files;
+            if (files && files.length > 0) {
+                onFileSelected(files[0]);
+            }
+        }).on('click', function() {
+            $fileInput.trigger('click');
+        }).on('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                $fileInput.trigger('click');
+            }
+        });
+
+        $fileInput.on('change', function() {
+            if (this.files && this.files.length > 0) {
+                onFileSelected(this.files[0]);
+            }
+        });
+
+        $fileRemove.on('click', function(e) {
+            e.stopPropagation();
+            resetUpload();
+        });
 
         $mode.on('change', function() {
             if (jQuery(this).val() === 'existing') { $newField.hide(); $existingField.show(); }
@@ -2862,24 +3499,29 @@ var dashboardChart = new Chart($dashboardCanvas, {
         });
 
         $startBtn.on('click', function() {
-            var fileInput = jQuery('#upt-imob-xml-file')[0];
-            if (!fileInput.files || fileInput.files.length === 0) { alert('Selecione um arquivo XML.'); return; }
-            $startBtn.prop('disabled', true).text('Enviando...');
-            uploadAndStart(fileInput.files[0]);
+            if (!selectedFile) {
+                showValidation('Selecione um arquivo XML antes de iniciar.', 'warning');
+                return;
+            }
+            $startBtn.prop('disabled', true).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:upt-spin 1s linear infinite" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Enviando...');
+            uploadAndStart(selectedFile);
         });
 
         $cancelBtn.on('click', function() {
-            if (!confirm('Cancelar importação?')) return;
+            if (!confirm('Deseja realmente cancelar a importação? Os imóveis já importados não serão afetados.')) return;
             is_running = false;
             jQuery.post(ajaxUrl, { action: 'upt_imob_cancel', nonce: nonce, session_id: session_id });
-            $progressSection.hide(); $uploadSection.show();
-            $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
+            $progressSection.hide();
+            $uploadSection.show();
+            resetUpload();
+            $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
         });
 
         $newBtn.on('click', function() {
-            $doneSection.hide(); $uploadSection.show();
-            $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
-            jQuery('#upt-imob-xml-file').val('');
+            $doneSection.hide();
+            $uploadSection.show();
+            resetUpload();
+            $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
         });
 
         function uploadAndStart(file) {
@@ -2895,16 +3537,29 @@ var dashboardChart = new Chart($dashboardCanvas, {
                 url: ajaxUrl, type: 'POST', data: formData,
                 processData: false, contentType: false, timeout: 300000,
                 success: function(resp) {
-                    $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação');
                     if (resp.success && resp.data && resp.data.session_id) {
                         session_id = resp.data.session_id;
-                        $uploadSection.hide(); $doneSection.hide(); $progressSection.show();
+                        $uploadSection.hide();
+                        $doneSection.hide();
+                        $progressSection.show();
+                        setStep(3);
                         imported_total = 0; photos_total = 0; errors_total = 0; current_offset = 0; is_running = true;
                         updateStats();
                         countAndProcess();
-                    } else { alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'Não foi possível iniciar.')); }
+                    } else {
+                        var errMsg = (resp.data && resp.data.message) ? resp.data.message : 'Não foi possível iniciar a importação.';
+                        showValidation(errMsg + '<br><small style="color:#6b7280">Verifique se o arquivo XML está no formato correto (OKE, Zap ou Viva Real) e tente novamente.</small>', 'error');
+                        $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
+                    }
                 },
-                error: function() { $startBtn.prop('disabled', false).text('Enviar e Iniciar Importação'); alert('Erro ao enviar.'); }
+                error: function(xhr, status) {
+                    var msg = 'Erro de conexão ao enviar o arquivo.';
+                    if (status === 'timeout') {
+                        msg = 'O envio demorou demais (<strong>timeout</strong>). Tente com um arquivo menor ou verifique sua conexão.';
+                    }
+                    showValidation(msg, 'error');
+                    $startBtn.prop('disabled', false).html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Iniciar Importação');
+                }
             });
         }
 
@@ -2912,6 +3567,8 @@ var dashboardChart = new Chart($dashboardCanvas, {
             var pct = total_items > 0 ? Math.round((current_offset / total_items) * 100) : 0;
             jQuery('#upt-imob-progress-bar').css('width', pct + '%');
             jQuery('#upt-imob-progress-text').text(pct + '%');
+            var $track = jQuery('.upt-import-progress__bar-track');
+            $track.attr('aria-valuenow', pct);
             jQuery('#upt-imob-stat-total').text(total_items || '—');
             jQuery('#upt-imob-stat-imported').text(imported_total);
             jQuery('#upt-imob-stat-photos').text(photos_total);
@@ -2919,34 +3576,57 @@ var dashboardChart = new Chart($dashboardCanvas, {
         }
 
         function countAndProcess() {
-            setStatus('Contando imóveis...');
+            setStatus('Contando imóveis no XML...', 'info');
             jQuery.post(ajaxUrl, { action: 'upt_imob_count', nonce: nonce, session_id: session_id }, function(resp) {
-                if (!resp.success) { setStatus('Erro: ' + (resp.data && resp.data.message ? resp.data.message : '?'), true); return; }
-                total_items = resp.data.total; updateStats(); processNextBatch();
+                if (!resp.success) {
+                    setStatus('Erro ao contar: ' + (resp.data && resp.data.message ? resp.data.message : 'Erro desconhecido') + '. A importação será interrompida.', 'error');
+                    return;
+                }
+                total_items = resp.data.total;
+                updateStats();
+                setStatus(total_items + ' imóveis encontrados. Iniciando importação...', 'info');
+                setTimeout(processNextBatch, 600);
             });
         }
 
         function processNextBatch() {
             if (!is_running) return;
-            setStatus('Processando ' + (current_offset + 1) + '-' + Math.min(current_offset + batch_size, total_items) + ' de ' + total_items + '...');
+            var batchEnd = Math.min(current_offset + batch_size, total_items);
+            setStatus('Importando imóveis ' + (current_offset + 1) + ' a ' + batchEnd + ' de ' + total_items + '...', 'info');
             jQuery.post(ajaxUrl, { action: 'upt_imob_batch', nonce: nonce, session_id: session_id, offset: current_offset, limit: batch_size }, function(resp) {
                 if (!is_running) return;
                 if (!resp.success) {
-                    setStatus('Erro: ' + (resp.data && resp.data.message ? resp.data.message : '?') + '. Continuando...', true);
+                    setStatus('Erro no lote: ' + (resp.data && resp.data.message ? resp.data.message : '?') + '. Pulando e continuando...', 'warning');
                     current_offset += batch_size; updateStats(); setTimeout(processNextBatch, 2000); return;
                 }
                 var d = resp.data;
                 imported_total += d.imported; photos_total += d.photos; errors_total += d.errors; current_offset = d.next_offset; updateStats();
-                if (d.last_error) setStatus('Erro: ' + d.last_error + '. Continuando...', true);
-                else setStatus('Processados ' + current_offset + ' de ' + total_items + '. Fotos: ' + photos_total + '.');
-                if (d.is_finished) { is_running = false; $progressSection.hide(); $doneSection.show(); jQuery('#upt-imob-done-stats').text('Importados: ' + imported_total + ' | Erros: ' + errors_total + ' | Fotos: ' + photos_total); }
+                if (d.last_error) setStatus('Aviso: ' + d.last_error + '. Continuando...', 'warning');
+                else setStatus('Processados ' + current_offset + ' de ' + total_items + ' imóveis. ' + photos_total + ' fotos baixadas.', 'info');
+                if (d.is_finished) {
+                    is_running = false;
+                    $progressSection.hide();
+                    $doneSection.show();
+                    $stepper.find('.upt-step').addClass('upt-step--completed').removeClass('upt-step--active');
+                    jQuery('#upt-imob-done-stats').html(
+                        '<strong style="color:#16a34a">' + imported_total + '</strong> imóveis importados' +
+                        (errors_total > 0 ? ' &bull; <strong style="color:#dc2626">' + errors_total + ' erros</strong>' : '') +
+                        ' &bull; <strong style="color:#2563eb">' + photos_total + '</strong> fotos baixadas'
+                    );
+                }
                 else setTimeout(processNextBatch, 500);
-            }).fail(function() { if (!is_running) return; setStatus('Erro de conexão. Tentando...', true); setTimeout(processNextBatch, 3000); });
+            }).fail(function() {
+                if (!is_running) return;
+                setStatus('Erro de conexão. Tentando novamente em 3 segundos...', 'warning');
+                setTimeout(processNextBatch, 3000);
+            });
         }
 
-        function setStatus(msg, isError) {
-            var $el = jQuery('#upt-imob-status-msg'); $el.text(msg);
-            if (isError) $el.css({ background: '#fef2f2', color: '#991b1b' }); else $el.css({ background: '#f1f5f9', color: '#475569' });
+        function setStatus(msg, type) {
+            var $el = jQuery('#upt-imob-status-msg');
+            var icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : type === 'success' ? '✅' : '⏳';
+            $el.attr('class', 'upt-import-msg upt-import-msg--' + (type || 'info'))
+               .html('<span class="upt-import-msg__icon" aria-hidden="true">' + icon + '</span><span class="upt-import-msg__text">' + msg + '</span>');
         }
     })();
 
