@@ -1,0 +1,687 @@
+/* admin-base.css */
+.upt-builder {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    margin-top: 24px;
+    align-items: flex-start;
+}
+
+.upt-builder__sidebar {
+    flex: 0 0 320px;
+}
+
+.upt-builder__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.upt-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.upt-card__header {
+    padding: 16px 20px;
+    margin: 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.upt-card__header h2 {
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.upt-card__body {
+    padding: 20px;
+}
+
+.upt-schema-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.upt-schema-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.upt-schema-list li:last-child {
+    border-bottom: none;
+}
+
+.upt-schema-list li.current a {
+    color: #1a73e8;
+    font-weight: 600;
+    background-color: #f0f5ff;
+}
+
+.upt-schema-list li a {
+    padding: 12px 20px;
+    text-decoration: none;
+    display: block;
+    flex-grow: 1;
+    color: #444;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.upt-schema-list li a:hover {
+    background-color: #f7f7f7;
+}
+
+.upt-schema-list li .delete-link {
+    flex-shrink: 0;
+    padding: 12px 20px;
+    color: #a00;
+}
+
+.upt-schema-list li .delete-link:hover {
+    background-color: #fbeaea;
+}
+
+.upt-schema-list .upt-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.upt-schema-list .upt-icon svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.form-field {
+    margin-bottom: 16px;
+    padding: 0;
+}
+
+.form-field label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* upt: manter o label de subcategoria consistente com os demais */
+.upt-subcategory-label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.form-field .description {
+    font-size: 13px;
+    color: #646970;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+.form-field input[type="text"],
+.form-field input[type="url"],
+.form-field input[type="date"],
+.form-field input[type="time"],
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.form-field input[type="text"]:focus,
+.form-field input[type="url"]:focus,
+.form-field input[type="date"]:focus,
+.form-field input[type="time"]:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 1px #1a73e8;
+}
+
+.upt-submit-form input[type="text"],
+.upt-submit-form input[type="number"],
+.upt-submit-form input[type="password"],
+.upt-submit-form input[type="date"],
+.upt-submit-form input[type="time"],
+.upt-submit-form input[type="search"],
+.upt-submit-form input[type="email"],
+.upt-submit-form input[type="url"],
+.upt-submit-form select,
+.upt-submit-form textarea {
+    border: 1px solid var(--fc-border-color, #E7E7E7);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.upt-submit-form input[type="text"]:focus,
+.upt-submit-form input[type="number"]:focus,
+.upt-submit-form input[type="password"]:focus,
+.upt-submit-form input[type="date"]:focus,
+.upt-submit-form input[type="time"]:focus,
+.upt-submit-form input[type="search"]:focus,
+.upt-submit-form input[type="email"]:focus,
+.upt-submit-form input[type="url"]:focus,
+.upt-submit-form select:focus,
+.upt-submit-form textarea:focus {
+    border-color: var(--e-global-color-accent, #1a73e8);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--e-global-color-accent, #1a73e8) 22%, transparent);
+    outline: none;
+}
+
+.upt-gallery-wrapper .gallery-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #fdfdfd;
+}
+
+.upt-gallery-wrapper .gallery-preview-item {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #eee;
+}
+
+.upt-gallery-wrapper .gallery-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.upt-gallery-wrapper .gallery-preview-item .remove-image {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    text-decoration: none;
+    text-align: center;
+    line-height: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.upt-gallery-wrapper .gallery-preview-item .remove-image:hover {
+    background-color: rgba(200, 0, 0, 0.8);
+}
+
+.upt-submit-form .image-preview-wrapper,
+.upt-submit-form .video-preview-wrapper {
+    margin-bottom: 10px;
+    min-height: 50px;
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9f9f9;
+    overflow: hidden;
+    position: relative;
+}
+
+.upt-submit-form .image-preview-wrapper img,
+.upt-submit-form .video-preview-wrapper img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+}
+
+.upt-submit-form .pdf-preview-wrapper {
+    margin-bottom: 10px;
+    min-height: 50px;
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9f9f9;
+    overflow: hidden;
+    position: relative;
+}
+
+.upt-submit-form .pdf-preview-wrapper .upt-pdf-thumb {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upt-submit-form .pdf-preview-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.upt-submit-form .pdf-preview-wrapper .upt-pdf-thumb::after {
+    content: 'PDF';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    color: #fff;
+    background: #d63638;
+    padding: 3px 7px;
+    border-radius: 999px;
+    letter-spacing: .4px;
+    pointer-events: none;
+}
+
+.upt-submit-form .video-preview-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M8,5.14V19.14L19,12.14L8,5.14Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px;
+    pointer-events: none;
+}
+
+.upt-submit-form .upt-field-hint {
+    font-size: 13px;
+    color: var(--fc-text-light);
+    margin: 8px 0 0 0;
+    padding: 0;
+}
+
+.taxonomy-field-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.taxonomy-field-wrapper select {
+    flex-grow: 1;
+}
+
+.taxonomy-field-wrapper a {
+    white-space: nowrap;
+}
+
+/* Subcategorias: área de criar/editar (labels e espaçamentos) */
+.upt-subcat-area .upt-subcat-field-label {
+    display: block;
+    font-weight: 600;
+    margin: 8px 0 4px;
+}
+
+.upt-subcat-area .upt-subcat-field-label:first-of-type {
+    margin-top: 0;
+}
+
+.upt-subcat-area .upt-subcat-name,
+.upt-subcat-area .upt-subcat-parent {
+    width: 100%;
+}
+
+.upt-subcat-area .upt-subcat-save {
+    margin-top: 10px;
+}
+
+.upt-subcat-area .upt-subcat-cancel {
+    margin-left: 10px;
+}
+
+/* Labels: espaçamento entre campos no bloco de subcategoria */
+.upt-subcat-area .upt-subcat-field-label {
+    display: block;
+    margin: 0 0 6px 0;
+}
+
+.upt-subcat-area .upt-subcat-field-label--parent {
+    margin-top: 12px;
+}
+
+/* Subcategorias: campos com fundo branco (evita aparência de disabled/acinzentado) */
+.upt-subcat-area .upt-subcat-name,
+.upt-subcat-area .upt-subcat-parent {
+    background: #fff !important;
+    background-color: #fff !important;
+}
+
+/* Subcategorias (fallback): garante branco mesmo se o markup variar */
+.upt-subcat-area input[type="text"],
+.upt-subcat-area select {
+    background: #fff !important;
+    background-color: #fff !important;
+}
+
+/* Renomear categoria: área inline (mesmo padrão de subcategoria) */
+.upt-rename-cat-area .upt-rename-cat-name {
+    width: 100%;
+    background: #fff !important;
+}
+
+.upt-rename-cat-area .upt-rename-cat-save {
+    margin-top: 10px;
+}
+
+.upt-rename-cat-area .upt-rename-cat-cancel {
+    margin-left: 10px;
+}
+
+
+/* FrontForm: quando o campo taxonomy usa subcategorias dependentes, o layout deve ser vertical
+   (Categoria em cima, Subcategoria abaixo) e ocupar 100% da largura. */
+.upt-submit-form .taxonomy-field-wrapper--subcats {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.taxonomy-field-wrapper--subcats {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.upt-submit-form .taxonomy-field-wrapper--subcats>select,
+.upt-submit-form .taxonomy-field-wrapper--subcats .upt-subcategory-wrapper,
+.upt-submit-form .taxonomy-field-wrapper--subcats .upt-subcategory-wrapper select {
+    width: 100%;
+}
+
+.taxonomy-field-wrapper--subcats>select,
+.taxonomy-field-wrapper--subcats .upt-subcategory-wrapper,
+.taxonomy-field-wrapper--subcats .upt-subcategory-wrapper select {
+    width: 100%;
+}
+
+/* Ações de taxonomia (Adicionar / Editar / Excluir) como botões */
+.upt-submit-form .taxonomy-actions-wrapper a,
+.upt-submit-form .upt-subcategory-actions a {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: var(--fc-border-radius);
+    font-family: var(--fc-font-family);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid transparent;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+/* Adicionar (primário) */
+.upt-submit-form .taxonomy-actions-wrapper a#add-new-cat-button,
+.upt-submit-form .upt-subcategory-actions a.upt-subcat-add {
+    background: var(--fc-primary-color);
+    color: #fff;
+}
+
+.upt-submit-form .taxonomy-actions-wrapper a#add-new-cat-button:hover,
+.upt-submit-form .upt-subcategory-actions a.upt-subcat-add:hover {
+    background: color-mix(in srgb, var(--fc-primary-color) 90%, black);
+}
+
+/* Editar (borda cinza) */
+.upt-submit-form .taxonomy-actions-wrapper a#rename-cat-button,
+.upt-submit-form .upt-subcategory-actions a.upt-subcat-edit {
+    background: #fff;
+    color: var(--fc-text-dark);
+    border-color: #c3c4c7;
+}
+
+.upt-submit-form .taxonomy-actions-wrapper a#rename-cat-button:hover,
+.upt-submit-form .upt-subcategory-actions a.upt-subcat-edit:hover {
+    border-color: color-mix(in srgb, var(--fc-primary-color) 55%, #c3c4c7);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc-primary-color) 18%, transparent);
+}
+
+/* Excluir (vermelho) */
+.upt-submit-form .taxonomy-actions-wrapper a#delete-cat-button,
+.upt-submit-form .upt-subcategory-actions a.upt-subcat-delete {
+    background: #d63638;
+    border-color: #d63638;
+    color: #fff;
+}
+
+.upt-submit-form .taxonomy-actions-wrapper a#delete-cat-button:hover,
+.upt-submit-form .upt-subcategory-actions a.upt-subcat-delete:hover {
+    background: #b32d2e;
+    border-color: #b32d2e;
+}
+
+.upt-image-upload-wrapper,
+.upt-video-upload-wrapper,
+.upt-pdf-upload-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.upt-image-upload-wrapper .image-preview-wrapper,
+.upt-video-upload-wrapper .video-preview-wrapper {
+    margin-bottom: 0;
+}
+
+.upt-pdf-upload-wrapper .pdf-preview-wrapper {
+    margin-bottom: 0;
+}
+
+.upt-image-upload-wrapper .image-buttons,
+.upt-video-upload-wrapper .image-buttons,
+.upt-pdf-upload-wrapper .image-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.upt-remove-image,
+.upt-remove-video {
+    color: #a00;
+    font-size: 13px;
+}
+
+.upt-remove-image.hidden,
+.upt-remove-video.hidden {
+    display: none;
+}
+
+.upt-remove-pdf {
+    color: #a00;
+    font-size: 13px;
+}
+
+.upt-remove-pdf.hidden {
+    display: none;
+}
+
+.upt-submit-form .upt-add-image,
+.upt-submit-form .upt-add-video,
+.upt-submit-form .upt-add-pdf,
+.upt-submit-form .add-gallery-images {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+/* PDF thumb in any context (single field + previews) */
+.upt-pdf-thumb {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.upt-pdf-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.upt-pdf-thumb::after {
+    content: 'PDF';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    color: #fff;
+    background: #d63638;
+    padding: 3px 7px;
+    border-radius: 999px;
+    letter-spacing: .4px;
+    pointer-events: none;
+}
+
+.upt-pdf-thumb:hover img {
+    border-color: color-mix(in srgb, var(--fc-primary-color) 55%, #e5e7eb);
+}
+
+/* Gallery preview strip (multiple selection) */
+.upt-gallery-wrapper .gallery-preview-item[data-type="pdf"] img {
+    object-fit: contain;
+    padding: 14px;
+    background: #fff;
+}
+
+.upt-gallery-wrapper .gallery-preview-item[data-type="pdf"]::after {
+    content: 'PDF';
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    color: #fff;
+    background: #d63638;
+    padding: 2px 6px;
+    border-radius: 999px;
+    letter-spacing: .35px;
+    pointer-events: none;
+}
+
+.upt-importer-instructions {
+    margin-top: 24px;
+}
+
+.upt-importer-instructions ul {
+    list-style: disc;
+    padding-left: 20px;
+}
+
+.upt-importer-instructions pre {
+    background-color: #f7f7f7;
+    padding: 15px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.upt-builder__sidebar .upt-card__body {
+    padding: 20px;
+}
+
+.upt-builder .upt-card__body h2 {
+    font-size: 1.5em;
+    margin: 0 0 1em;
+    padding: 0;
+    border-bottom: none;
+}
+
+.upt-builder .upt-card__body h3 {
+    font-size: 1.1em;
+    margin: 0 0 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #eee;
+}
+
+.upt-builder hr {
+    border: none;
+    border-top: 1px solid #e7e7e7;
+    margin: 24px 0;
+}
+
+.upt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5em;
+}
+
+.upt-table th,
+.upt-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.upt-table thead th {
+    background-color: #f9f9f9;
+    font-weight: 600;
+    font-size: 13px;
+    color: #444;
+}
+
+.upt-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.upt-table tbody tr:hover {
+    background-color: #fdfdfd;
+}
+
+.upt-table code {
+    background-color: #eef0f2;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.upt-table .delete-link {
+    color: #d63638;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.upt-table .delete-link:hover {
+    text-decoration: underline;
+}
+

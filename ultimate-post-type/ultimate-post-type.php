@@ -174,9 +174,7 @@ final class UPT
             'pdf_placeholder' => wp_mime_type_icon('application/pdf'),
         ]);
 
-        // Scripts and styles are now registered conditionally, not enqueued globally
-        // wp_enqueue_script('upt-main-js');
-        wp_register_style('upt-style', plugin_dir_url(__FILE__) . 'assets/css/admin.css', [], filemtime(plugin_dir_path(__FILE__) . 'assets/css/admin.css'));
+        wp_register_style('upt-style', plugin_dir_url(__FILE__) . 'assets/css/front.css', [], filemtime(plugin_dir_path(__FILE__) . 'assets/css/front.css'));
     }
 
     private function init_hooks()

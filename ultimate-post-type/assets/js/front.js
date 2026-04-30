@@ -1,5 +1,11 @@
 jQuery(document).ready(function ($) {
 
+    /* ========================================================================
+     * SECTION 1: UTILITIES
+     * Alert config, debug logging, AJAX helpers, char counters, confirm
+     * dialog, notifications, URL query params, slugify
+     * ======================================================================== */
+
     // =========================
     // upt Alert Badge
     // =========================
@@ -337,6 +343,10 @@ jQuery(document).ready(function ($) {
         }
     })();
 
+    /* ========================================================================
+     * SECTION 2: INPUT VALIDATION & SANITIZATION
+     * Search debounce, number/price input sanitization
+     * ======================================================================== */
 
     var uptSearchTimeout;
     var uptSearchDelay = 250; // debounce curto para buscas
@@ -370,6 +380,11 @@ jQuery(document).ready(function ($) {
     });
 
 
+
+    /* ========================================================================
+     * SECTION 3: UI FIXES & MEDIA VALIDATION
+     * CSS hard fixes, modal focus trap, media required tooltips, WYSIWG
+     * ======================================================================== */
 
     // 1. CORREÇÃO DE INTERFACE E EDITOR
     // ==============================================================
@@ -595,7 +610,13 @@ jQuery(document).ready(function ($) {
         var $fieldWrapper = $(this).closest('.upt-image-upload-wrapper, .upt-video-upload-wrapper, .upt-gallery-wrapper, p');
         $fieldWrapper.removeClass('upt-media-field-has-error');
         $fieldWrapper.find('.upt-required-tooltip').remove();
-    });
+    })
+
+    /* ========================================================================
+     * SECTION 4: WYSIWYG EDITOR
+     * Simple rich text editor with toolbar, source toggle, block select
+     * ======================================================================== */
+
     var currentEditorInstance = null;
     var savedRange = null;
 
@@ -829,6 +850,11 @@ jQuery(document).ready(function ($) {
         });
     }
 
+
+    /* ========================================================================
+     * SECTION 5: DRAFT SYSTEM
+     * Draft context, collect/apply/save/clear drafts, media preview refresh
+     * ======================================================================== */
 
     function uptGetDraftContextFromForm($form) {
         if (!$form || !$form.length) { return null; }
@@ -1256,7 +1282,10 @@ jQuery(document).ready(function ($) {
     // garantindo persistência mesmo após recarregar a página ou acessar em outro navegador.
     // Rebuild map once media helpers are available (moved near definition below)
 
-
+    /* ========================================================================
+     * SECTION 6: LISTING & SEARCH
+     * AJAX search, pagination, load more, grid layout, item rendering
+     * ======================================================================== */
 
     function performuptSearch(triggerElement, page, options) {
         options = options || {};
@@ -1633,6 +1662,11 @@ if (role === 'parent') {
         performuptSearch(triggerEl, 1);
     });
 
+    /* ========================================================================
+     * SECTION 7: CATEGORY FILTERS
+     * URL filter sync, parent/child category cascade, filter click handlers
+     * ======================================================================== */
+
     function setActiveFiltersFromURL() {
         var params = new URLSearchParams(window.location.search);
         var catIdFromUrl = params.get('upt_category');
@@ -1920,6 +1954,11 @@ function uptInitParentChildFilters() {
 
 setActiveFiltersFromURL();
     uptInitParentChildFilters();
+
+    /* ========================================================================
+     * SECTION 8: JUSTIFIED FILTER LAYOUT
+     * Balanced two-row layout, viewport resize, category dropdown UI
+     * ======================================================================== */
 
     // --- Alinhamento Justificado (Filtro de Categoria) ---
     // Objetivo: quando "Justificada" estiver ativo, equilibrar os itens em 2 linhas (sem deixar 1 item sozinho) e preencher a largura disponível.
@@ -2407,9 +2446,19 @@ setActiveFiltersFromURL();
         });
     }
 
+    /* ========================================================================
+     * SECTION 9: INFINITE SCROLL & CATEGORY BUTTONS
+     * Per-category add buttons, infinite scroll initialization
+     * ======================================================================== */
+
     // Initialize on load
     inituptInfinite($('.upt-listing-wrapper'));
 
+
+    /* ========================================================================
+     * SECTION 10: MODAL
+     * Open/close modal with form content, AJAX item loading
+     * ======================================================================== */
 
     // Disponível globalmente para qualquer cenário de dashboard/modal
     function closeModal() {
@@ -2528,6 +2577,11 @@ setActiveFiltersFromURL();
         }
     });
 
+
+    /* ========================================================================
+     * SECTION 11: DASHBOARD INIT
+     * Tab system, tab shadows, filter change handler, dashboard infinite scroll
+     * ======================================================================== */
 
     if ($('.upt-dashboard').length || $('#upt-modal-content').length) {
 
@@ -2965,6 +3019,11 @@ setActiveFiltersFromURL();
                 adjustWidths();
             });
         }
+
+    /* ========================================================================
+     * SECTION 12: FORM SUBMISSION & INLINE CATEGORIES
+     * Submit forms, new-item forms, inline category actions, rename options
+     * ======================================================================== */
 
         uptInitCustomCategoryFilter($(document));
         $(document).on('upt_items_list_updated', function(){ uptInitCustomCategoryFilter($(document)); });
@@ -4263,6 +4322,12 @@ setActiveFiltersFromURL();
             // Armazena a seleção do painel de mídia enquanto o painel existir (por campo)
             window.uptGallerySelectionMap = window.uptGallerySelectionMap || {};
 
+    /* ========================================================================
+     * SECTION 13: GALLERY MODAL
+     * Gallery selection map, iframe injection, pagination vars, media
+     * select/remove, font asset injection into iframe
+     * ======================================================================== */
+
             function uptIsImageOrVideo(media) {
                 // Filtro desativado: retorna sempre true para não bloquear nenhum tipo de mídia.
                 return true;
@@ -5066,6 +5131,12 @@ setActiveFiltersFromURL();
 
     }
 
+    /* ========================================================================
+     * SECTION 14: PER-CATEGORY BUTTONS, TAB COUNTERS, SORTABLE CARDS
+     * Item limit per schema, add button visibility, tab counters with AJAX,
+     * drag-and-drop card sorting
+     * ======================================================================== */
+
     // Controle de limite de itens por esquema
     
     function normalizeTruth(val) {
@@ -5461,6 +5532,11 @@ function uptUpdateAddButtonVisibility() {
 
         // Inicializa ao carregar
         uptInitCardSorting();
+    /* ========================================================================
+     * SECTION 15: HELP MODAL & MEDIA TITLE BADGE
+     * Video help modal, media title badge overlay
+     * ======================================================================== */
+
         // =======================
         // Ajuda: modal de vídeo
         // =======================
@@ -5632,7 +5708,13 @@ function uptUpdateAddButtonVisibility() {
             } catch (e) { }
         });
         /* === end upt 43.0.5 additive === */
-        /* === Fallback media init (ensures gallery opens even if dashboard init didn't run) === */
+        /* ========================================================================
+     * SECTION 16: GALLERY FALLBACK
+     * Standalone gallery/media init for pages without dashboard context.
+     * Opens gallery modal, handles media selection (image/video/pdf/gallery)
+     * ======================================================================== */
+
+    /* === Fallback media init (ensures gallery opens even if dashboard init didn't run) === */
         (function(){
             if (window.uptFallbackMediaInitDone) return; window.uptFallbackMediaInitDone = true;
 
@@ -5825,6 +5907,12 @@ function uptUpdateAddButtonVisibility() {
             $('body').on('click', '.upt-remove-pdf', function(e){ e.preventDefault(); var btn=$(this); var wrapper=btn.closest('.upt-pdf-upload-wrapper'); wrapper.find('.upt-pdf-id-input').val(''); wrapper.find('.pdf-preview-wrapper').html(''); btn.addClass('hidden'); });
             $('body').on('click', '.gallery-preview-item .remove-image', function(e){ e.preventDefault(); var item=$(this).closest('.gallery-preview-item'); var wrapper=item.closest('.upt-gallery-wrapper'); var input=wrapper.find('.gallery-ids-input'); var idToRemove=item.data('id').toString(); item.remove(); var currentIds=input.val().split(','); var newIds=currentIds.filter(function(id){ return id !== idToRemove; }); input.val(newIds.join(',')).trigger('change'); });
         })();
+
+    /* ========================================================================
+     * SECTION 17: BULK DELETE
+     * Bulk selection mode, select all (with AJAX for all pages), confirm
+     * dialog, bulk delete via AJAX, UI reset
+     * ======================================================================== */
 
         // -----------------------------
         // Bulk delete (dashboard)

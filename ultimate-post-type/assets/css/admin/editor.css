@@ -1,0 +1,667 @@
+/* editor.css */
+/* Reordenar campos (schema builder) */
+.upt-fields-table tbody tr.upt-field-row {
+    cursor: move;
+}
+
+.upt-fields-table tbody tr.upt-sortable-placeholder {
+    background: #f5f5f5;
+    border: 1px dashed #c3c4c7;
+    height: 40px;
+}
+
+
+/* WYSIWYG styles imported from stable backup */
+se conectar visualmente à toolbar */ .upt-submit-form .upt-wysiwyg-textarea {
+    border-radius: 0 0 4px 4px !important;
+    margin-top: 0 !important;
+    border-top-color: #e5e5e5 !important;
+    /* Leve separação */
+    min-height: 200px;
+}
+
+/* =========================================
+   EDITOR NATIVO upt (VISUAL PREMIUM)
+   ========================================= */
+
+/* Container 
+
+/* ===== BLOCO DE ESTILOS DO EDITOR (WYSIWYG) RESTAURADO DO BACKUP ===== */
+.tox-statusbar__branding,
+div.tox-statusbar__branding,
+.tox-promotion {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Estilo para o Editor Simples upt */
+.upt-simple-toolbar {
+    background: #f0f0f1;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    padding: 8px;
+    display: flex;
+    gap: 6px;
+    border-radius: 4px 4px 0 0;
+    flex-wrap: wrap;
+}
+
+.upt-simple-toolbar button {
+    background: #fff;
+    border: 1px solid #ccc;
+    color: #333;
+    cursor: pointer;
+    padding: 4px 10px;
+    font-size: 13px;
+    border-radius: 3px;
+    font-weight: 600;
+    min-width: 32px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upt-simple-toolbar button:hover {
+    background: #e5e5e5;
+    border-color: #999;
+    color: #000;
+}
+
+/* Ajuste para o textarea se conectar visualmente à toolbar */
+.upt-submit-form .upt-wysiwyg-textarea {
+    border-radius: 0 0 4px 4px !important;
+    margin-top: 0 !important;
+    border-top-color: #e5e5e5 !important;
+    /* Leve separação */
+    min-height: 200px;
+}
+
+/* =========================================
+   EDITOR NATIVO upt (VISUAL PREMIUM)
+   ========================================= */
+
+/* Container Principal */
+.upt-editor-wrapper {
+    all: initial;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e1e4e8 !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+    overflow: hidden;
+    margin-bottom: 20px;
+    /* Herda a fonte definida no Widget do Elementor */
+    font-family: var(--fc-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
+    box-sizing: border-box !important;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.upt-editor-wrapper:focus-within {
+    border-color: var(--fc-primary-color, #2271b1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.upt-editor-wrapper * {
+    box-sizing: border-box;
+}
+
+/* --- Barra de Ferramentas --- */
+.upt-editor-toolbar {
+    background-color: #fff !important;
+    border-bottom: 1px solid #f0f0f2 !important;
+    padding: 6px 10px !important;
+    display: flex;
+    align-items: center;
+    gap: 4px !important;
+    flex-wrap: wrap;
+    min-height: 46px;
+}
+
+/* --- STEPPER DE FONTE (VISUAL NOTION) --- */
+.upt-fontsize-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px !important;
+    border: 1px solid transparent !important;
+    border-radius: 4px !important;
+    background-color: transparent !important;
+    padding: 0 2px !important;
+    margin-right: 6px !important;
+    transition: all 0.2s ease !important;
+    cursor: default;
+}
+
+.upt-fontsize-stepper:hover {
+    background-color: #f1f3f4 !important;
+}
+
+/* Campo de número (Aparência de texto simples) */
+.upt-fontsize-display {
+    width: 24px !important;
+    height: 100% !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    text-align: right;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #3c4043 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    font-family: inherit !important;
+}
+
+/* Controles das setinhas */
+.upt-fontsize-controls {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 20px !important;
+    margin-left: 2px !important;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.upt-fontsize-stepper:hover .upt-fontsize-controls {
+    opacity: 1;
+}
+
+.upt-fontsize-btn {
+    height: 10px !important;
+    width: 16px !important;
+    min-width: auto !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5f6368 !important;
+    line-height: 0 !important;
+    margin: 0 !important;
+}
+
+.upt-fontsize-btn:hover {
+    color: #000 !important;
+    background-color: rgba(0, 0, 0, 0.06) !important;
+    border-radius: 2px;
+}
+
+.upt-fontsize-btn svg {
+    width: 8px !important;
+    height: 8px !important;
+    stroke-width: 3px;
+    pointer-events: none;
+    display: block;
+}
+
+/* --- Botões Padrão (B, I, U, etc) --- */
+.upt-editor-btn {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    cursor: pointer;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 4px !important;
+    color: #5f6368 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.upt-editor-btn:hover {
+    background-color: #f1f3f4 !important;
+    color: #202124 !important;
+}
+
+.upt-editor-btn.active-mode,
+.upt-editor-btn:active {
+    background-color: color-mix(in srgb, var(--fc-primary-color, #2271b1) 10%, white) !important;
+    color: var(--fc-primary-color, #2271b1) !important;
+}
+
+.upt-editor-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke-width: 2px;
+    pointer-events: none;
+    fill: none !important;
+    stroke: currentColor !important;
+}
+
+/* Dropdowns (Select) */
+.upt-select-wrapper {
+    position: relative;
+    margin-right: 6px !important;
+}
+
+.upt-select-wrapper::after {
+    display: none !important;
+    content: none !important;
+}
+
+.upt-editor-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-color: var(--fc-body-bg, #f7f7f9) !important;
+    border: 1px solid var(--fc-border-color, #E7E7E7) !important;
+    border-radius: 8px !important;
+    color: var(--fc-text-dark, #231E39) !important;
+    font-family: var(--fc-font-family, inherit) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    width: auto;
+    min-width: 90px;
+    height: 30px !important;
+    line-height: 30px !important;
+    padding: 0 30px 0 10px !important;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236A6A6A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 14px !important;
+}
+
+.upt-editor-select option {
+    padding: 4px 10px;
+}
+
+.upt-editor-select option[value="p"] {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.upt-editor-select option[value="h1"] {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.upt-editor-select option[value="h2"] {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.upt-editor-select option[value="h3"] {
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.upt-editor-select option[value="h4"] {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.upt-editor-select option[value="h5"] {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.upt-editor-select option[value="h6"] {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.upt-editor-select option[value="pre"] {
+    font-size: 13px;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.upt-editor-select.upt-editor-select--p {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+.upt-editor-select.upt-editor-select--h1 {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+}
+
+.upt-editor-select.upt-editor-select--h2 {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+
+.upt-editor-select.upt-editor-select--h3,
+.upt-editor-select.upt-editor-select--h4 {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.upt-editor-select.upt-editor-select--h5,
+.upt-editor-select.upt-editor-select--h6 {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+
+.upt-editor-select.upt-editor-select--pre {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+@supports (appearance: base-select) {
+    .upt-editor-select {
+        appearance: base-select !important;
+        -webkit-appearance: base-select !important;
+    }
+
+    .upt-editor-select::picker(select) {
+        appearance: base-select;
+        background-color: var(--fc-container-bg, #FFFFFF);
+        border: 1px solid var(--fc-border-color, #E7E7E7);
+        border-radius: 8px;
+        box-shadow: var(--fc-box-shadow, 0px 4px 12px rgba(0, 0, 0, 0.05));
+        padding: 5px;
+        margin-top: 5px;
+        max-height: 240px;
+        overflow-y: auto;
+    }
+
+    .upt-editor-select option {
+        padding: 4px 10px;
+        margin-bottom: 0;
+        border-radius: 4px;
+        color: var(--fc-text-dark, #231E39);
+        font-family: var(--fc-font-family, inherit);
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border: none;
+    }
+
+    .upt-editor-select option[value="p"] {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .upt-editor-select option[value="h1"] {
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .upt-editor-select option[value="h2"] {
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .upt-editor-select option[value="h3"] {
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .upt-editor-select option[value="h4"] {
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .upt-editor-select option[value="h5"] {
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .upt-editor-select option[value="h6"] {
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .upt-editor-select option[value="pre"] {
+        font-size: 13px;
+        font-weight: 600;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .upt-editor-select option:hover,
+    .upt-editor-select option:checked,
+    .upt-editor-select option:focus {
+        background-color: var(--fc-primary-color,
+                var(--e-global-color-primary, #FF3131)) !important;
+        color: #ffffff !important;
+    }
+}
+
+.upt-editor-select::picker-icon {
+    display: none;
+}
+
+.upt-editor-select:hover {
+    background-color: var(--fc-container-bg, #ffffff) !important;
+}
+
+.upt-editor-select:focus {
+    outline: none !important;
+    border-color: var(--fc-primary-color,
+            var(--e-global-color-primary, #FF3131)) !important;
+    background-color: var(--fc-container-bg, #ffffff) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc-primary-color, var(--e-global-color-primary, #FF3131)) 20%, transparent) !important;
+}
+
+/* Separador */
+.upt-editor-separator {
+    width: 1px !important;
+    height: 18px !important;
+    background-color: #dadce0 !important;
+    margin: 0 6px !important;
+    display: block !important;
+}
+
+/* --- Conteúdo --- */
+.upt-editor-content {
+    min-height: 300px;
+    max-height: 600px;
+    padding: 20px 24px !important;
+    outline: none !important;
+    overflow-y: auto;
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+    color: #202124 !important;
+    background: #fff !important;
+    font-family: inherit !important;
+}
+
+/* Placeholder */
+.upt-editor-content:empty::before {
+    content: attr(placeholder);
+    color: #9aa0a6 !important;
+    pointer-events: none;
+    display: block;
+}
+
+/* Mapeamento de Fontes (1-7) */
+.upt-editor-content font[size="1"] {
+    font-size: 10px !important;
+}
+
+.upt-editor-content font[size="2"] {
+    font-size: 13px !important;
+}
+
+.upt-editor-content font[size="3"] {
+    font-size: 16px !important;
+}
+
+.upt-editor-content font[size="4"] {
+    font-size: 18px !important;
+}
+
+.upt-editor-content font[size="5"] {
+    font-size: 24px !important;
+}
+
+.upt-editor-content font[size="6"] {
+    font-size: 32px !important;
+}
+
+.upt-editor-content font[size="7"] {
+    font-size: 48px !important;
+}
+
+/* Estilos internos */
+.upt-editor-content p {
+    margin: 0 0 1em 0 !important;
+}
+
+.upt-editor-content h1,
+.upt-editor-content h2,
+.upt-editor-content h3 {
+    margin: 1em 0 0.5em 0 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+}
+
+.upt-editor-content h1 {
+    font-size: 2em !important;
+}
+
+.upt-editor-content h2 {
+    font-size: 1.5em !important;
+}
+
+.upt-editor-content h3 {
+    font-size: 1.25em !important;
+}
+
+.upt-editor-content h4 {
+    font-size: 1.1em !important;
+    margin: 1em 0 0.5em 0 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+}
+
+.upt-editor-content h5 {
+    font-size: 1.0em !important;
+    margin: 1em 0 0.5em 0 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+}
+
+.upt-editor-content h6 {
+    font-size: 0.9em !important;
+    margin: 1em 0 0.5em 0 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+}
+
+.upt-editor-content pre {
+    margin: 0 0 1em 0 !important;
+    padding: 12px 14px !important;
+    background: #f6f8fa !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+    overflow: auto !important;
+}
+
+.upt-editor-content ul,
+.upt-editor-content ol {
+    padding-left: 1.5em !important;
+    margin: 1em 0 !important;
+    list-style-position: outside !important;
+}
+
+.upt-editor-content a {
+    color: var(--fc-primary-color, #2271b1) !important;
+    text-decoration: underline !important;
+}
+
+.upt-editor-content blockquote {
+    border-left: 3px solid var(--fc-primary-color, #2271b1) !important;
+    margin: 1em 0 !important;
+    padding-left: 15px !important;
+    color: #5f6368 !important;
+    font-style: italic !important;
+}
+
+.upt-editor-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 6px !important;
+    margin: 10px 0 !important;
+    display: block !important;
+}
+
+.upt-editor-content video {
+    width: 100% !important;
+    border-radius: 6px !important;
+    margin: 10px 0 !important;
+}
+
+/* Modo Código */
+.upt-editor-code {
+    width: 100% !important;
+    min-height: 300px !important;
+    border: none !important;
+    padding: 20px !important;
+    background: #282c34 !important;
+    color: #abb2bf !important;
+    font-family: 'Consolas', monospace !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    resize: vertical !important;
+    display: none;
+}
+
+/* Modal Galeria (Z-Index Correto) */
+#upt-gallery-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 2147483647;
+    align-items: center;
+    justify-content: center;
+}
+
+#upt-gallery-modal-content {
+    width: 90%;
+    height: 90%;
+    background: #fff;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+#upt-gallery-close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    background: #d63638;
+    color: #fff;
+    text-align: center;
+    line-height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 100;
+}
+
+#upt-gallery-modal iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+

@@ -1,0 +1,9 @@
+/* variables.css */
+:root {
+    --fc-danger-color: #ff3131;
+}
+
+.wrap.upt-wrap {
+    margin-top: 20px;
+}
+

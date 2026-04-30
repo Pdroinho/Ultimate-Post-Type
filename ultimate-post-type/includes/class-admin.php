@@ -174,13 +174,21 @@ class UPT_Admin
             );
         }
 
+        $css_base = plugin_dir_url(__FILE__) . '../assets/css/admin/';
+        $css_path = plugin_dir_path(__FILE__) . '../assets/css/admin/';
+
         if ($hook === $schema_builder_hook) {
             wp_enqueue_script('jquery-ui-sortable');
             wp_enqueue_script('upt-admin-js', plugin_dir_url(__FILE__) . '../assets/js/admin.js', ['jquery'], filemtime(plugin_dir_path(__FILE__) . '../assets/js/admin.js'), true);
+            wp_enqueue_style('upt-admin-variables', $css_base . 'variables.css', [], filemtime($css_path . 'variables.css'));
+            wp_enqueue_style('upt-admin-base', $css_base . 'admin-base.css', ['upt-admin-variables'], filemtime($css_path . 'admin-base.css'));
+            wp_enqueue_style('upt-admin-editor', $css_base . 'editor.css', ['upt-admin-variables'], filemtime($css_path . 'editor.css'));
         }
 
-        if ($hook === $schema_builder_hook || $hook === $importer_hook) {
-            wp_enqueue_style('upt-admin-style', plugin_dir_url(__FILE__) . '../assets/css/admin.css', [], filemtime(plugin_dir_path(__FILE__) . '../assets/css/admin.css'));
+        if ($hook === $importer_hook) {
+            wp_enqueue_style('upt-admin-variables', $css_base . 'variables.css', [], filemtime($css_path . 'variables.css'));
+            wp_enqueue_style('upt-admin-base', $css_base . 'admin-base.css', ['upt-admin-variables'], filemtime($css_path . 'admin-base.css'));
+            wp_enqueue_style('upt-admin-import-wizard', $css_base . 'import-wizard.css', ['upt-admin-variables'], filemtime($css_path . 'import-wizard.css'));
         }
 
         if ($hook === $importer_hook) {
@@ -399,8 +407,9 @@ class UPT_Admin
         if (isset($_GET['page']) && $_GET['page'] === 'upt_gallery') {
             wp_enqueue_media();
             wp_enqueue_style('upt-gallery-style', plugin_dir_url(__FILE__) . '../assets/css/gallery.css', [], filemtime(plugin_dir_path(__FILE__) . '../assets/css/gallery.css'));
-            // Badge de alerta (reuso do CSS/JS)
-            wp_enqueue_style('upt-admin-style', plugin_dir_url(__FILE__) . '../assets/css/admin.css', [], filemtime(plugin_dir_path(__FILE__) . '../assets/css/admin.css'));
+            wp_enqueue_style('upt-admin-variables', $css_base . 'variables.css', [], filemtime($css_path . 'variables.css'));
+            wp_enqueue_style('upt-admin-components', $css_base . 'components.css', ['upt-admin-variables'], filemtime($css_path . 'components.css'));
+            wp_enqueue_style('upt-admin-form-fixes', $css_base . 'form-fixes.css', ['upt-admin-variables'], filemtime($css_path . 'form-fixes.css'));
             wp_enqueue_script('upt-front-js', plugin_dir_url(__FILE__) . '../assets/js/front.js', ['jquery'], filemtime(plugin_dir_path(__FILE__) . '../assets/js/front.js'), true);
             wp_enqueue_script('upt-gallery-js', plugin_dir_url(__FILE__) . '../assets/js/gallery.js', ['jquery', 'upt-front-js'], filemtime(plugin_dir_path(__FILE__) . '../assets/js/gallery.js'), true);
 
