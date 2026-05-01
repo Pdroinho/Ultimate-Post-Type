@@ -2632,7 +2632,19 @@ endif; ?>
 <!-- ========================= -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<?php wp_enqueue_script('upt-dashboard-js', plugin_dir_url(__DIR__) . 'assets/js/admin/dashboard.js', ['jquery'], filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin/dashboard.js'), true); ?>
+<?php
+wp_enqueue_script('upt-dashboard-js', plugin_dir_url(__DIR__) . 'assets/js/admin/dashboard.js', ['jquery'], filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin/dashboard.js'), true);
+wp_enqueue_script('upt-card-builder-js', plugin_dir_url(__DIR__) . 'assets/js/admin/card-builder.js', ['jquery', 'jquery-ui-sortable'], filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin/card-builder.js'), true);
+wp_enqueue_script('upt-import-wizard-js', plugin_dir_url(__DIR__) . 'assets/js/admin/import-wizard.js', ['jquery'], filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin/import-wizard.js'), true);
+wp_localize_script('upt-card-builder-js', 'upt_ajax', [
+    'ajax_url' => admin_url('admin-ajax.php'),
+    'nonce'    => wp_create_nonce('upt_ajax_nonce'),
+]);
+wp_localize_script('upt-import-wizard-js', 'upt_ajax', [
+    'ajax_url' => admin_url('admin-ajax.php'),
+    'nonce'    => wp_create_nonce('upt_ajax_nonce'),
+]);
+?>
 <script>
 window.uptDashboard = {
     labels: <?php echo $upt_dashboard_labels_json; ?>,
@@ -2643,13 +2655,4 @@ window.uptDashboard = {
     hasButtons: <?php echo $upt_has_buttons_cpt ? 'true' : 'false'; ?>,
     hasImages: <?php echo $upt_has_images_cpt ? 'true' : 'false'; ?>
 };
-</script>
-<script>
-jQuery(function($) {
-
-    <?php wp_enqueue_script('upt-card-builder-js', plugin_dir_url(__DIR__) . 'assets/js/admin/card-builder.js', ['jquery', 'jquery-ui-sortable'], filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin/card-builder.js'), true); ?>
-
-    <?php wp_enqueue_script('upt-import-wizard-js', plugin_dir_url(__DIR__) . 'assets/js/admin/import-wizard.js', ['jquery'], filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin/import-wizard.js'), true); ?>
-
-});
 </script>

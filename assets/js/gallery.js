@@ -1,6 +1,11 @@
 (function($) {
     'use strict';
 
+    function toast(msg, type) {
+        if (window.uptToast) { window.uptToast(msg, type); }
+        else { alert(msg); }
+    }
+
     // Resolve helpers across nested iframes (Elementor/editor can nest frames)
     function fcResolveFn(fnName, maxDepth) {
         var depth = (typeof maxDepth === 'number') ? maxDepth : 10;
@@ -1490,12 +1495,12 @@ function loadImages(folderId, folderName, highlightId, options) {
                             loadFolders();
                             fcShowBadge(deletedFolderMsg);
                         } else {
-                            alert('Erro ao excluir a pasta: ' + (response.data && response.data.message ? response.data.message : 'Erro desconhecido.'));
+                            toast('Erro ao excluir a pasta: ' + (response.data && response.data.message ? response.data.message : 'Erro desconhecido.'), 'error');
                             button.prop('disabled', false);
                         }
                     },
                     error: function() {
-                        alert('Erro de comunicação.');
+                        toast('Erro de comunicação.', 'error');
                         button.prop('disabled', false);
                     }
                 });
@@ -1561,12 +1566,12 @@ function loadImages(folderId, folderName, highlightId, options) {
 
                         renderBreadcrumb(termId);
                     } else {
-                        alert('Erro ao renomear a pasta: ' + (response && response.data && response.data.message ? response.data.message : 'Erro desconhecido.'));
+                        toast('Erro ao renomear a pasta: ' + (response && response.data && response.data.message ? response.data.message : 'Erro desconhecido.'), 'error');
                         button.prop('disabled', false);
                     }
                 },
                 error: function() {
-                    alert('Erro de comunicação.');
+                    toast('Erro de comunicação.', 'error');
                     button.prop('disabled', false);
                 }
             });
@@ -1646,7 +1651,7 @@ function loadImages(folderId, folderName, highlightId, options) {
                     }
 
                     if (errors.length) {
-                        alert(errors.join('\n'));
+                        toast(errors.join('\n'), 'error');
                     }
                 }
 
@@ -1934,7 +1939,7 @@ function loadImages(folderId, folderName, highlightId, options) {
                                 }
                             }
                             if (uploadErrors) {
-                                alert('Algumas mídias não puderam ser enviadas.');
+                                toast('Algumas mídias não puderam ser enviadas.', 'warning');
                             }
                         }
                     }
@@ -2016,7 +2021,7 @@ function loadImages(folderId, folderName, highlightId, options) {
                     loadImages(0, 'Midias sem pasta');
                 },
                 error: function() {
-                    alert('Ocorreu um erro ao mover as mídias.');
+                    toast('Ocorreu um erro ao mover as mídias.', 'error');
                     selectedItems.css('opacity', '1');
                 },
                 complete: function() {
@@ -2047,7 +2052,7 @@ function loadImages(folderId, folderName, highlightId, options) {
                         loadImages(activeFolderId, sidebarList.find('a.active').text());
                     },
                     error: function() {
-                        alert('Ocorreu um erro ao remover as mídias da pasta.');
+                        toast('Ocorreu um erro ao remover as mídias da pasta.', 'error');
                         selectedItems.css('opacity', '1');
                     }
                 });
@@ -2080,12 +2085,12 @@ function loadImages(folderId, folderName, highlightId, options) {
                                 loadImages(activeFolderId, activeFolderName);
                             }
                         } else {
-                            alert('Erro ao excluir as mídias: ' + (response.data ? response.data.message : 'Erro desconhecido.'));
+                            toast('Erro ao excluir as mídias: ' + (response.data ? response.data.message : 'Erro desconhecido.'), 'error');
                             selectedItems.css('opacity', '1');
                         }
                     },
                     error: function() {
-                        alert('Erro ao excluir as mídias.');
+                        toast('Erro ao excluir as mídias.', 'error');
                         selectedItems.css('opacity', '1');
                     }
                 });

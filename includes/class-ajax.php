@@ -3186,9 +3186,27 @@ public static function delete_category() {
             wp_send_json_error( [ 'message' => 'Configure a URL e o esquema primeiro.' ] );
         }
 
+        $before_last = isset( $config['last_run'] ) ? $config['last_run'] : '';
+
+        set_time_limit( 300 );
+
         do_action( 'upt_imob_cron_import' );
 
-        wp_send_json_success( [ 'message' => 'Teste disparado.' ] );
+        $config_after = get_option( 'upt_imob_cron_config', [] );
+        $stats = get_option( 'upt_imob_cron_stats', ['total' => 0, 'imported' => 0, 'errors' => 0] );
+        $after_last = isset( $config_after['last_run'] ) ? $config_after['last_run'] : '';
+
+        if ( $after_last !== $before_last ) {
+            wp_send_json_success( [
+                'message'  => 'Importação concluída!',
+                'last_run' => $after_last,
+                'stats'    => $stats,
+            ] );
+        } else {
+            wp_send_json_error( [
+                'message' => 'A importação não foi executada. Verifique se a URL está acessível e o bloqueio de execução anterior expirou (30 min).',
+            ] );
+        }
     }
 
     public static function save_card_settings() {

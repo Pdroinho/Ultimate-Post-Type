@@ -273,6 +273,65 @@ jQuery(document).ready(function ($) {
         }
     }
 
+    function uptToast(message, type) {
+        type = type || 'info';
+        var iconMap = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        var colorMap = { success: '#16a34a', error: '#dc2626', warning: '#f59e0b', info: '#2563eb' };
+        var $host = uptEnsureAlertHost();
+
+        var $toast = $('<div class="upt-toast upt-toast--' + type + '" role="status"></div>');
+        $toast.css({
+            'display': 'flex',
+            'align-items': 'flex-start',
+            'gap': '10px',
+            'padding': '14px 16px',
+            'margin-bottom': '10px',
+            'background': '#fff',
+            'border-radius': '10px',
+            'box-shadow': '0 4px 24px rgba(0,0,0,0.12)',
+            'border-left': '4px solid ' + (colorMap[type] || colorMap.info),
+            'max-width': '420px',
+            'width': '100%',
+            'opacity': '0',
+            'transform': 'translateX(40px)',
+            'transition': 'opacity .3s ease, transform .3s ease',
+            'font-size': '14px',
+            'line-height': '1.5',
+            'color': '#1e293b',
+            'position': 'relative',
+        });
+
+        var $icon = $('<span class="upt-toast__icon" aria-hidden="true"></span>').text(iconMap[type] || iconMap.info).css({ 'font-size': '18px', 'flex-shrink': '0', 'margin-top': '1px' });
+        var $body = $('<div class="upt-toast__body"></div>').css({ 'flex': '1' });
+
+        var lines = (message || '').split('\n');
+        lines.forEach(function(line, i) {
+            if (i === 0) {
+                var $strong = $('<strong></strong>').css({ 'display': 'block', 'margin-bottom': '2px', 'color': colorMap[type] || colorMap.info }).text(line);
+                $body.append($strong);
+            } else if (line.trim()) {
+                $body.append($('<span></span>').css({ 'display': 'block', 'font-size': '13px', 'color': '#64748b' }).text(line));
+            }
+        });
+
+        var $close = $('<button type="button" class="upt-toast__close" aria-label="Fechar"></button>').css({
+            'background': 'none', 'border': 'none', 'cursor': 'pointer', 'color': '#94a3b8',
+            'font-size': '16px', 'padding': '0', 'line-height': '1', 'flex-shrink': '0',
+        }).html('✕');
+
+        $close.on('click', function() { $toast.css({ opacity: '0', transform: 'translateX(40px)' }); setTimeout(function() { $toast.remove(); }, 300); });
+        $toast.append($icon, $body, $close);
+        $host.append($toast);
+
+        var $all = $host.find('.upt-toast, .upt-alert-badge');
+        if ($all.length > 5) { $all.first().remove(); }
+
+        setTimeout(function() { $toast.css({ opacity: '1', transform: 'translateX(0)' }); }, 20);
+
+        var dur = type === 'error' ? 8000 : 5000;
+        setTimeout(function() { if ($toast.length) { $toast.css({ opacity: '0', transform: 'translateX(40px)' }); setTimeout(function() { $toast.remove(); }, 300); } }, dur);
+    }
+
     function uptNotify(type, message) {
         var cfg = uptGetAlertConfig();
         if (!cfg || !cfg.enabled) { return; }
@@ -333,6 +392,7 @@ jQuery(document).ready(function ($) {
     window.uptGetAlertConfig = uptGetAlertConfig;
     window.uptNotify = uptNotify;
     window.uptConfirmDialog = uptConfirmDialog;
+    window.uptToast = uptToast;
 
 
     (function () {
@@ -473,7 +533,7 @@ jQuery(document).ready(function ($) {
 
         if (!Array.isArray(mediaFields) || !mediaFields.length) {
             if (fallbackMessage) {
-                alert('Erro ao salvar: ' + (fallbackMessage || 'Ocorreu um erro desconhecido.'));
+                uptToast('Erro ao salvar: ' + (fallbackMessage || 'Ocorreu um erro desconhecido.'), 'error');
             }
             return;
         }
@@ -2519,7 +2579,7 @@ setActiveFiltersFromURL();
 
                 } else {
                     if (response.data && (response.data.code === 'invalid_nonce' || response.data.code === 'not_logged_in')) {
-                        alert('Sua sessão parece ter expirado. A página será recarregada para corrigir o problema.');
+                        uptToast('Sua sessão parece ter expirado. A página será recarregada para corrigir o problema.', 'warning');
                         location.reload();
                     } else {
                         contentDiv.attr('aria-busy', 'false').html('<p>Ocorreu um erro ao carregar o formulário.</p>');
@@ -3104,7 +3164,7 @@ setActiveFiltersFromURL();
             var schemaSlug = activeTab.length ? activeTab.attr('id').replace('tab-', '') : '';
 
             if (!schemaSlug) {
-                alert('Por favor, selecione uma aba de esquema primeiro.');
+                uptToast('Por favor, selecione uma aba de esquema primeiro.', 'warning');
                 return;
             }
 
@@ -3144,12 +3204,12 @@ setActiveFiltersFromURL();
                                 activeTab.find('.filter-item.filter-category').html(response.data.filter_html);
                             }
                         } else {
-                            alert('Erro ao excluir: ' + (response.data.message || 'Erro desconhecido.'));
+                            uptToast('Erro ao excluir: ' + (response.data.message || 'Erro desconhecido.'), 'error');
                             listItem.removeClass('upt-loading');
                         }
                     },
                     error: function () {
-                        alert('Erro de comunicação.');
+                        uptToast('Erro de comunicação.', 'error');
                         listItem.removeClass('upt-loading');
                     }
                 });
@@ -3232,7 +3292,7 @@ setActiveFiltersFromURL();
                     });
                 }
             } catch (err) {
-                alert('Selecione uma subcategoria para continuar.');
+                uptToast('Selecione uma subcategoria para continuar.', 'warning');
                 var $first = form.find('.upt-subcategory-wrapper[data-subcat-required="1"] #upt-category-child').first();
                 if ($first.length) { $first.focus(); }
                 return;
@@ -3282,12 +3342,12 @@ setActiveFiltersFromURL();
                         } else if (mediaData.media_required && Array.isArray(mediaData.media_fields)) {
                             uptShowMediaRequiredTooltips(mediaData.media_fields, message);
                         } else {
-                            alert('Erro ao salvar: ' + (message || 'Ocorreu um erro desconhecido.'));
+                            uptToast('Erro ao salvar: ' + (message || 'Ocorreu um erro desconhecido.'), 'error');
                         }
                     }
                 },
                 error: function () {
-                    alert('Ocorreu um erro de comunicação. Tente novamente.');
+                    uptToast('Ocorreu um erro de comunicação. Tente novamente.', 'error');
                 },
                 complete: function () {
                     submitButton.val(originalButtonText).prop('disabled', false);
@@ -3358,13 +3418,13 @@ setActiveFiltersFromURL();
                                 if (typeof uptRefreshTabCounters === 'function') { uptRefreshTabCounters(); }
                             });
                         } else {
-                            alert('Erro ao excluir: ' + (response.data.message || 'Ocorreu um erro desconhecido.'));
+                            uptToast('Erro ao excluir: ' + (response.data.message || 'Ocorreu um erro desconhecido.'), 'error');
                             card.removeClass('upt-loading');
                         }
                     },
                     error: function (xhr, status, err) {
                         uptDebugLog('delete-item: ajax error', { status: status, err: err, responseText: xhr && xhr.responseText });
-                        alert('Ocorreu um erro de comunicação. Tente novamente.');
+                        uptToast('Ocorreu um erro de comunicação. Tente novamente.', 'error');
                         card.removeClass('upt-loading');
                     }
                 });
@@ -3784,10 +3844,10 @@ setActiveFiltersFromURL();
                                     }
                                     uptShowAlertBadge('Categoria "' + termName + '" excluída com sucesso.');
                                 } else {
-                                    alert('Erro ao excluir: ' + (response.data ? response.data.message : 'Erro desconhecido.'));
+                                    uptToast('Erro ao excluir: ' + (response.data ? response.data.message : 'Erro desconhecido.'), 'error');
                                 }
                             },
-                            error: function () { alert('Erro de comunicação ao tentar excluir a categoria.'); }
+                            error: function () { uptToast('Erro de comunicação ao tentar excluir a categoria.', 'error'); }
                         });
                     });
                 });
@@ -3816,10 +3876,10 @@ setActiveFiltersFromURL();
                                     checkbox.remove();
                                     uptShowAlertBadge('Opção "' + optionValue + '" excluída com sucesso.');
                                 } else {
-                                    alert('Erro ao excluir: ' + (response.data ? response.data.message : 'Erro desconhecido.'));
+                                    uptToast('Erro ao excluir: ' + (response.data ? response.data.message : 'Erro desconhecido.'), 'error');
                                 }
                             },
-                            error: function () { alert('Erro de comunicação ao tentar excluir a opção.'); }
+                            error: function () { uptToast('Erro de comunicação ao tentar excluir a opção.', 'error'); }
                         });
                     });
                 });
@@ -3836,7 +3896,7 @@ setActiveFiltersFromURL();
 
                     var termId = parseInt(catDropdown.val(), 10);
                     if (!termId || termId <= 0) {
-                        alert('Por favor, selecione uma categoria para renomear.');
+                        uptToast('Por favor, selecione uma categoria para renomear.', 'warning');
                         return;
                     }
 
@@ -3868,11 +3928,11 @@ setActiveFiltersFromURL();
                                     }
                                     uptNotify('category_renamed', (response.data && response.data.message) ? response.data.message : ('Categoria renomeada: ' + updatedName));
                                 } else {
-                                    alert('Erro ao renomear: ' + (response.data.message || 'Erro desconhecido.'));
+                                    uptToast('Erro ao renomear: ' + (response.data.message || 'Erro desconhecido.'), 'error');
                                 }
                             },
                             error: function () {
-                                alert('Erro de comunicação ao tentar renomear a categoria.');
+                                uptToast('Erro de comunicação ao tentar renomear a categoria.', 'error');
                             }
                         });
                         return;
@@ -3984,7 +4044,7 @@ setActiveFiltersFromURL();
                     var catName = catDropdown.find('option:selected').text();
 
                     if (!termId || termId <= 0) {
-                        alert('Por favor, selecione uma categoria para excluir.');
+                        uptToast('Por favor, selecione uma categoria para excluir.', 'warning');
                         return;
                     }
                     uptConfirmDialog('Tem certeza que deseja excluir a categoria "' + catName + '"? Esta ação não pode ser desfeita.', function () {
@@ -4002,11 +4062,11 @@ setActiveFiltersFromURL();
                                     catDropdown.val(0).trigger('change');
                                     if (window.uptNotify) { window.uptNotify('category_deleted', response.data && response.data.message ? response.data.message : 'Categoria apagada.'); }
                                 } else {
-                                    alert('Erro: ' + (response.data && response.data.message ? response.data.message : 'Erro ao excluir categoria.'));
+                                    uptToast('Erro: ' + (response.data && response.data.message ? response.data.message : 'Erro ao excluir categoria.'), 'error');
                                 }
                             },
                             error: function () {
-                                alert('Erro de comunicação ao tentar excluir a categoria.');
+                                uptToast('Erro de comunicação ao tentar excluir a categoria.', 'error');
                             }
                         });
                     });
@@ -4131,7 +4191,7 @@ setActiveFiltersFromURL();
                     var $row = $(this).closest('.upt-field-row');
                     var $wrapper = $row.find('.upt-subcategory-wrapper');
                     var parentId = $row.find('#upt-category-parent').val();
-                    if (!parentId) { alert('Selecione uma categoria primeiro.'); return; }
+                    if (!parentId) { uptToast('Selecione uma categoria primeiro.', 'warning'); return; }
 
                     var $area = $wrapper.find('.upt-subcat-area');
                     $area.find('.upt-subcat-mode').val('create');
@@ -4148,7 +4208,7 @@ setActiveFiltersFromURL();
                     var $wrapper = $row.find('.upt-subcategory-wrapper');
                     var $child = $row.find('#upt-category-child');
                     var termId = parseInt($child.val(), 10);
-                    if (!termId || termId <= 0) { alert('Selecione uma subcategoria para editar.'); return; }
+                    if (!termId || termId <= 0) { uptToast('Selecione uma subcategoria para editar.', 'warning'); return; }
 
                     var currentName = $child.find('option:selected').text();
                     var parentId = $row.find('#upt-category-parent').val();
@@ -4168,7 +4228,7 @@ setActiveFiltersFromURL();
                     var $wrapper = $row.find('.upt-subcategory-wrapper');
                     var $child = $row.find('#upt-category-child');
                     var termId = parseInt($child.val(), 10);
-                    if (!termId || termId <= 0) { alert('Selecione uma subcategoria para excluir.'); return; }
+                    if (!termId || termId <= 0) { uptToast('Selecione uma subcategoria para excluir.', 'warning'); return; }
                     var name = $child.find('option:selected').text();
                     uptConfirmDialog('Tem certeza que deseja excluir a subcategoria "' + name + '"? Esta ação não pode ser desfeita.', function () {
                         $.ajax({
@@ -4186,10 +4246,10 @@ setActiveFiltersFromURL();
                                     uptSyncFinalCategoryValue($row);
                                     if (window.uptNotify) { window.uptNotify('subcategory_deleted', 'Subcategoria excluída.'); }
                                 } else {
-                                    alert('Erro ao excluir: ' + (resp && resp.data && resp.data.message ? resp.data.message : 'Erro desconhecido.'));
+                                    uptToast('Erro ao excluir: ' + (resp && resp.data && resp.data.message ? resp.data.message : 'Erro desconhecido.'), 'error');
                                 }
                             },
-                            error: function () { alert('Erro de comunicação ao tentar excluir.'); }
+                            error: function () { uptToast('Erro de comunicação ao tentar excluir.', 'error'); }
                         });
                     });
                 });
@@ -5374,7 +5434,7 @@ function uptUpdateAddButtonVisibility() {
             }).done(function () {
                 $(document).trigger('upt_items_list_updated');
             }).fail(function () {
-                window.alert('Erro ao salvar a nova ordem.');
+                uptToast('Erro ao salvar a nova ordem.', 'error');
             });
         }
 

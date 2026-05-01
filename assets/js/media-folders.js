@@ -1,6 +1,11 @@
 (function($) {
     'use strict';
 
+    function toast(msg, type) {
+        if (window.uptToast) { window.uptToast(msg, type); }
+        else { alert(msg); }
+    }
+
     if (typeof wp === 'undefined' || typeof wp.media === 'undefined') {
         return;
     }
@@ -59,7 +64,7 @@
                 filterDropdown.val(response.slug).trigger('change');
                 input.val('');
             }).fail(function(response) {
-                alert('Erro: ' + response.message);
+                toast('Erro: ' + response.message, 'error');
             }).always(function() {
                 button.prop('disabled', false).text('Criar');
             });

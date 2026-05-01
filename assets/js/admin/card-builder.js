@@ -23,32 +23,42 @@
                 if (resp.success) {
                     location.reload();
                 } else {
-                    alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'));
+                    window.uptToast('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'), 'error');
                     $btn.text('Salvar e Ativar');
                 }
             }).fail(function() {
                 $btn.prop('disabled', false).text('Salvar e Ativar');
-                alert('Erro de conexão.');
+                window.uptToast('Erro de conexão.', 'error');
             });
         });
 
         jQuery('#upt-cron-test').on('click', function() {
             var $btn = jQuery(this);
-            $btn.prop('disabled', true).text('Testando...');
+            $btn.prop('disabled', true).text('Importando...');
             jQuery.post(ajaxUrl, {
                 action: 'upt_test_cron_import',
                 nonce: nonce
             }, function(resp) {
                 $btn.prop('disabled', false).text('Testar Agora');
                 if (resp.success) {
-                    alert('Teste iniciado! Verifique o status em instantes.');
-                    setTimeout(function() { location.reload(); }, 3000);
+                    var data = resp.data || {};
+                    var msg = data.message || 'Teste concluído!';
+                    if (data.stats) {
+                        msg += '\n\nTotal: ' + (data.stats.total || 0);
+                        msg += '\nImportados: ' + (data.stats.imported || 0);
+                        msg += '\nErros: ' + (data.stats.errors || 0);
+                    }
+                    if (data.last_run) {
+                        msg += '\n\nÚltima execução: ' + data.last_run;
+                    }
+                    window.uptToast(msg, 'success');
+                    location.reload();
                 } else {
-                    alert('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'));
+                    window.uptToast('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'), 'error');
                 }
             }).fail(function() {
                 $btn.prop('disabled', false).text('Testar Agora');
-                alert('Erro de conexão.');
+                window.uptToast('Erro de conexão. O servidor pode ter atingido o tempo limite (timeout). Tente novamente.', 'error');
             });
         });
     })();
