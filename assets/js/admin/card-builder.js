@@ -32,19 +32,76 @@
             });
         });
 
+        var $progress = jQuery('#upt-cron-progress');
+        var $progressMsg = jQuery('#upt-cron-progress-msg');
+        var $progressBar = jQuery('#upt-cron-progress-bar');
+        var $cronStep = jQuery('#upt-cron-step');
+        var $cronElapsed = jQuery('#upt-cron-elapsed');
+        var cronTimer = null;
+        var cronStart = null;
+
+        function cronShowProgress() {
+            $progress.slideDown(200);
+            cronStart = Date.now();
+            cronTimer = setInterval(function() {
+                var s = Math.round((Date.now() - cronStart) / 1000);
+                $cronElapsed.text(s + 's');
+            }, 1000);
+        }
+        function cronSetStep(label, barPct) {
+            $progressMsg.text(label);
+            $cronStep.text(label);
+            $progressBar.css('width', barPct + '%');
+        }
+        function cronHideProgress() {
+            if (cronTimer) { clearInterval(cronTimer); cronTimer = null; }
+            $progress.slideUp(200);
+            $progressBar.css('width', '0%');
+        }
+
+        var cronSteps = [
+            { at: 0,    label: 'Baixando XML...',      pct: 10 },
+            { at: 3000, label: 'Lendo estrutura...',    pct: 25 },
+            { at: 6000, label: 'Importando imóveis...', pct: 50 },
+            { at: 15000,label: 'Processando lotes...',  pct: 70 },
+            { at: 30000,label: 'Baixando fotos...',     pct: 85 },
+            { at: 60000,label: 'Finalizando...',        pct: 95 },
+        ];
+        var cronStepTimers = [];
+
+        function cronStartSteps() {
+            cronStepTimers.forEach(function(t) { clearTimeout(t); });
+            cronStepTimers = [];
+            cronSteps.forEach(function(step) {
+                var t = setTimeout(function() { cronSetStep(step.label, step.pct); }, step.at);
+                cronStepTimers.push(t);
+            });
+        }
+        function cronClearSteps() {
+            cronStepTimers.forEach(function(t) { clearTimeout(t); });
+            cronStepTimers = [];
+        }
+
         jQuery('#upt-cron-test').on('click', function() {
             var $btn = jQuery(this);
             $btn.prop('disabled', true).text('Importando...');
+            cronShowProgress();
+            cronSetStep('Baixando XML...', 5);
+            cronStartSteps();
+
             jQuery.post(ajaxUrl, {
                 action: 'upt_test_cron_import',
                 nonce: nonce
             }, function(resp) {
+                cronClearSteps();
                 $btn.prop('disabled', false).text('Testar Agora');
+
                 if (resp.success) {
+                    cronSetStep('Concluído!', 100);
                     var data = resp.data || {};
                     var msg = data.message || 'Teste concluído!';
                     if (data.stats) {
-                        msg += '\n\nTotal: ' + (data.stats.total || 0);
+                        msg += '\nTotal: ' + (data.stats.total || 0);
                         msg += '\nImportados: ' + (data.stats.imported || 0);
                         msg += '\nErros: ' + (data.stats.errors || 0);
                     }
@@ -52,11 +109,14 @@
                         msg += '\n\nÚltima execução: ' + data.last_run;
                     }
                     window.uptToast(msg, 'success');
-                    location.reload();
+                    setTimeout(function() { cronHideProgress(); location.reload(); }, 1500);
                 } else {
+                    cronHideProgress();
                     window.uptToast('Erro: ' + (resp.data && resp.data.message ? resp.data.message : 'desconhecido'), 'error');
                 }
             }).fail(function() {
+                cronClearSteps();
+                cronHideProgress();
                 $btn.prop('disabled', false).text('Testar Agora');
                 window.uptToast('Erro de conexão. O servidor pode ter atingido o tempo limite (timeout). Tente novamente.', 'error');
             });

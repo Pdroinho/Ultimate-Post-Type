@@ -2171,6 +2171,20 @@ endif; ?>
                                     </button>
                                 </div>
 
+                                <div id="upt-cron-progress" style="display:none;margin-top:16px;">
+                                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                                        <div id="upt-cron-spinner" style="width:20px;height:20px;border:2.5px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:uptSpin .8s linear infinite;flex-shrink:0;"></div>
+                                        <span id="upt-cron-progress-msg" style="font-size:13px;color:#475569;">Baixando XML...</span>
+                                    </div>
+                                    <div style="background:#e2e8f0;border-radius:6px;overflow:hidden;height:8px;">
+                                        <div id="upt-cron-progress-bar" style="background:linear-gradient(90deg,#6366f1,#818cf8);height:100%;width:0%;transition:width 0.5s ease;border-radius:6px;"></div>
+                                    </div>
+                                    <div id="upt-cron-progress-stats" style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:#64748b;">
+                                        <span>Etapa: <strong id="upt-cron-step">—</strong></span>
+                                        <span>Tempo: <strong id="upt-cron-elapsed">0s</strong></span>
+                                    </div>
+                                </div>
+
                                 <div class="upt-import-cron__status">
                                     <div class="upt-import-cron__status-grid">
                                         <div class="upt-import-cron__status-item">
@@ -2512,6 +2526,7 @@ endif; ?>
 <!-- ========================= -->
 
 <style>
+@keyframes uptSpin { to { transform: rotate(360deg); } }
 /* Ícones (ver detalhes / excluir) */
 .upt-submissions-grid .upt-action-icon svg,
 .upt-submissions-grid .upt-action-icon i {
