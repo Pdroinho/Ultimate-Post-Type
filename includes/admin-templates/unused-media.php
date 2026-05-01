@@ -174,7 +174,8 @@ if (!defined('ABSPATH'))
             if (window.localStorage) {
                 localStorage.setItem('upt_unused_auto_scan', '0');
             }
-            alert('<?php echo esc_js(__('Varredura automática parada. Você pode continuar manualmente se desejar.', 'upt')); ?>');
+            if (window.uptToast) { window.uptToast('<?php echo esc_js(__('Varredura automática parada. Você pode continuar manualmente se desejar.', 'upt')); ?>', 'info'); }
+            else { alert('<?php echo esc_js(__('Varredura automática parada. Você pode continuar manualmente se desejar.', 'upt')); ?>'); }
         });
 
         $(document).on('change', '#upt-select-all-unused', function(){

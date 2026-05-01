@@ -185,19 +185,77 @@ jQuery(document).ready(function ($) {
 
     function uptConfirmDialog(message, onConfirm, options) {
         options = options || {};
-        // Simple confirm modal (evita prompt nativo do navegador)
         var $existing = $('#upt-confirm-overlay');
         if ($existing.length) { $existing.remove(); }
 
-        var $overlay = $('<div id="upt-confirm-overlay" class="upt-confirm-overlay" role="dialog" aria-modal="true"></div>');
-        var $panel = $('<div class="upt-confirm-panel"></div>');
-        var $msg = $('<p class="upt-confirm-message"></p>').text(message || 'Confirmar ação?');
-        var $actions = $('<div class="upt-confirm-actions"></div>');
-        var $cancel = $('<button type="button" class="upt-confirm-cancel">Cancelar</button>');
-        var $ok = $('<button type="button" class="upt-confirm-ok">Excluir</button>');
+        var $overlay = $('<div id="upt-confirm-overlay" role="dialog" aria-modal="true"></div>').css({
+            'position': 'fixed',
+            'inset': '0',
+            'z-index': '2147483640',
+            'background': 'rgba(0,0,0,0.45)',
+            'display': 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            'padding': '20px',
+            'animation': 'uptFadeIn .2s ease',
+        });
+
+        var $panel = $('<div></div>').css({
+            'background': '#fff',
+            'border-radius': '14px',
+            'box-shadow': '0 20px 60px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.08)',
+            'padding': '24px',
+            'max-width': '480px',
+            'width': '100%',
+        });
+
+        var $msg = $('<p></p>').text(message || 'Confirmar ação?').css({
+            'margin': '0 0 20px',
+            'font-size': '14px',
+            'line-height': '1.6',
+            'color': '#1e293b',
+        });
+
+        var $actions = $('<div></div>').css({
+            'display': 'flex',
+            'justify-content': 'flex-end',
+            'gap': '10px',
+        });
+
+        var $cancel = $('<button type="button">Cancelar</button>').css({
+            'border-radius': '10px',
+            'border': '1px solid #e2e8f0',
+            'padding': '10px 20px',
+            'font-size': '14px',
+            'font-weight': '600',
+            'cursor': 'pointer',
+            'background': '#f8fafc',
+            'color': '#475569',
+            'transition': 'background .15s',
+        });
+
+        var $ok = $('<button type="button">Excluir</button>').css({
+            'border-radius': '10px',
+            'border': '1px solid rgba(229,57,53,0.3)',
+            'padding': '10px 20px',
+            'font-size': '14px',
+            'font-weight': '600',
+            'cursor': 'pointer',
+            'background': '#e53935',
+            'color': '#fff',
+            'transition': 'background .15s',
+        });
+
+        $cancel.hover(
+            function() { $(this).css('background', '#f1f5f9'); },
+            function() { $(this).css('background', '#f8fafc'); }
+        );
+        $ok.hover(
+            function() { $(this).css('background', '#d32f2f'); },
+            function() { $(this).css('background', '#e53935'); }
+        );
 
         $actions.append($cancel, $ok);
-
         $panel.append($msg);
 
         if (options.extraContent) {
@@ -206,6 +264,12 @@ jQuery(document).ready(function ($) {
 
         $panel.append($actions);
         $overlay.append($panel);
+
+        var $style = $('#upt-confirm-keyframes');
+        if (!$style.length) {
+            $('head').append('<style id="upt-confirm-keyframes">@keyframes uptFadeIn{from{opacity:0}to{opacity:1}}</style>');
+        }
+
         $('body').append($overlay);
 
         function close() { $overlay.remove(); $(document).off('keydown.uptConfirm'); }
@@ -223,6 +287,8 @@ jQuery(document).ready(function ($) {
             close();
             try { if (typeof onConfirm === 'function') { onConfirm(confirmData); } } catch (e) { }
         });
+
+        $ok.focus();
     }
 
 
