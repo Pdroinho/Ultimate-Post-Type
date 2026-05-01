@@ -1310,11 +1310,11 @@ endif; ?>
             <div class="dashboard-header-actions">
                 <a href="#" class="button upt-btn-secondary upt-toggle-pagination"><?php echo esc_html($pagination_toggle_label); ?></a>
                 <!-- Bulk delete: toggle -> button group -->
-                <a href="#" class="button upt-btn-danger upt-bulk-delete-toggle">Excluir</a>
+                <a href="#" class="button upt-btn-danger upt-bulk-delete-toggle">Selecionar</a>
                 <span class="upt-bulk-delete-group" style="display:none">
                     <a href="#" class="button upt-btn-danger upt-bulk-delete-confirm" data-base-label="Excluir">Excluir 0</a>
-                    <a href="#" class="button upt-bulk-delete-selectall" aria-label="Selecionar todos" title="Selecionar todos">Tudo</a>
-                    <a href="#" class="button upt-btn-danger upt-bulk-delete-cancel" aria-label="Cancelar" title="Cancelar">✕</a>
+                    <a href="#" class="button upt-btn-secondary upt-bulk-delete-selectall" title="Selecionar todos da página">Tudo</a>
+                    <a href="#" class="button upt-btn-secondary upt-bulk-delete-cancel" title="Cancelar seleção">Cancelar</a>
                 </span>
                 <a href="#" class="button button-primary open-add-modal"><?php echo esc_html($saas_add_btn_label); ?></a>
             </div>
@@ -2527,6 +2527,18 @@ endif; ?>
 
 <style>
 @keyframes uptSpin { to { transform: rotate(360deg); } }
+
+.upt-bulk-checkbox { position:absolute;top:10px;left:10px;z-index:50;display:none;align-items:center;gap:4px;background:#fff;border:1px solid #d0d0d0;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.1); }
+.upt-bulk-checkbox input { width:18px;height:18px;margin:0;cursor:pointer;accent-color:#6366f1; }
+.upt-bulk-select-mode .upt-bulk-checkbox { display:flex; }
+.upt-bulk-select-mode .upt-item-card, .upt-bulk-select-mode .elementor-widget-container { position:relative;cursor:pointer; }
+.upt-bulk-select-mode .upt-item-card.selected, .upt-bulk-select-mode .elementor-widget-container.selected { outline:2px solid #6366f1;outline-offset:-2px;border-radius:8px; }
+
+.upt-bulk-delete-group { display:inline-flex;align-items:center;gap:6px; }
+.upt-bulk-delete-group a.button { font-size:13px;padding:6px 14px; }
+.upt-bulk-delete-confirm { font-weight:600; }
+.upt-bulk-delete-confirm[data-count="0"] { opacity:0.6;cursor:not-allowed; }
+
 /* Ícones (ver detalhes / excluir) */
 .upt-submissions-grid .upt-action-icon svg,
 .upt-submissions-grid .upt-action-icon i {
