@@ -1,0 +1,20 @@
+.upt-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.upt-status-error {
+    color: #dc2626 !important;
+}
+
+.upt-status-reset {
+    color: inherit !important;
+}
+
+.upt-status-warn {
+    color: #555 !important;
+}
+
+.upt-display-flex {
+    display: flex !important;
+}

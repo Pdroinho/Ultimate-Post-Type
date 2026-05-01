@@ -1,0 +1,366 @@
+/* form-fixes.css */
+/* =========================================
+   CORREÇÃO DE ESPAÇAMENTOS DO FORMULÁRIO
+   ========================================= */
+
+/* Garante espaçamento vertical entre cada campo */
+.upt-form-field-row {
+    margin-bottom: 24px !important;
+    display: block;
+    width: 100%;
+}
+
+/* Espaço entre o Rótulo (Label) e o Campo */
+.upt-form-field-row label {
+    margin-bottom: 8px !important;
+    display: inline-block;
+    font-weight: 600;
+    color: var(--fc-text-dark, #231E39);
+}
+
+/* Remove margens extras do editor que causam buracos ou colagem */
+.upt-editor-wrapper {
+    margin-bottom: 0 !important;
+    /* O row já tem margin-bottom */
+    margin-top: 0 !important;
+}
+
+/* Garante que os inputs de texto normais tenham a mesma altura/visual do editor */
+.upt-submit-form input[type="text"],
+.upt-submit-form input[type="number"],
+.upt-submit-form input[type="date"],
+.upt-submit-form input[type="time"],
+.upt-submit-form textarea:not(.upt-editor-code) {
+    margin-bottom: 0 !important;
+}
+
+.upt-char-counter {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1;
+    text-align: right;
+    color: var(--fc-text-light, #6A6A6A);
+}
+
+/* Corrige o espaçamento dos botões de upload de imagem/vídeo */
+.upt-image-upload-wrapper,
+.upt-video-upload-wrapper {
+    margin-top: 8px;
+    gap: 15px;
+}
+
+/* Botão de Enviar (Submit) com espaço no topo */
+.upt-submit-form input[type="submit"] {
+    margin-top: 30px !important;
+}
+
+/* Estilo para campo de URL no formulário de envio, igual aos demais campos de texto */
+.upt-submit-form input[type="url"],
+.upt-submit-form input[type="date"],
+.upt-submit-form input[type="time"] {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.upt-submit-form input[type="url"]:focus,
+.upt-submit-form input[type="date"]:focus,
+.upt-submit-form input[type="time"]:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 1px #1a73e8;
+}
+
+/* Padroniza todos os selects do formulário com o mesmo visual dos inputs */
+.upt-submit-form select,
+.upt-submit-form .taxonomy-field-wrapper select,
+#upt-schema-selector-form select {
+    width: 100%;
+    height: 46px;
+    line-height: 1.2;
+    padding: 12px 15px;
+    padding-right: 35px;
+    border: 1px solid var(--fc-border-color, #E7E7E7);
+    border-radius: var(--fc-border-radius, 8px);
+    background-color: var(--fc-body-bg, #f7f7f9);
+    color: var(--fc-text-dark, #231e39);
+    font-family: var(--fc-font-family, "Roboto", sans-serif);
+    font-size: 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236A6A6A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px top 50%;
+    background-size: 16px;
+}
+
+.upt-submit-form select:focus,
+.upt-submit-form select:focus-visible,
+.upt-submit-form .taxonomy-field-wrapper select:focus,
+.upt-submit-form .taxonomy-field-wrapper select:focus-visible,
+#upt-schema-selector-form select:focus,
+#upt-schema-selector-form select:focus-visible {
+    border-color: var(--fc-primary-color, var(--e-global-color-primary, #FF3131));
+    background-color: var(--fc-container-bg, #FFFFFF);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc-primary-color, var(--e-global-color-primary, #FF3131)) 20%, transparent);
+    outline: none;
+}
+
+
+/* upt help link styles */
+.upt-preset-hostinger .upt-dashboard-header .welcome-text .upt-help-link {
+    margin-top: 12px;
+    margin-left: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.upt-preset-hostinger .upt-dashboard-header .welcome-text .upt-help-link::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    background-color: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11.99 2C6.47 2 2 6.03 2 10.55 2 13.4 3.64 15.9 6.16 17.37L5 22l4.86-2.57c.68.1 1.38.16 2.13.16 5.52 0 10-4.03 10-8.55C21.99 6.03 17.51 2 11.99 2zm.01 3c1.84 0 3.25 1.26 3.25 2.9 0 1.21-.65 2-1.64 2.55-.84.45-1.11.75-1.11 1.31V13h-1.9v-.42c0-1.05.45-1.72 1.45-2.25.83-.44 1.15-.81 1.15-1.48 0-.73-.59-1.26-1.45-1.26-.89 0-1.5.56-1.6 1.4H8.2C8.32 6.41 9.76 5 12 5zm-.25 8c.84 0 1.45.56 1.45 1.34 0 .8-.61 1.36-1.45 1.36-.86 0-1.47-.56-1.47-1.36 0-.78.61-1.34 1.47-1.34z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11.99 2C6.47 2 2 6.03 2 10.55 2 13.4 3.64 15.9 6.16 17.37L5 22l4.86-2.57c.68.1 1.38.16 2.13.16 5.52 0 10-4.03 10-8.55C21.99 6.03 17.51 2 11.99 2zm.01 3c1.84 0 3.25 1.26 3.25 2.9 0 1.21-.65 2-1.64 2.55-.84.45-1.11.75-1.11 1.31V13h-1.9v-.42c0-1.05.45-1.72 1.45-2.25.83-.44 1.15-.81 1.15-1.48 0-.73-.59-1.26-1.45-1.26-.89 0-1.5.56-1.6 1.4H8.2C8.32 6.41 9.76 5 12 5zm-.25 8c.84 0 1.45.56 1.45 1.34 0 .8-.61 1.36-1.45 1.36-.86 0-1.47-.56-1.47-1.36 0-.78.61-1.34 1.47-1.34z'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.upt-preset-hostinger .upt-dashboard-header .welcome-text .upt-help-link:hover {
+    color: var(--fc-primary-color);
+}
+
+
+/* Fix: ensure "Ver detalhes" detail button never gets background on click/hover */
+.upt-detail-button.upt-open-button-detail,
+.upt-detail-button.upt-open-button-detail:hover,
+.upt-detail-button.upt-open-button-detail:focus,
+.upt-detail-button.upt-open-button-detail:active {
+    background: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+}
+
+.upt-dashboard-top-items {
+    display: flex;
+    gap: 32px;
+}
+
+.upt-dashboard-top-group {
+    flex: 1;
+    padding-right: 24px;
+}
+
+.upt-dashboard-top-group:last-child {
+    border-right: 0;
+}
+
+
+.upt-dashboard-top-items {
+    display: flex;
+    gap: 32px;
+    align-items: stretch;
+}
+
+.upt-dashboard-top-group {
+    flex: 1;
+    position: relative;
+    padding-right: 32px;
+}
+
+
+/* Layout para filtros de período (formulários + dashboard) */
+.upt-forms-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Wrapper de datas personalizadas em linha no desktop */
+.upt-forms-filters #upt-forms-custom-dates,
+.upt-dashboard-filters #upt-dashboard-custom-dates {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.upt-forms-filters .fc-inline-label,
+.upt-dashboard-filters .fc-inline-label {
+    margin-left: 12px;
+}
+
+.upt-dashboard-filters select#upt-forms-range,
+.upt-dashboard-filters select#upt-dashboard-range {
+    width: -moz-fit-content !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+}
+
+.upt-forms-filters #upt-forms-custom-dates input[type="date"],
+.upt-dashboard-filters #upt-dashboard-custom-dates input[type="date"] {
+    width: -moz-fit-content !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    background-color: var(--fc-body-bg, #f7f7f9) !important;
+    border: 1px solid var(--fc-border-color, #E7E7E7) !important;
+    border-radius: var(--fc-border-radius, 8px) !important;
+    color: var(--fc-text-dark, #231E39) !important;
+    font-family: var(--fc-font-family, "Roboto", sans-serif) !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    padding: 12px 15px !important;
+    box-sizing: border-box !important;
+}
+
+.upt-forms-filters #upt-forms-custom-dates input[type="date"]:focus,
+.upt-dashboard-filters #upt-dashboard-custom-dates input[type="date"]:focus,
+.upt-forms-filters #upt-forms-custom-dates input[type="date"]:focus-visible,
+.upt-dashboard-filters #upt-dashboard-custom-dates input[type="date"]:focus-visible {
+    outline: none !important;
+    border-color: var(--fc-primary-color,
+            var(--e-global-color-primary, #FF3131)) !important;
+}
+
+/* Empilhar campos de período personalizado no mobile */
+@media (max-width: 768px) {
+
+    .upt-forms-filters,
+    .upt-dashboard-filters {
+        align-items: flex-start;
+    }
+
+    .upt-forms-filters #upt-forms-custom-dates,
+    .upt-dashboard-filters #upt-dashboard-custom-dates {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .upt-forms-filters #upt-forms-custom-dates label,
+    .upt-forms-filters #upt-forms-custom-dates input,
+    .upt-dashboard-filters #upt-dashboard-custom-dates label,
+    .upt-dashboard-filters #upt-dashboard-custom-dates input {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    /* Garantir labels alinhados à esquerda no mobile (dashboard + formulários) */
+    .upt-forms-filters label,
+    .upt-dashboard-filters label {
+        text-align: left;
+        width: 100%;
+        display: block;
+    }
+}
+
+/* Ajuste de quebra de linha para modais de detalhes (botões e imagens mais clicados) */
+#upt-modal-content,
+#upt-modal-content p,
+#upt-modal-content pre {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+
+/* MOBILE FIX DASHBOARD FILTERS (alignment + stacking) */
+@media (max-width: 768px) {
+    .upt-dashboard-filters {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .upt-dashboard-filters>* {
+        width: 100%;
+    }
+
+    .upt-dashboard-filters #upt-dashboard-custom-dates {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-left: 0;
+    }
+
+    .upt-dashboard-filters #upt-dashboard-custom-dates label {
+        text-align: left;
+        width: 100%;
+        display: block;
+        margin-left: 0;
+    }
+
+    .upt-dashboard-filters #upt-dashboard-custom-dates input[type="date"],
+    .upt-dashboard-filters #upt-dashboard-custom-dates select {
+        width: 100%;
+        max-width: 260px;
+    }
+}
+
+
+/* FINAL FIX: garantir labels do filtro de período do dashboard alinhados à esquerda em qualquer viewport */
+.upt-dashboard-filters label,
+.upt-dashboard-filters #upt-dashboard-custom-dates label {
+    text-align: left !important;
+    display: block;
+}
+
+
+/* EXTRA FIX: alinhar definitivamente 'De' e 'Até' à esquerda no dashboard */
+.upt-dashboard-filters #upt-dashboard-custom-dates label,
+.upt-dashboard-filters .fc-inline-label {
+    text-align: left !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    display: flex !important;
+}
+
+
+/* Ajuste de largura para selects e input file nos cards do upt */
+.wrap.upt-wrap .upt-card .form-field select,
+.wrap.upt-wrap .upt-card .form-field input[type="file"] {
+    width: -moz-fit-content;
+    width: fit-content;
+    max-width: 100%;
+}
+
+
+/* Título da mídia (imagem/vídeo) abaixo do preview no formulário do upt */
+.upt-submit-form .upt-media-title {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    padding: 2px 4px;
+    font-size: 11px;
+    color: #e3e3e3;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+    max-width: calc(100% - 12px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+

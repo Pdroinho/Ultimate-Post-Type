@@ -1,0 +1,683 @@
+/* components.css */
+/* =========================
+   upt Alert Badge
+   ========================= */
+.upt-alert-host {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 2147483647;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.upt-alert-badge {
+    gap: 1rem;
+    display: flex;
+    background: white;
+    width: fit-content;
+    align-items: center;
+    border-radius: 15px;
+    justify-content: center;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.upt-alert-badge.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.upt-alert-badge.is-hiding {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.upt-alert-badge p {
+    margin: 0;
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    color: #333333;
+}
+
+.upt-alert-badge button {
+    border: none;
+    color: #222222;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s;
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 0, 0, 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upt-alert-badge button:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #333333;
+    transition: all 0.3s;
+}
+
+.upt-alert-badge button svg {
+    display: block;
+    stroke: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .upt-alert-badge {
+        transition: none;
+        transform: none;
+    }
+
+    .upt-alert-badge.is-visible {
+        transform: none;
+    }
+}
+
+
+.upt-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483640;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.upt-confirm-panel {
+    background: #fff;
+    border-radius: 14px;
+    border: 0.5px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    padding: 16px 16px 12px;
+    width: min(520px, 100%);
+}
+
+.upt-confirm-message {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #222;
+}
+
+.upt-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.upt-confirm-actions button {
+    border-radius: 10px;
+    border: 0.5px solid rgba(0, 0, 0, 0.12);
+    padding: 10px 12px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.upt-confirm-ok {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+
+.upt-confirm-cancel {
+    background: #f2f2f2 !important;
+    color: #222 !important;
+    border: 0.5px solid rgba(0, 0, 0, 0.14) !important;
+}
+
+.upt-confirm-cancel:hover {
+    background: #eaeaea !important;
+}
+
+.upt-confirm-ok {
+    background: #e53935 !important;
+    color: #fff !important;
+    border: 0.5px solid rgba(229, 57, 53, 0.9) !important;
+}
+
+.upt-confirm-ok:hover {
+    background: #d32f2f !important;
+}
+
+
+/* upt: Category Dropdown (custom UI) */
+.upt-category-dropdown-ui {
+    position: relative;
+    display: inline-block;
+    min-width: 220px;
+    max-width: 100%;
+}
+
+.upt-category-dropdown-ui .upt-category-filter-dropdown {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.upt-category-dropdown-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.upt-category-dropdown-trigger-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.upt-category-dropdown-caret {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid currentColor;
+    opacity: .65;
+}
+
+.upt-category-dropdown-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    background: #111;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    padding: 6px;
+    display: none;
+    max-height: 320px;
+    overflow: auto;
+    z-index: 99999;
+}
+
+.upt-category-dropdown-ui.is-open .upt-category-dropdown-panel {
+    display: block;
+}
+
+.upt-category-dropdown-option {
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.upt-category-dropdown-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.upt-category-dropdown-option.is-active {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+/* --- upt: dropdown category UI hard reset for theme interference --- */
+.upt-category-dropdown-ui .upt-category-dropdown-trigger,
+.upt-category-dropdown-ui .upt-category-dropdown-option {
+    font-family: inherit;
+    font-weight: 600;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    line-height: 1.15 !important;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.upt-category-dropdown-ui .upt-category-dropdown-trigger {
+    background: var(--fc-primary-color, #0f766e) !important;
+    color: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+}
+
+.upt-category-dropdown-ui .upt-category-dropdown-trigger-text {
+    letter-spacing: normal !important;
+}
+
+.upt-category-dropdown-ui .upt-category-dropdown-panel {
+    overflow-x: hidden !important;
+    width: max(100%, 260px);
+    max-width: min(420px, calc(100vw - 24px));
+}
+
+.upt-category-dropdown-ui .upt-category-dropdown-option {
+    display: block;
+    width: 100%;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+}
+
+.upt-category-dropdown-ui .upt-category-dropdown-option:hover {
+    background: rgba(255, 255, 255, 0.10) !important;
+}
+
+.upt-category-dropdown-ui .upt-category-dropdown-option.is-active {
+    background: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* --- Wizard: ajustes finos (V20.5.0) --- */
+/* Campos de editar/renomear subcategoria e vínculo devem ficar com fundo branco */
+.upt-subcat-area .upt-subcat-name,
+.upt-subcat-area .upt-subcat-parent,
+.upt-rename-cat-area .upt-rename-cat-name {
+    background-color: #ffffff !important;
+}
+
+/* Botões de ações para opções de select (Adicionar/Renomear/Excluir) */
+.upt-submit-form .taxonomy-actions-wrapper a.rename-select-option,
+.upt-submit-form .taxonomy-actions-wrapper a.delete-select-option {
+    text-decoration: none;
+}
+
+.upt-submit-form .taxonomy-actions-wrapper a.rename-select-option {
+    background: #fff;
+    color: var(--fc-text-dark);
+    border-color: #c3c4c7;
+}
+
+.upt-submit-form .taxonomy-actions-wrapper a.rename-select-option:hover {
+    border-color: color-mix(in srgb, var(--fc-primary-color) 55%, #c3c4c7);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc-primary-color) 18%, transparent);
+}
+
+.upt-submit-form .taxonomy-actions-wrapper a.delete-select-option {
+    background: #d63638;
+    border-color: #d63638;
+    color: #fff;
+}
+
+.upt-submit-form .taxonomy-actions-wrapper a.delete-select-option:hover {
+    background: #b32d2e;
+    border-color: #b32d2e;
+}
+
+
+/* Select option rename/edit controls */
+.upt-new-item-area .upt-white-field,
+.upt-new-item-area select.upt-inline-select {
+    background: #ffffff !important;
+}
+
+.upt-new-item-area select.upt-inline-select {
+    margin-bottom: 10px !important;
+}
+
+/* Renomear item de seleção: garantir espaçamento do campo antes dos botões */
+.upt-new-item-area input[id^="rename-option-name-"] {
+    margin-bottom: 12px !important;
+}
+
+.upt-inline-label {
+    display: block;
+    margin: 10px 0 6px 0;
+    font-weight: 600;
+}
+
+
+/* Subcategoria label: igual ao label de Categoria */
+.upt-submit-form .taxonomy-field-wrapper--subcats label,
+.upt-submit-form .upt-subcategory-wrapper label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: block;
+}
+
+
+/* V20.6.1 - Dashboard secondary + bulk delete */
+.upt-btn-secondary {
+    background: #fff !important;
+    border: 1px solid #c9c9c9 !important;
+    color: #1e1e1e !important;
+    box-shadow: none !important;
+}
+
+.upt-btn-secondary:hover,
+.upt-btn-secondary:focus {
+    background: #fff !important;
+    border-color: #9c9c9c !important;
+    color: #1e1e1e !important;
+}
+
+.upt-btn-danger {
+    background: #d63638 !important;
+    border: 1px solid #b32d2e !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+
+.upt-btn-danger:hover,
+.upt-btn-danger:focus {
+    background: #b32d2e !important;
+    border-color: #8a2424 !important;
+    color: #fff !important;
+}
+
+/* Bulk delete button group (confirm + cancel) */
+.upt-bulk-delete-group {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+.upt-bulk-delete-group .upt-bulk-delete-confirm {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+/* Select all button (middle) */
+.upt-bulk-delete-group .upt-bulk-delete-selectall {
+    border-radius: 0 !important;
+    width: auto;
+    min-width: 56px;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #c7c7c7 !important;
+    background: #e9ecef !important;
+    border-color: #d0d0d0 !important;
+    color: #000 !important;
+    text-decoration: none !important;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.upt-bulk-delete-group .upt-bulk-delete-selectall:focus,
+.upt-bulk-delete-group .upt-bulk-delete-selectall:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+
+.upt-bulk-delete-group .upt-bulk-delete-selectall:hover,
+.upt-bulk-delete-group .upt-bulk-delete-selectall:focus {
+    background: #d6d8db !important;
+    border-color: #c7c7c7 !important;
+    color: #000 !important;
+}
+
+.upt-bulk-delete-group .upt-bulk-delete-cancel {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    width: 42px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #c7c7c7 !important;
+    background: #e9ecef !important;
+    border-color: #d0d0d0 !important;
+    color: #333 !important;
+    text-decoration: none !important;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.upt-bulk-delete-group .upt-bulk-delete-cancel:hover,
+.upt-bulk-delete-group .upt-bulk-delete-cancel:focus {
+    background: #d6d8db !important;
+    border-color: #c7c7c7 !important;
+    color: #111 !important;
+}
+
+.upt-bulk-delete-toggle.upt-bulk-mode-active {
+    filter: saturate(1.05);
+}
+
+/* Checkbox overlay on cards */
+.upt-bulk-checkbox {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.upt-bulk-checkbox input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.upt-bulk-select-mode .upt-bulk-checkbox {
+    display: flex;
+}
+
+.upt-bulk-select-mode .upt-item-card,
+.upt-bulk-select-mode .elementor-widget-container {
+    position: relative;
+    cursor: pointer;
+}
+
+
+/* Category filter layout */
+.upt-filters .filter-category {
+    position: relative;
+}
+
+/* Subcategory visual emphasis (native select limitation: styles apply to the whole option line) */
+.upt-category-filter option.level-1,
+.upt-category-filter option.level-2,
+.upt-category-filter option.level-3,
+.upt-category-filter option.level-4,
+.upt-category-filter option.level-5 {
+    font-size: 12px;
+    color: var(--upt-accent, #f59e0b);
+}
+
+/* (icon removed) */
+
+
+/* Dashboard custom category filter (to style "Sub" badge) */
+.upt-category-filter-native {
+    display: none !important;
+}
+
+/* Default: keep width auto to match text, but allow full width on small screens */
+.upt-category-filter-wrap {
+    position: relative;
+    width: auto;
+    flex: 0 0 auto;
+}
+
+.upt-category-filter-custom {
+    position: relative;
+    width: auto;
+    display: inline-block;
+}
+
+.upt-category-filter-trigger {
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    /* space between text and caret */
+    padding: 12px 16px;
+    /* symmetrical horizontal padding */
+    border: 1px solid var(--fc-border-color, #E7E7E7);
+    border-radius: var(--fc-border-radius, 12px);
+    background: var(--fc-container-bg, #fff);
+    font-family: var(--fc-font-family, inherit);
+    font-size: 14px;
+    color: #000 !important;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.upt-category-filter-trigger-text {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+
+
+.upt-category-filter-trigger:hover,
+.upt-category-filter-trigger:active {
+    color: #000 !important;
+}
+
+.upt-category-filter-trigger-caret {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-left: 12px;
+    /* nudge caret slightly to the right */
+    transform: rotate(45deg);
+    border-right: 2px solid #666;
+    border-bottom: 2px solid #666;
+    flex: 0 0 auto;
+}
+
+.upt-category-filter-menu {
+    position: absolute;
+    z-index: 9999;
+    left: 0;
+    right: auto;
+    margin-top: 6px;
+    max-height: 360px;
+    overflow: auto;
+    border: 1px solid var(--fc-border-color, #E7E7E7);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .12);
+    padding: 6px;
+    min-width: 100%;
+}
+
+/* Hostinger preset: category filter should size to text (not stretch like search) */
+.upt-preset-hostinger .upt-filters .filter-item.filter-category {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+
+    .upt-category-filter-wrap,
+    .upt-category-filter-custom {
+        width: 100%;
+    }
+
+    .upt-category-filter-trigger {
+        width: 100%;
+    }
+
+    .upt-category-filter-menu {
+        left: 0;
+        right: 0;
+        min-width: 0;
+    }
+}
+
+.upt-cat-option {
+    padding: 10px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    line-height: 1.2;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.upt-cat-option:hover {
+    background: #f3f4f6;
+}
+
+.upt-sub-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--fc-primary-color, var(--e-global-color-accent, #f59e0b));
+}
+
+
+
+/* V20.7.3-wizard: Custom category trigger text black + width based on label */
+.upt-preset-hostinger .upt-filters .upt-category-filter-trigger {
+    width: auto;
+    padding: 12px 15px;
+    border: 1px solid var(--fc-border-color);
+    border-radius: var(--fc-border-radius);
+    background-color: var(--fc-container-bg);
+    font-family: var(--fc-font-family);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    box-shadow: none;
+}
+
+/* Keep search input text always black (including hover) */
+.upt-preset-hostinger .upt-filters input[type="search"],
+.upt-preset-hostinger .upt-filters input[type="search"]:hover,
+.upt-preset-hostinger .upt-filters input[type="search"]:focus,
+.upt-preset-hostinger .upt-filters input[type="search"]:focus-visible {
+    color: #000 !important;
+}
+
+/* Prevent filter controls from shrinking so much that labels wrap */
+.upt-preset-hostinger .upt-filters .filter-item {
+    min-width: 220px;
+}
+
+.upt-preset-hostinger .upt-filters .filter-item.filter-category {
+    min-width: 180px;
+}
+
+.upt-preset-hostinger .upt-filters .upt-category-filter-trigger:focus,
+.upt-preset-hostinger .upt-filters .upt-category-filter-trigger:focus-visible {
+    border-color: var(--fc-primary-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc-primary-color) 20%, transparent);
+    outline: none;
+}
+
+
+
+/* V20.7.16-wizard: Category adder/metabox background matches subcategory section; inputs remain white */
+#catalog_category-adder .wp-tab-panel {
+    background: #f6f7f7;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+#catalog_category-adder .wp-tab-panel input[type="text"],
+#catalog_category-adder .wp-tab-panel textarea {
+    background: #fff;
+}
+

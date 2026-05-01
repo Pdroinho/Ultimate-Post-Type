@@ -1,0 +1,880 @@
+/* dashboard.css */
+/* =========================================================
+   Frontend: Category dropdown (simple, theme-proof)
+   Customizable via CSS vars on .upt-category-filter-wrapper:
+   --fc-cat-font-family, --fc-cat-text, --fc-cat-focus, --fc-cat-accent
+   ========================================================= */
+
+.upt-category-filter-wrapper {
+    --fc-cat-font-family: var(--fc-font-family, inherit);
+    --fc-cat-text: var(--fc-text-dark, #231E39);
+    --fc-cat-focus: var(--fc-primary-color, #0EA5E9);
+    --fc-cat-accent: var(--fc-primary-color, #0EA5E9);
+}
+
+.upt-category-filter-wrapper .upt-dropdown-wrapper {
+    position: relative;
+    max-width: 100%;
+}
+
+.upt-category-filter-wrapper .upt-dropdown-wrapper select.upt-category-filter-dropdown {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    width: 100%;
+    height: 44px;
+    padding: 10px 40px 10px 14px;
+    border: 1px solid var(--fc-border-color, #E7E7E7);
+    border-radius: 10px;
+    background-color: var(--fc-container-bg, #FFFFFF);
+    color: var(--fc-cat-text);
+    font-family: var(--fc-cat-font-family);
+    font-size: 14px;
+    line-height: 1.2;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    box-shadow: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%236A6A6A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+}
+
+.upt-category-filter-wrapper .upt-dropdown-wrapper select.upt-category-filter-dropdown:focus,
+.upt-category-filter-wrapper .upt-dropdown-wrapper select.upt-category-filter-dropdown:focus-visible {
+    outline: none;
+    border-color: var(--fc-cat-focus);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc-cat-focus) 22%, transparent);
+}
+
+/* Remove aggressive option theming (keep native menu) */
+.upt-category-filter-wrapper select.upt-category-filter-dropdown option {
+    padding: 10px 15px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    color: var(--fc-text-dark, #231E39);
+    font-family: var(--fc-cat-font-family);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: none;
+}
+
+.upt-category-filter-wrapper select.upt-category-filter-dropdown option:hover,
+.upt-category-filter-wrapper select.upt-category-filter-dropdown option:checked,
+.upt-category-filter-wrapper select.upt-category-filter-dropdown option:focus {
+    background-color: var(--fc-primary-color,
+            var(--e-global-color-primary, #FF3131)) !important;
+    color: #ffffff !important;
+}
+
+/* Built-in Grid Filter (SaaS Pills) */
+.upt-builtin-filter-container {
+    margin-bottom: 24px;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.upt-builtin-filter-container::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
+}
+
+.upt-builtin-filter-list {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    white-space: nowrap;
+}
+
+.upt-builtin-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fc-text-light, #6B7280);
+    background-color: var(--fc-container-bg, #ffffff);
+    border: 1px solid var(--fc-border-color, #e5e7eb);
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.upt-builtin-pill:hover {
+    color: var(--fc-text-dark, #111827);
+    background-color: var(--fc-body-bg, #f9fafb);
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.upt-builtin-pill.active {
+    color: #ffffff;
+    background-color: var(--fc-primary-color, #1a73e8);
+    border-color: var(--fc-primary-color, #1a73e8);
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--fc-primary-color) 40%, transparent);
+}
+
+.upt-meta-filter-separator {
+    width: 1px;
+    height: 24px;
+    background-color: var(--fc-border-color, #e5e7eb);
+    flex-shrink: 0;
+    margin: 0 4px;
+}
+
+.upt-meta-filter-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--fc-text-light, #9ca3af);
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+
+.upt-meta-filter-pill {
+    border-style: dashed;
+}
+
+.upt-meta-filter-pill.active {
+    border-style: solid;
+}
+
+/* Dashboard Wrapper SaaS Layout */
+.upt-tabs-wrapper {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 30px;
+}
+
+/* Sidebar Navigation (SaaS Style) */
+.upt-tabs-nav {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: var(--fc-container-bg, #ffffff);
+    border: 1px solid var(--fc-border-color, #e7e7e7);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.upt-tabs-nav li {
+    margin: 0;
+    border-bottom: 1px solid var(--fc-border-color, #f0f0f0);
+}
+
+.upt-tabs-nav li:last-child {
+    border-bottom: none;
+}
+
+.upt-tabs-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    text-decoration: none;
+    color: var(--fc-text-light, #6B7280);
+    font-weight: 500;
+    font-size: 14px;
+    position: relative;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.upt-tabs-nav a:hover {
+    color: var(--fc-text-dark, #111827);
+    background-color: var(--fc-body-bg, #f9fafb);
+}
+
+.upt-tabs-nav a.active {
+    color: var(--fc-primary-color, #1a73e8);
+    background-color: color-mix(in srgb, var(--fc-primary-color) 8%, transparent);
+    border-left-color: var(--fc-primary-color, #1a73e8);
+    font-weight: 600;
+}
+
+.upt-tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.upt-tab-icon svg {
+    display: block;
+    width: 1.25em;
+    height: 1.25em;
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+.upt-tab-image {
+    display: block;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.upt-tab-counter {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: var(--fc-body-bg, #f3f4f6);
+    color: var(--fc-text-light, #6B7280);
+    transition: inherit;
+}
+
+.upt-tabs-nav a:hover .upt-tab-counter {
+    background-color: #e5e7eb;
+}
+
+.upt-tabs-nav a.active .upt-tab-counter {
+    background-color: var(--fc-primary-color, #1a73e8);
+    color: #ffffff;
+}
+
+/* Main Content Area */
+.upt-tabs-content {
+    background: var(--fc-container-bg, #ffffff);
+    border: 1px solid var(--fc-border-color, #e7e7e7);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.upt-tab-pane {
+    display: none;
+}
+
+.upt-tab-pane.active {
+    display: block;
+    animation: uptFadeIn 0.3s ease;
+}
+
+@keyframes uptFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive - Mobile Tabs */
+@media (max-width: 768px) {
+    .upt-tabs-wrapper {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .upt-tabs-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        border-radius: 8px;
+    }
+
+    .upt-tabs-nav li {
+        border-bottom: none;
+        border-right: 1px solid var(--fc-border-color, #f0f0f0);
+        flex-shrink: 0;
+    }
+
+    .upt-tabs-nav a {
+        border-left: none;
+        border-bottom: 3px solid transparent;
+    }
+
+    .upt-tabs-nav a.active {
+        border-left-color: transparent;
+        border-bottom-color: var(--fc-primary-color, #1a73e8);
+    }
+}
+
+.upt-dashboard-wrapper {
+    position: relative;
+}
+
+.upt-dashboard-wrapper::before {
+    z-index: 0 !important;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.upt-dashboard-wrapper>.upt-preset-hostinger {
+    position: relative;
+    z-index: revert-layer;
+}
+
+.upt-login-form form {
+    background-color: var(--fc-container-bg, #fff);
+    border: 1px solid var(--fc-border-color, #e7e7e7);
+    padding: 40px;
+    border-radius: var(--fc-border-radius, 8px);
+}
+
+.upt-login-form .form-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 30px 0;
+    color: var(--fc-text-dark, #231E39);
+}
+
+.upt-login-form .form-logo {
+    text-align: center;
+    margin: 0 0 30px 0;
+}
+
+.upt-login-form .form-logo img {
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
+}
+
+.upt-login-form label {
+    font-size: 14px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--fc-text-dark, #231E39);
+}
+
+.upt-login-form .input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--fc-border-color, #e7e7e7);
+    border-radius: var(--fc-border-radius, 8px);
+    background-color: var(--fc-body-bg);
+    font-family: var(--fc-font-family);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.upt-login-form .input:focus {
+    border-color: var(--fc-primary-color, #673DE6);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc-primary-color, #673DE6) 20%, transparent);
+    outline: none;
+}
+
+.upt-login-form .restricted-access {
+    text-align: center;
+    font-size: 13px;
+    color: var(--fc-text-light, #6A6A6A);
+    margin: 0;
+}
+
+.remember-me-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    margin-bottom: 24px;
+}
+
+.remember-me-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.remember-me-toggle .toggle-label {
+    font-size: 14px;
+    color: var(--fc-text-dark, #231E39);
+    cursor: pointer;
+}
+
+.remember-me-toggle .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    background-color: #ccc;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.remember-me-toggle .toggle-switch::before {
+    z-index: 0 !important;
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 18px;
+    height: 18px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.remember-me-toggle input[type="checkbox"]:checked+.toggle-switch {
+    background-color: var(--fc-primary-color, #673DE6);
+}
+
+.remember-me-toggle input[type="checkbox"]:checked+.toggle-switch::before {
+    z-index: 0 !important;
+    transform: translateX(18px);
+}
+
+/* WRAPPER PRINCIPAL */
+.upt-taxonomy-checklist {
+    border: 1px solid var(--fc-border-color, #e7e7e7) !important;
+    border-radius: var(--fc-border-radius, 8px) !important;
+    padding: 10px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: center !important;
+    align-content: center !important;
+    background: var(--fc-body-bg, #f7f7f9) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    list-style: none !important;
+}
+
+/* INPUT ESCONDIDO */
+.upt-taxonomy-checklist .upt-cat-checkbox {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+}
+
+/* LABEL (PÍLULA) - Layout em fluxo para evitar sobreposição */
+html body #upt-modal-content .upt-taxonomy-checklist label,
+html body .upt-taxonomy-checklist label {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    position: relative !important;
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    border-radius: 999px !important;
+    background-color: var(--fc-container-bg, #ffffff) !important;
+    color: var(--fc-text-dark, #231E39) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid var(--fc-border-color, #e7e7e7) !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    float: none !important;
+    width: auto !important;
+    max-width: 100% !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    line-height: 1.2 !important;
+    text-indent: 0 !important;
+}
+
+/* TEXTO DA PÍLULA */
+html body #upt-modal-content .upt-taxonomy-checklist .pill-text,
+html body .upt-taxonomy-checklist .pill-text {
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+}
+
+/* ÍCONE DE CHECKBOX (Círculo) - Em fluxo para não sobrepor texto */
+html body #upt-modal-content .upt-taxonomy-checklist .pill-checkbox-icon,
+html body .upt-taxonomy-checklist .pill-checkbox-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 999px !important;
+    background-color: #ffffff !important;
+    box-sizing: border-box !important;
+}
+
+/* PSEUDO-ELEMENTOS RESET */
+#upt-modal-content .upt-taxonomy-checklist label::before,
+#upt-modal-content .upt-taxonomy-checklist label::after,
+.upt-taxonomy-checklist label::before,
+.upt-taxonomy-checklist label::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* HOVER NO LABEL */
+#upt-modal-content .upt-taxonomy-checklist label:hover,
+.upt-taxonomy-checklist label:hover {
+    border-color: var(--fc-primary-color, #673DE6) !important;
+    color: var(--fc-primary-color, #673DE6) !important;
+}
+
+/* ESTADO CHECKED */
+#upt-modal-content .upt-taxonomy-checklist .upt-cat-checkbox:checked + label,
+.upt-taxonomy-checklist .upt-cat-checkbox:checked + label {
+    background-color: var(--fc-primary-color, #673DE6) !important;
+    color: #fff !important;
+    border-color: var(--fc-primary-color, #673DE6) !important;
+}
+
+/* ÍCONE DE CHECKBOX (Círculo) - REMOVIDO DAQUI POIS AGORA É TRATADO COM FORÇA BRUTA ACIMA */
+
+/* ÍCONE INTERNO (Check) */
+.upt-taxonomy-checklist .pill-checkbox-icon::before {
+    content: '' !important;
+    width: 14px !important;
+    height: 14px !important;
+    background-color: transparent !important;
+    display: block !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    border: none !important;
+    transform: none !important;
+    opacity: 0 !important; /* Invisível por padrão */
+    position: static !important;
+}
+
+/* ÍCONE QUANDO CHECKED */
+.upt-taxonomy-checklist .upt-cat-checkbox:checked + label .pill-checkbox-icon {
+    background-color: #ffffff !important;
+    border-color: #ffffff !important;
+}
+
+.upt-taxonomy-checklist .upt-cat-checkbox:checked + label .pill-checkbox-icon::before {
+    opacity: 1 !important;
+    background-color: var(--fc-primary-color, #673DE6) !important;
+    -webkit-mask-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    mask-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    -webkit-mask-size: contain !important;
+    mask-size: contain !important;
+    -webkit-mask-repeat: no-repeat !important;
+    mask-repeat: no-repeat !important;
+    -webkit-mask-position: center !important;
+    mask-position: center !important;
+}
+
+html body #upt-modal-content .upt-taxonomy-checklist .upt-cat-checkbox:checked + label .pill-delete-icon,
+html body .upt-taxonomy-checklist .upt-cat-checkbox:checked + label .pill-delete-icon {
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* TEXTO DA PÍLULA */
+html body #upt-modal-content .upt-taxonomy-checklist .pill-text,
+html body .upt-taxonomy-checklist .pill-text {
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    flex: 0 1 auto !important;
+}
+
+/* BOTÃO DE REMOVER */
+html body #upt-modal-content .upt-taxonomy-checklist .remove-pill,
+html body .upt-taxonomy-checklist .remove-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin-left: 6px !important;
+    border-radius: 50% !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    position: static !important;
+    flex: 0 0 auto !important;
+    align-self: center !important;
+}
+
+.upt-taxonomy-checklist .remove-pill:hover {
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+
+.upt-taxonomy-checklist .upt-cat-checkbox:checked + label .remove-pill:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ÍCONE DE REMOVER */
+.upt-taxonomy-checklist .pill-delete-icon {
+    width: 14px !important;
+    height: 14px !important;
+    display: block !important;
+    background-color: currentColor !important;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z'/%3E%3C/svg%3E") !important;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z'/%3E%3C/svg%3E") !important;
+    -webkit-mask-size: contain !important;
+    mask-size: contain !important;
+    -webkit-mask-repeat: no-repeat !important;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center !important;
+    mask-position: center !important;
+    opacity: 0.6 !important;
+}
+
+.upt-taxonomy-checklist .remove-pill:hover .pill-delete-icon {
+    opacity: 1 !important;
+    background-color: #d32f2f !important;
+}
+
+.upt-taxonomy-checklist .upt-cat-checkbox:checked + label .remove-pill:hover .pill-delete-icon {
+    background-color: #ffffff !important;
+}
+
+/* Removido CSS duplicado e conflitante */
+
+.upt-pagination-wrapper {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    transition: opacity 0.3s;
+}
+
+.upt-pagination-wrapper .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    margin: 0 4px;
+    text-decoration: none;
+    border: 1px solid var(--fc-border-color);
+    color: var(--fc-text-light);
+    background-color: var(--fc-container-bg);
+    border-radius: var(--fc-border-radius);
+    transition: all 0.2s;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.upt-pagination-wrapper .page-numbers:hover {
+    border-color: var(--fc-primary-color);
+    color: var(--fc-primary-color);
+    background-color: color-mix(in srgb, var(--fc-primary-color) 10%, transparent);
+}
+
+.upt-pagination-wrapper .page-numbers.current {
+    background-color: var(--fc-primary-color);
+    border-color: var(--fc-primary-color);
+    color: #fff;
+    cursor: default;
+}
+
+.upt-pagination-wrapper .page-numbers.dots {
+    border-color: transparent;
+    background-color: transparent;
+    cursor: default;
+}
+
+.upt-pagination-wrapper .page-numbers.dots:hover {
+    color: var(--fc-text-light);
+}
+
+.upt-pagination-infinite {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.upt-pagination-infinite .upt-load-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px;
+    height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--fc-border-color);
+    color: var(--fc-text-light);
+    background-color: var(--fc-container-bg);
+    border-radius: var(--fc-border-radius);
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.upt-pagination-infinite .upt-load-more:hover {
+    border-color: var(--fc-primary-color);
+    color: var(--fc-primary-color);
+    background-color: color-mix(in srgb, var(--fc-primary-color) 10%, transparent);
+}
+
+.upt-pagination-infinite .upt-load-more:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.upt-load-more-sentinel {
+    width: 100%;
+    height: 1px;
+}
+
+/* upt media upload circular progress */
+
+
+
+#upt-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+}
+
+#upt-upload-container label[for="upt-uploader"] {
+    position: relative;
+    overflow: hidden;
+}
+
+#upt-upload-container label[for="upt-uploader"]::before {
+    z-index: 0 !important;
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: var(--fc-upload-progress, 0%);
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--fc-primary-color, #1d4ed8) 90%, #ffffff 10%);
+    pointer-events: none;
+    transition: width 0.2s ease;
+}
+
+#upt-upload-container label[for="upt-uploader"] span {
+    position: relative;
+    z-index: 5;
+}
+
+
+/* wrapper da barra de progresso abaixo do botão */
+#upt-upload-progress.upt-progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* barra de progresso horizontal */
+.upt-progress-bar {
+    position: relative;
+    flex: 1;
+    min-width: 140px;
+    max-width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    /* cinza claro */
+    overflow: hidden;
+}
+
+/* preenchimento da barra com a cor de destaque */
+.upt-progress-bar-fill {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    border-radius: inherit;
+    background: var(--fc-primary-color, #1d4ed8);
+    transition: width 0.25s ease;
+}
+
+#upt-upload-progress .upt-progress-text {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
+/* Video thumbnail overlay for gallery/media fields on front-end */
+.upt-video-thumb {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.upt-video-thumb video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.upt-video-thumb .upt-video-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+
+#upt-upload-container .upt-upload-button-subtext {
+    font-size: 11px;
+    opacity: 0.9;
+    margin-left: 6px;
+    display: none;
+}
+
+#upt-upload-container label[for="upt-uploader"].upt-uploading .upt-upload-button-subtext {
+    display: inline;
+}
+
+
+
+#upt-upload-container label[for="upt-uploader"] * {
+    position: relative;
+    z-index: 5 !important;
+}
+
+
