@@ -271,8 +271,13 @@ jQuery(document).ready(function ($) {
         }
 
         $('body').append($overlay);
+        $overlay[0].style.setProperty('z-index', '2147483640', 'important');
 
-        function close() { $overlay.remove(); $(document).off('keydown.uptConfirm'); }
+        function close() {
+            $overlay.remove();
+            $(document).off('keydown.uptConfirm');
+            if (typeof options.onCancel === 'function') { options.onCancel(); }
+        }
 
         $cancel.on('click', function () { close(); });
         $overlay.on('click', function (e) {
@@ -284,7 +289,8 @@ jQuery(document).ready(function ($) {
 
         $ok.on('click', function () {
             var confirmData = (typeof options.onBeforeConfirm === 'function') ? options.onBeforeConfirm() : undefined;
-            close();
+            $overlay.remove();
+            $(document).off('keydown.uptConfirm');
             try { if (typeof onConfirm === 'function') { onConfirm(confirmData); } } catch (e) { }
         });
 
@@ -3423,6 +3429,7 @@ setActiveFiltersFromURL();
 
         $('body').on('click', '.delete-item-ajax', function (e) {
             e.preventDefault();
+            e.stopPropagation();
 
             var link = $(this);
             var itemId = link.data('item-id');
@@ -3450,8 +3457,10 @@ setActiveFiltersFromURL();
                 perPage: perPage
             });
 
+            card.css('opacity', '0.5');
+
             uptConfirmDialog(confirmMsg, function () {
-                card.addClass('upt-loading');
+                card.css('opacity', '').addClass('upt-loading');
 
                 var ajaxPayload = {
                     action: 'upt_delete_item',
@@ -3501,7 +3510,7 @@ setActiveFiltersFromURL();
                         uptDebugLog('delete-item: ajax still pending after 5s', ajaxPayload);
                     }
                 }, 5000);
-            });
+            }, { onCancel: function () { card.css('opacity', ''); } });
 
         });
 
@@ -6101,7 +6110,7 @@ function uptSetBulkMode(isActive) {
             var baseLabel = $btn.data('base-label') || 'Excluir';
             var $scope = uptGetBulkScope();
             var n = $scope.find('.upt-bulk-select:checked').length;
-            $btn.text(baseLabel + ' ' + n);
+            $btn.text(baseLabel + ' ' + n).attr('data-count', n);
         }
 
         // Update count when checkboxes change
