@@ -53,12 +53,12 @@ class UPT_Cache {
 
     private static function is_upt_request() {
         $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-        if ( strpos( $action, 'UPT_' ) === 0 ) {
+        if ( strpos( $action, 'upt_' ) === 0 ) {
             return true;
         }
 
         $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-        if ( strpos( $page, 'UPT_' ) === 0 ) {
+        if ( strpos( $page, 'upt_' ) === 0 ) {
             return true;
         }
 
@@ -76,7 +76,7 @@ class UPT_Cache {
     }
 
     public static function print_console_log() {
-        if ( wp_doing_ajax() || ! self::$did_purge ) {
+        if ( wp_doing_ajax() || ! self::$did_purge || ( defined( 'WP_DEBUG' ) && ! WP_DEBUG ) ) {
             return;
         }
 

@@ -336,7 +336,7 @@ class UPT_Custom_Field_Tag extends \Elementor\Core\DynamicTags\Data_Tag {
                 if (is_numeric($raw_value)) {
                     $label = isset($field_def['label']) ? $field_def['label'] : '';
                     $label_lower = function_exists('mb_strtolower') ? mb_strtolower($label, 'UTF-8') : strtolower($label);
-                    $id_lower = strtolower($base_field_id);
+                    $id_lower = strtolower($key);
                     if (
                         strpos($id_lower, 'preco') !== false ||
                         strpos($id_lower, 'preço') !== false ||

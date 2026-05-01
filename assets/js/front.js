@@ -1459,47 +1459,7 @@ jQuery(document).ready(function ($) {
             }
 
             if (!templateId) {
-                // Fallback: quando não há template (layout manual), recarrega a página com os filtros na URL.
-                try {
-                    var currentUrl = window.location.href.split('?')[0];
-                    var params = new URLSearchParams(window.location.search);
-
-                    params.delete('paged');
-                    params.delete('page');
-
-                    if (searchTerm && searchTerm.length) {
-                        params.set('s_upt', searchTerm);
-                    } else {
-                        params.delete('s_upt');
-                    }
-
-                    if (Array.isArray(searchTargets) && searchTargets.length) {
-                        params.set('upt_target', searchTargets.join(','));
-                    } else {
-                        params.delete('upt_target');
-                    }
-
-                    if (termId && termId !== '0') {
-                        params.set('upt_category', termId);
-                    } else {
-                        params.delete('upt_category');
-                    }
-
-                    if (metaFilterKey && metaFilterVal) {
-                        params.set('upt_meta_key', metaFilterKey);
-                        params.set('upt_meta_filter', metaFilterVal);
-                    } else {
-                        params.delete('upt_meta_key');
-                        params.delete('upt_meta_filter');
-                    }
-
-                    var qs = params.toString();
-                    var newUrl = qs ? currentUrl + '?' + qs : currentUrl;
-                    window.location.href = newUrl;
-                } catch (err) {
-                    console.error('upt Error: Template ID not found and fallback navigation failed.', err);
-                }
-                return;
+                templateId = 0;
             }
 
             // Se já houver uma requisição em andamento para este grid, aborta para usar o valor mais recente digitado.
@@ -1530,10 +1490,11 @@ jQuery(document).ready(function ($) {
                     search_targets: searchTargets,
                     search_slug: searchSlug,
                     meta_filter_key: metaFilterKey,
-                    meta_filter_val: metaFilterVal
+                    meta_filter_val: metaFilterVal,
+                    parent_term_id: listingWrapper.attr('data-upt-parent-term') || '0'
                 },
                 beforeSend: function () {
-                    listingWrapper.css('opacity', 0.5);
+                    listingWrapper.addClass('upt-loading');
                 },
                 success: function (response) {
                     if (response.success) {
@@ -1564,7 +1525,7 @@ jQuery(document).ready(function ($) {
                     console.error('upt Error: AJAX request failed.');
                 },
                 complete: function () {
-                    listingWrapper.css('opacity', 1);
+                    listingWrapper.removeClass('upt-loading');
                     if (loadingButton && loadingButton.length) {
                         loadingButton.prop('disabled', false).removeClass('is-loading');
                     }
@@ -1621,6 +1582,15 @@ jQuery(document).ready(function ($) {
 
 if (role === 'parent') {
     uptHandleParentSelection(wrapper, String(clickedItem.data('term-id') || '0'));
+
+    var parentListingWrapper = $('#' + wrapper.data('target-id')).closest('.upt-listing-wrapper');
+    if (!parentListingWrapper.length) {
+        parentListingWrapper = wrapper.closest('.upt-listing-wrapper');
+    }
+    if (parentListingWrapper.length) {
+        parentListingWrapper.attr('data-upt-active-term', '0');
+    }
+    performuptSearch(wrapper, 1);
     return;
 }
 // Persiste term id selecionado no wrapper da listagem para uso posterior (ex.: paginação).
@@ -2247,6 +2217,15 @@ setActiveFiltersFromURL();
             var parentId = String($(this).val() || '0');
             if (parentId === '-1') { parentId = '0'; }
             uptHandleParentSelection(wrapper, parentId);
+
+            var parentListingWrapper = $('#' + wrapper.data('target-id')).closest('.upt-listing-wrapper');
+            if (!parentListingWrapper.length) {
+                parentListingWrapper = wrapper.closest('.upt-listing-wrapper');
+            }
+            if (parentListingWrapper.length) {
+                parentListingWrapper.attr('data-upt-active-term', '0');
+            }
+            performuptSearch(wrapper, 1);
             return;
         }
 
@@ -2712,8 +2691,8 @@ setActiveFiltersFromURL();
                 var infiniteTrigger = (container.data('pagination-infinite-trigger') || 'scroll').toString();
                 var currentPage = page || 1;
 
-                grid.css('opacity', 0.5);
-                paginationWrapper.css('opacity', 0.5);
+                grid.addClass('upt-loading');
+                paginationWrapper.addClass('upt-loading');
 
                 $.ajax({
                     url: upt_ajax.ajax_url,
@@ -2756,8 +2735,8 @@ setActiveFiltersFromURL();
                         grid.html('<p>Ocorreu um erro de comunicação.</p>');
                     },
                     complete: function () {
-                        grid.css('opacity', 1);
-                        paginationWrapper.css('opacity', 1);
+                        grid.removeClass('upt-loading');
+                        paginationWrapper.removeClass('upt-loading');
                         container.removeAttr('data-upt-dashboard-loading');
                     }
                 });
@@ -3146,7 +3125,7 @@ setActiveFiltersFromURL();
             var schemaSlug = activeTab.length ? activeTab.attr('id').replace('tab-', '') : '';
 
             uptConfirmDialog('Tem certeza que deseja excluir a categoria "' + termName + '" permanentemente?', function () {
-                listItem.css('opacity', 0.5);
+                listItem.addClass('upt-loading');
 
                 $.ajax({
                     url: upt_ajax.ajax_url,
@@ -3166,12 +3145,12 @@ setActiveFiltersFromURL();
                             }
                         } else {
                             alert('Erro ao excluir: ' + (response.data.message || 'Erro desconhecido.'));
-                            listItem.css('opacity', 1);
+                            listItem.removeClass('upt-loading');
                         }
                     },
                     error: function () {
                         alert('Erro de comunicação.');
-                        listItem.css('opacity', 1);
+                        listItem.removeClass('upt-loading');
                     }
                 });
             });
@@ -3346,7 +3325,7 @@ setActiveFiltersFromURL();
             });
 
             uptConfirmDialog(confirmMsg, function () {
-                card.css('opacity', 0.5);
+                card.addClass('upt-loading');
 
                 var ajaxPayload = {
                     action: 'upt_delete_item',
@@ -3375,24 +3354,24 @@ setActiveFiltersFromURL();
                         if (response.success) {
                             uptNotify('delete', 'Item apagado!');
                             card.fadeOut(400, function () {
-                                // Sempre refaz a listagem via filtro (fonte única de verdade)
                                 handleFiltersChangeDashboard(parseInt(currentPage, 10) || 1);
+                                if (typeof uptRefreshTabCounters === 'function') { uptRefreshTabCounters(); }
                             });
                         } else {
                             alert('Erro ao excluir: ' + (response.data.message || 'Ocorreu um erro desconhecido.'));
-                            card.css('opacity', 1);
+                            card.removeClass('upt-loading');
                         }
                     },
                     error: function (xhr, status, err) {
                         uptDebugLog('delete-item: ajax error', { status: status, err: err, responseText: xhr && xhr.responseText });
                         alert('Ocorreu um erro de comunicação. Tente novamente.');
-                        card.css('opacity', 1);
+                        card.removeClass('upt-loading');
                     }
                 });
 
                 // Fallback timer to log if the request takes too long
                 setTimeout(function () {
-                    if (card && card.length && card.css('opacity') === '0.5') {
+                    if (card && card.length && card.hasClass('upt-loading')) {
                         uptDebugLog('delete-item: ajax still pending after 5s', ajaxPayload);
                     }
                 }, 5000);
@@ -3469,9 +3448,9 @@ setActiveFiltersFromURL();
                     var createSubcats = $wrapper.find('#new-cat-create-subcats').is(':checked');
                     var subcatsRaw = createSubcats ? ($wrapper.find('#new-cat-subcats').val() || '') : '';
 
-                    if (newCatName === '') { statusDiv.text('Por favor, digite um nome.').css('color', 'red'); return; }
+                    if (newCatName === '') { statusDiv.text('Por favor, digite um nome.').addClass('upt-status-error'); return; }
                     button.text('Salvando...').prop('disabled', true);
-                    statusDiv.text('').css('color', 'inherit');
+                    statusDiv.text('').removeClass('upt-status-error upt-status-warn');
                     $.ajax({
                         url: upt_ajax.ajax_url, type: 'POST',
                         data: {
@@ -3527,11 +3506,11 @@ setActiveFiltersFromURL();
                                 $wrapper.find('#new-cat-create-subcats').prop('checked', false);
                                 $wrapper.find('#new-cat-subcats').val('').hide();
                             } else {
-                                statusDiv.text(response.data.message).css('color', 'red');
+                                statusDiv.text(response.data.message).addClass('upt-status-error');
                             }
                         },
                         error: function (xhr, status) {
-                            statusDiv.text('Erro de comunicação.').css('color', 'red');
+                            statusDiv.text('Erro de comunicação.').addClass('upt-status-error');
                         },
                         complete: function () { button.text(originalButtonText).prop('disabled', false); }
                     });
@@ -3560,12 +3539,12 @@ setActiveFiltersFromURL();
                     var statusDiv = $('#new-option-status-' + fieldId);
 
                     if (newOptionName === '') {
-                        statusDiv.text('Por favor, digite um nome.').css('color', 'red');
+                        statusDiv.text('Por favor, digite um nome.').addClass('upt-status-error');
                         return;
                     }
 
                     button.text('Salvando...').prop('disabled', true);
-                    statusDiv.text('').css('color', 'inherit');
+                    statusDiv.text('').removeClass('upt-status-error upt-status-warn');
 
                     $.ajax({
                         url: upt_ajax.ajax_url,
@@ -3597,11 +3576,11 @@ setActiveFiltersFromURL();
                                 $('.add-new-select-option[data-field-id="' + fieldId + '"]').show();
                                 $('#new-option-name-' + fieldId).val('');
                             } else {
-                                statusDiv.text(response.data.message).css('color', 'red');
+                                statusDiv.text(response.data.message).addClass('upt-status-error');
                             }
                         },
                         error: function () {
-                            statusDiv.text('Erro de comunicação.').css('color', 'red');
+                            statusDiv.text('Erro de comunicação.').addClass('upt-status-error');
                         },
                         complete: function () {
                             button.text(originalButtonText).prop('disabled', false);
@@ -3635,7 +3614,7 @@ setActiveFiltersFromURL();
                     $status.text('');
 
                     if (!currentVal) {
-                        $status.text('Selecione um item para renomear.').css('color', 'red');
+                        $status.text('Selecione um item para renomear.').addClass('upt-status-error');
                         $('#rename-option-area-' + fieldId).slideDown();
                         $('#rename-option-old-' + fieldId).val('');
                         $('#rename-option-name-' + fieldId).val('');
@@ -3667,11 +3646,11 @@ setActiveFiltersFromURL();
                     var statusDiv = $('#rename-option-status-' + fieldId);
 
                     if (!oldName || !newName) {
-                        statusDiv.text('Preencha o nome.').css('color', 'red');
+                        statusDiv.text('Preencha o nome.').addClass('upt-status-error');
                         return;
                     }
                     if (oldName === newName) {
-                        statusDiv.text('Nenhuma alteração.').css('color', '#555');
+                        statusDiv.text('Nenhuma alteração.').addClass('upt-status-warn');
                         return;
                     }
 
@@ -3719,11 +3698,11 @@ setActiveFiltersFromURL();
                                 $('#rename-option-name-' + fieldId).val('');
                                 $('#rename-option-old-' + fieldId).val('');
                             } else {
-                                statusDiv.text((response.data && response.data.message) ? response.data.message : 'Erro ao renomear.').css('color', 'red');
+                                statusDiv.text((response.data && response.data.message) ? response.data.message : 'Erro ao renomear.').addClass('upt-status-error');
                             }
                         },
                         error: function () {
-                            statusDiv.text('Erro de comunicação.').css('color', 'red');
+                            statusDiv.text('Erro de comunicação.').addClass('upt-status-error');
                         },
                         complete: function () {
                             button.text(originalButtonText).prop('disabled', false);
@@ -4233,10 +4212,10 @@ setActiveFiltersFromURL();
                     var newParentId = $area.find('.upt-subcat-parent').val();
                     var $status = $area.find('.upt-subcat-status');
 
-                    if (!name) { $status.text('Digite um nome.').css('color', 'red'); return; }
-                    if (!newParentId) { $status.text('Selecione a categoria pai.').css('color', 'red'); return; }
+                    if (!name) { $status.text('Digite um nome.').addClass('upt-status-error'); return; }
+                    if (!newParentId) { $status.text('Selecione a categoria pai.').addClass('upt-status-error'); return; }
 
-                    $status.text('').css('color', 'inherit');
+                    $status.text('').removeClass('upt-status-error upt-status-warn');
 
                     if (mode === 'create') {
                         $.ajax({
@@ -4262,11 +4241,11 @@ setActiveFiltersFromURL();
                                     $area.slideUp(180);
                                     if (window.uptNotify) { window.uptNotify('subcategory_created', 'Subcategoria criada: ' + termName); }
                                 } else {
-                                    $status.text(resp && resp.data && resp.data.message ? resp.data.message : 'Erro ao salvar.').css('color', 'red');
+                                    $status.text(resp && resp.data && resp.data.message ? resp.data.message : 'Erro ao salvar.').addClass('upt-status-error');
                                 }
                             },
                             error: function () {
-                                $status.text('Erro de comunicação.').css('color', 'red');
+                                $status.text('Erro de comunicação.').addClass('upt-status-error');
                             }
                         });
                         return;
@@ -4274,7 +4253,7 @@ setActiveFiltersFromURL();
 
                     // edit
                     var termIdEdit = parseInt($area.find('.upt-subcat-term-id').val(), 10);
-                    if (!termIdEdit || termIdEdit <= 0) { $status.text('Subcategoria inválida.').css('color', 'red'); return; }
+                    if (!termIdEdit || termIdEdit <= 0) { $status.text('Subcategoria inválida.').addClass('upt-status-error'); return; }
 
                     $.ajax({
                         url: upt_ajax.ajax_url,
@@ -4303,11 +4282,11 @@ setActiveFiltersFromURL();
                                 $area.slideUp(180);
                                 if (window.uptNotify) { window.uptNotify('subcategory_updated', resp.data.message || 'Subcategoria atualizada.'); }
                             } else {
-                                $status.text(resp && resp.data && resp.data.message ? resp.data.message : 'Erro ao atualizar.').css('color', 'red');
+                                $status.text(resp && resp.data && resp.data.message ? resp.data.message : 'Erro ao atualizar.').addClass('upt-status-error');
                             }
                         },
                         error: function () {
-                            $status.text('Erro de comunicação.').css('color', 'red');
+                            $status.text('Erro de comunicação.').addClass('upt-status-error');
                         }
                     });
                 });
@@ -6108,7 +6087,6 @@ function uptSetBulkMode(isActive) {
         $('body').on('click', '.upt-bulk-delete-cancel', function (e) {
             e.preventDefault();
             uptResetBulkDeleteUI();
-                            if (typeof uptRefreshTabCounters === 'function') { uptRefreshTabCounters(); }
         });
 
         // Confirm bulk deletion
@@ -6142,12 +6120,21 @@ function uptSetBulkMode(isActive) {
                     },
                     success: function (response) {
                         if (response && response.success) {
-                            uptNotify('delete', 'Itens apagados!');
-                            ids.forEach(function (id) {
-                                var $target = $('.delete-item-ajax[data-item-id="' + id + '"]').closest('.upt-item-card');
-                                if ($target.length) $target.fadeOut(250, function(){ $(this).remove(); });
-                            });
+                            var deletedCount = (response.data && response.data.deleted) ? response.data.deleted.length : 0;
+                            var errorCount = (response.data && response.data.errors) ? Object.keys(response.data.errors).length : 0;
+
+                            if (deletedCount > 0) {
+                                uptNotify('delete', deletedCount + ' item(ns) apagado(s)!');
+                            }
+                            if (errorCount > 0) {
+                                var errMsgs = [];
+                                $.each(response.data.errors, function(k, v) { errMsgs.push(v); });
+                                uptNotify('error', errMsgs.join('\n'));
+                            }
+
                             uptResetBulkDeleteUI();
+                            handleFiltersChangeDashboard(1);
+                            if (typeof uptRefreshTabCounters === 'function') { uptRefreshTabCounters(); }
                         } else {
                             var msg = (response && response.data && response.data.message) ? response.data.message : 'Falha ao excluir itens.';
                             uptNotify('error', msg);

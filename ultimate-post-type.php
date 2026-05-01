@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       upt - Catálogo Front-End
+ * Plugin Name:       Ultimate Post Type
  * Description:       Gerenciador de itens de catálogo com submissão e gerenciamento via front-end.
  * Version: V20.7.35-wizard
- * Author:            Pedro
+ * Author:            Pedro e Matheus
  */
 
 /**
@@ -151,7 +151,6 @@ final class UPT
         require_once UPT_PLUGIN_DIR . 'includes/class-taxonomies.php';
         require_once UPT_PLUGIN_DIR . 'includes/class-roles.php';
         require_once UPT_PLUGIN_DIR . 'includes/class-auth.php';
-        require_once UPT_PLUGIN_DIR . 'includes/class-form-handler.php';
         require_once UPT_PLUGIN_DIR . 'includes/class-admin.php';
         require_once UPT_PLUGIN_DIR . 'includes/class-schema-store.php';
         require_once UPT_PLUGIN_DIR . 'includes/class-ajax.php';
@@ -181,9 +180,7 @@ final class UPT
     {
         UPT_CPT::init();
         UPT_Taxonomies::init();
-        UPT_Roles::init();
         UPT_Auth::init();
-        UPT_Form_Handler::init();
         UPT_Admin::init();
         UPT_Ajax::init();
         UPT_Media_Folders::init();

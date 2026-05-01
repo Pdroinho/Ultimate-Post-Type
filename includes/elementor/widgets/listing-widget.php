@@ -975,6 +975,14 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
         $this->add_render_attribute('_wrapper', 'data-posts-per-page', $ppp_data);
         $this->add_render_attribute('_wrapper', 'data-pagination-type', esc_attr($pagination_type));
         $this->add_render_attribute('_wrapper', 'data-infinite-trigger', esc_attr($pagination_trigger));
+
+        $fixed_field_id = isset($settings['builtin_meta_filter_field']) ? $settings['builtin_meta_filter_field'] : '';
+        $fixed_mode = isset($settings['builtin_meta_filter_mode']) ? $settings['builtin_meta_filter_mode'] : 'interactive';
+        $fixed_value = isset($settings['builtin_meta_filter_fixed_value']) ? $settings['builtin_meta_filter_fixed_value'] : '';
+        if ($fixed_mode === 'fixed' && !empty($fixed_field_id) && !empty($fixed_value)) {
+            $this->add_render_attribute('_wrapper', 'data-upt-active-meta-key', $fixed_field_id);
+            $this->add_render_attribute('_wrapper', 'data-upt-active-meta-val', $fixed_value);
+        }
 ?>
         <div <?php echo $this->get_render_attribute_string('_wrapper'); ?>>
             <style>
@@ -1336,22 +1344,22 @@ class UPT_Listing_Widget extends \Elementor\Widget_Base
                 // Neste widget, precisamos manter a mesma estrutura usada no AJAX (get_builder_content)
                 // para garantir que o CSS do template seja aplicado já no carregamento inicial.
                 echo '<div class="elementor-grid-item">';
-                $upt_builder_raw = get_option('upt_card_builder', []);
-                if (empty($upt_builder_raw) || !is_array($upt_builder_raw)) {
-                    $upt_builder_raw = [
-                        ['id' => 'image',  'visible' => true, 'color' => '', 'prefix' => '', 'suffix' => '', 'fontSize' => '', 'fontWeight' => ''],
-                        ['id' => 'title',  'visible' => true, 'color' => '#111827', 'prefix' => '', 'suffix' => '', 'fontSize' => '16', 'fontWeight' => '700'],
-                        ['id' => 'price',  'visible' => true, 'color' => '#16a34a', 'prefix' => '', 'suffix' => '', 'fontSize' => '18', 'fontWeight' => '700'],
-                        ['id' => 'button', 'visible' => true, 'color' => '#6366f1', 'prefix' => 'Ver Detalhes', 'suffix' => '', 'fontSize' => '13', 'fontWeight' => '600'],
-                    ];
-                }
-                $upt_use_builder = true;
-                $upt_builder_elements = $upt_builder_raw;
-
-                if (!empty($template_id) && !$upt_use_builder) {
+                if (!empty($template_id) && class_exists('\Elementor\Plugin')) {
                     echo \Elementor\Plugin::instance()->frontend->get_builder_content($template_id, true);
                 }
                 else {
+                    $upt_builder_raw = get_option('upt_card_builder', []);
+                    if (empty($upt_builder_raw) || !is_array($upt_builder_raw)) {
+                        $upt_builder_raw = [
+                            ['id' => 'image',  'visible' => true, 'color' => '', 'prefix' => '', 'suffix' => '', 'fontSize' => '', 'fontWeight' => ''],
+                            ['id' => 'title',  'visible' => true, 'color' => '#111827', 'prefix' => '', 'suffix' => '', 'fontSize' => '16', 'fontWeight' => '700'],
+                            ['id' => 'price',  'visible' => true, 'color' => '#16a34a', 'prefix' => '', 'suffix' => '', 'fontSize' => '18', 'fontWeight' => '700'],
+                            ['id' => 'button', 'visible' => true, 'color' => '#6366f1', 'prefix' => 'Ver Detalhes', 'suffix' => '', 'fontSize' => '13', 'fontWeight' => '600'],
+                        ];
+                    }
+                    $upt_use_builder = true;
+                    $upt_builder_elements = $upt_builder_raw;
+
                     $post_id = get_the_ID();
                     $post_schemas = get_the_terms($post_id, 'catalog_schema');
                     $schema_slug = !empty($post_schemas) ? $post_schemas[0]->slug : '';

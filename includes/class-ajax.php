@@ -416,8 +416,6 @@ class UPT_Ajax {
     }
 
     public static function save_item() {
-        if ( ! check_ajax_referer( 'upt_new_item', 'upt_submit_nonce', false ) ) { ob_clean(); wp_send_json_error(['message' => 'Falha de segurança.']); }
-        if ( ! is_user_logged_in() ) { ob_clean(); wp_send_json_error(['message' => 'Você precisa estar logado.']); }
         
         $is_update = isset($_POST['item_id']) && !empty($_POST['item_id']);
         $post_id = $is_update ? absint($_POST['item_id']) : 0;
@@ -464,7 +462,6 @@ class UPT_Ajax {
                             if ( $count_query->found_posts >= $items_limit ) {
                                 $cat_name = get_term_field( 'name', $cat_id, 'catalog_category' );
                                 $cat_label = ( ! is_wp_error( $cat_name ) && $cat_name ) ? $cat_name : 'esta categoria';
-                                ob_clean();
                                 wp_send_json_error( [
                                     'message' => sprintf(
                                         'Você atingiu o limite máximo de %d itens para %s.',
@@ -491,7 +488,6 @@ class UPT_Ajax {
                         ] );
 
                         if ( $count_query->found_posts >= $items_limit ) {
-                            ob_clean();
                             wp_send_json_error( [
                                 'message' => sprintf(
                                     'Você atingiu o limite máximo de %d itens para este esquema.',
@@ -508,7 +504,6 @@ class UPT_Ajax {
         if ($is_update) {
             $post_to_edit = get_post($post_id);
             if (!$post_to_edit || ($post_to_edit->post_author != get_current_user_id() && !current_user_can('manage_options'))) {
-                ob_clean(); 
                 wp_send_json_error(['message' => 'Permissão negada.']); 
             }
         }
@@ -547,14 +542,12 @@ class UPT_Ajax {
                     $excerpt_value_for_check = isset( $post_data['post_excerpt'] ) ? trim( (string) $post_data['post_excerpt'] ) : '';
 
                     if ( $excerpt_is_required && $excerpt_value_for_check === '' ) {
-                        ob_clean();
                         wp_send_json_error( [ 'message' => 'O resumo do post é obrigatório.' ] );
                     }
 
                     if ( $excerpt_max_length > 0 && $excerpt_value_for_check !== '' ) {
                         $len = function_exists( 'mb_strlen' ) ? mb_strlen( $excerpt_value_for_check ) : strlen( $excerpt_value_for_check );
                         if ( $len > $excerpt_max_length ) {
-                            ob_clean();
                             wp_send_json_error( [ 'message' => 'O resumo do post excede o limite de ' . $excerpt_max_length . ' caracteres.' ] );
                         }
                     }
@@ -678,7 +671,6 @@ class UPT_Ajax {
                         // Evita deixar rascunho órfão em caso de erro ao criar.
                         wp_delete_post( $post_id, true );
                     }
-                    ob_clean();
                     wp_send_json_error(
                         array(
                             'message'        => implode( ' ', $media_required_errors ),
@@ -700,92 +692,18 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                 if ( in_array($field['type'], ['core_title', 'core_content', 'core_featured_image', 'taxonomy']) ) continue;
 
                 if (isset($_POST[$field_id])) {
-                    $raw_value = $_POST[$field_id];
-                    $sanitized_value = '';
-
-                    if (is_array($raw_value)) {
-                        $sanitized_value = array_map('sanitize_text_field', $raw_value);
-                    } else {
-                        switch ($field['type']) {
-                            case 'textarea':
-                                $sanitized_value = sanitize_textarea_field($raw_value);
-                                break;
-                            case 'wysiwyg':
-                                $sanitized_value = wp_kses_post( $raw_value );
-                                break;
-                            case 'number':
-                            case 'price': $sanitized_value = floatval($raw_value); break;
-                            case 'url':
-                                $raw_value = trim($raw_value);
-                                $sanitized_value = $raw_value === '' ? '' : esc_url_raw($raw_value);
-                                break;
-                            case 'image':
-                            case 'video':
-                            case 'pdf':
-                            case 'relationship': $sanitized_value = absint($raw_value); break;
-                            case 'gallery':
-                                $ids = explode(',', $raw_value);
-                                $sanitized_ids = array_map('absint', $ids);
-                                $sanitized_value = implode(',', array_filter($sanitized_ids));
-                                break;
-                            case 'list':
-                                $lines = preg_split('/\r\n|\r|\n/', (string)$raw_value);
-                                $lines = array_map('trim', $lines);
-                                $lines = array_filter($lines, function($v){ return $v !== ''; });
-                                $sanitized_value = array_values(array_map('sanitize_text_field', $lines));
-                                break;
-                            case 'unit_measure':
-                                $sanitized_value = floatval($raw_value);
-                                if (isset($_POST[$field_id . '_unit'])) {
-                                    $sanitized_unit = sanitize_text_field($_POST[$field_id . '_unit']);
-                                    update_post_meta($post_id, $field_id . '_unit', $sanitized_unit);
-                                }
-                                break;
-                            default: $sanitized_value = sanitize_text_field($raw_value); break;
-                        }
-                    }
+                    $sanitized_value = self::sanitize_field_value( $_POST[$field_id], $field['type'], $field_id, $post_id );
                     update_post_meta($post_id, $field_id, $sanitized_value);
                 } else {
                     delete_post_meta($post_id, $field_id);
                 }
             }
             
-            $show_all = isset($_POST['show_all']) && in_array($_POST['show_all'], ['true', 'yes', '1'], true);
-            $active_schema_slug = isset($_POST['active_schema_slug']) ? sanitize_text_field($_POST['active_schema_slug']) : '';
-            $active_category_id = isset($_POST['active_category_id']) ? absint($_POST['active_category_id']) : 0;
-            $table_html_args = [];
-            $table_html_args['posts_per_page'] = isset($_POST['per_page']) ? intval($_POST['per_page']) : -1;
-            $table_html_args['paged'] = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
-
-            if (!$show_all || !current_user_can('manage_options')) {
-                $table_html_args['author'] = get_current_user_id();
-            }
-            if (isset($_POST['template_id']) && !empty($_POST['template_id'])) {
-                $table_html_args['template_id'] = absint($_POST['template_id']);
-            }
-            $card_variant = isset($_POST['card_variant']) ? sanitize_key($_POST['card_variant']) : 'modern';
-            if ( ! in_array( $card_variant, [ 'modern', 'legacy' ], true ) ) {
-                $card_variant = 'modern';
-            }
-            $table_html_args['card_variant'] = $card_variant;
-            if (!empty($active_schema_slug) || $active_category_id > 0) {
-                $table_html_args['tax_query'] = ['relation' => 'AND'];
-                if (!empty($active_schema_slug)) {
-                    $table_html_args['tax_query'][] = [
-                        'taxonomy' => 'catalog_schema',
-                        'field'    => 'slug',
-                        'terms'    => $active_schema_slug,
-                    ];
-                }
-                if ($active_category_id > 0) {
-                    $table_html_args['tax_query'][] = [
-                        'taxonomy' => 'catalog_category',
-                        'field'    => 'term_id',
-                        'terms'    => $active_category_id,
-                    ];
-                }
-            }
+            $table_html_args = self::build_table_response_args();
             $table_data = self::get_items_list_html($table_html_args);
+
+            $active_schema_slug = isset( $_POST['active_schema_slug'] ) ? sanitize_text_field( $_POST['active_schema_slug'] ) : '';
+            $active_category_id = isset( $_POST['active_category_id'] ) ? absint( $_POST['active_category_id'] ) : 0;
 
             $parent_cat_term = get_term_by('slug', $active_schema_slug, 'catalog_category');
             $parent_cat_id = ($parent_cat_term && !is_wp_error($parent_cat_term)) ? $parent_cat_term->term_id : 0;
@@ -802,7 +720,6 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
             ];
             $filter_html = wp_dropdown_categories($category_args);
 
-            ob_clean();
             wp_send_json_success([
                 'message' => 'Item salvo!', 
                 'html' => $table_data['html'],
@@ -810,7 +727,6 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                 'filter_html' => $filter_html,
             ]);
         } else {
-            ob_clean();
             wp_send_json_error(['message' => 'Erro ao salvar o item.']);
         }
         wp_die();
@@ -1366,19 +1282,27 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
             ];
         }
         
-        if ( ! $template_id ) {
-            wp_send_json_error();
-        }
+        $parent_term_id = isset($_POST['parent_term_id']) ? intval($_POST['parent_term_id']) : 0;
+
                 $tax_query = [];
         if ( ! empty( $term_id ) ) {
             $cat_taxonomy = $is_wp_posts_mode ? 'category' : 'catalog_category';
 
-            // Filtra por categoria incluindo automaticamente todos os descendentes.
-            // Isso garante que, ao clicar na categoria "pai", os itens das subcategorias também apareçam.
             $tax_query[] = [
                 'taxonomy'         => $cat_taxonomy,
                 'field'            => 'term_id',
                 'terms'            => [ (int) $term_id ],
+                'include_children' => true,
+                'operator'         => 'IN',
+            ];
+        }
+
+        if ( ! empty( $parent_term_id ) && ( empty( $term_id ) || $parent_term_id != $term_id ) ) {
+            $cat_taxonomy = $is_wp_posts_mode ? 'category' : 'catalog_category';
+            $tax_query[] = [
+                'taxonomy'         => $cat_taxonomy,
+                'field'            => 'term_id',
+                'terms'            => [ (int) $parent_term_id ],
                 'include_children' => true,
                 'operator'         => 'IN',
             ];
@@ -1483,16 +1407,43 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
             $total_pages = (int) $query->max_num_pages;
         }
         
-        ob_start();
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                echo '<div class="elementor-grid-item">';
-                echo \Elementor\Plugin::instance()->frontend->get_builder_content( $template_id, true );
-                echo '</div>';
+        if ( $template_id > 0 ) {
+            ob_start();
+            if ($query->have_posts()) {
+                while ($query->have_posts()) {
+                    $query->the_post();
+                    echo '<div class="elementor-grid-item">';
+                    if ( class_exists('\Elementor\Plugin') ) {
+                        echo \Elementor\Plugin::instance()->frontend->get_builder_content( $template_id, true );
+                    }
+                    echo '</div>';
+                }
             }
+            $html = ob_get_clean();
+        } else {
+            $list_args = [
+                'post_type'      => $is_wp_posts_mode ? 'post' : 'catalog_item',
+                'post_status'    => 'publish',
+                'posts_per_page' => $posts_per_page,
+                'paged'          => $paged,
+                'template_id'    => 0,
+                'card_variant'   => 'modern',
+                'show_actions'   => false,
+            ];
+            if ( ! empty( $search_term ) ) {
+                $list_args['s'] = $search_term;
+            }
+            if ( ! empty( $tax_query ) ) {
+                $list_args['tax_query'] = $tax_query;
+            }
+            if ( ! empty( $meta_query ) ) {
+                $list_args['meta_query'] = $meta_query;
+            }
+
+            $list_result  = self::get_items_list_html( $list_args );
+            $html         = $list_result['html'];
+            $total_pages  = ! empty( $list_result['total_pages'] ) ? (int) $list_result['total_pages'] : $total_pages;
         }
-        $html = ob_get_clean();
         
         $add_args = [];
         if ( $search_term !== '' ) {
@@ -1550,6 +1501,7 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
             'pagination_infinite_trigger' => 'scroll',
             'pagination_numbers_show_arrows' => true,
             'pagination_load_more_text' => '',
+            'show_actions' => true,
         ];
         
         $query_args = wp_parse_args( $args, $default_args );
@@ -1700,6 +1652,8 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
         $upt_show_dash_price    = in_array('price', $upt_dash_card_fields);
         $upt_show_dash_status   = in_array('status', $upt_dash_card_fields);
         $upt_show_dash_category = in_array('category', $upt_dash_card_fields);
+        $show_actions = !empty($query_args['show_actions']);
+        unset($query_args['show_actions']);
 
         if ($items_query->have_posts()) :
             while ($items_query->have_posts()) : $items_query->the_post();
@@ -1910,6 +1864,7 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                                 }
                                 ?>
 
+                                <?php if ($show_actions) : ?>
                                 <div class="card-actions upt-card-actions--inline">
                                     <a href="#" class="upt-card-btn open-edit-modal" data-item-id="<?php echo esc_attr( $post_id ); ?>" title="Editar">
                                         <?php if ( ! $is_form_submission_listing ) : ?>
@@ -1922,6 +1877,7 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                                         <?php endif; ?>
                                     </a>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <?php
@@ -1949,10 +1905,12 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                                 </div>
                                 <?php endif; ?>
                             </div>
+                            <?php if ($show_actions) : ?>
                             <div class="card-actions">
                                 <a href="#" class="open-edit-modal" data-item-id="<?php echo get_the_ID(); ?>" title="Editar"></a>
                                 <a href="#" class="delete-item-ajax" data-item-id="<?php echo get_the_ID(); ?>" title="Excluir"></a>
                             </div>
+                            <?php endif; ?>
                         </div>
                         <?php
                     }
@@ -2005,18 +1963,7 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
         ];
     }
 
-    public static function filter_items() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) ) {
-            wp_send_json_error(['message' => 'Nonce inválido.']);
-        }
-    
-        $args = [];
-        $show_all = isset($_POST['show_all']) && in_array($_POST['show_all'], ['true', 'yes', '1'], true);
-
-        if (!$show_all || !current_user_can('manage_options')) {
-            $args['author'] = get_current_user_id();
-        }
-
+    private static function parse_common_query_args( &$args ) {
         if (isset($_POST['template_id']) && !empty($_POST['template_id'])) {
             $args['template_id'] = absint($_POST['template_id']);
         }
@@ -2049,11 +1996,11 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
                 $args['pagination_infinite_trigger'] = $trigger;
             }
         }
-    
+
         if ( isset( $_POST['search_term'] ) && trim( $_POST['search_term'] ) !== '' ) {
             $args['s'] = sanitize_text_field( $_POST['search_term'] );
         }
-    
+
         $tax_query = [];
 
         if ( isset( $_POST['category_id'] ) && $_POST['category_id'] > 0 ) {
@@ -2064,19 +2011,38 @@ $fields_to_save = UPT_Schema_Store::get_fields_for_schema( $schema_slug );
             ];
         }
 
-        if ( isset( $_POST['schema_slug'] ) && !empty($_POST['schema_slug']) ) {
-            $tax_query[] = [
-                'taxonomy' => 'catalog_schema',
-                'field'    => 'slug',
-                'terms'    => sanitize_text_field( $_POST['schema_slug'] ),
-            ];
-        }
-
         if ( ! empty( $tax_query ) ) {
             if ( count( $tax_query ) > 1 ) {
                 $tax_query['relation'] = 'AND';
             }
             $args['tax_query'] = $tax_query;
+        }
+    }
+
+    public static function filter_items() {
+        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) ) {
+            wp_send_json_error(['message' => 'Nonce inválido.']);
+        }
+    
+        $args = [];
+        $show_all = isset($_POST['show_all']) && in_array($_POST['show_all'], ['true', 'yes', '1'], true);
+
+        if (!$show_all || !current_user_can('manage_options')) {
+            $args['author'] = get_current_user_id();
+        }
+
+        self::parse_common_query_args($args);
+
+        if ( isset( $_POST['schema_slug'] ) && !empty($_POST['schema_slug']) ) {
+            if ( ! isset( $args['tax_query'] ) ) { $args['tax_query'] = []; }
+            $args['tax_query'][] = [
+                'taxonomy' => 'catalog_schema',
+                'field'    => 'slug',
+                'terms'    => sanitize_text_field( $_POST['schema_slug'] ),
+            ];
+            if ( count( $args['tax_query'] ) > 1 ) {
+                $args['tax_query']['relation'] = 'AND';
+            }
         }
     
         $filtered_data = self::get_items_list_html( $args );
@@ -2516,12 +2482,10 @@ public static function delete_category() {
 
     public static function save_draft() {
         if ( ! check_ajax_referer( 'upt_new_item', 'upt_submit_nonce', false ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Falha de segurança.', 'code' => 'invalid_nonce' ] );
         }
 
         if ( ! is_user_logged_in() ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Você precisa estar logado.', 'code' => 'not_logged_in' ] );
         }
 
@@ -2566,12 +2530,10 @@ public static function delete_category() {
 
     public static function get_draft() {
         if ( ! check_ajax_referer( 'upt_new_item', 'upt_submit_nonce', false ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Falha de segurança.', 'code' => 'invalid_nonce' ] );
         }
 
         if ( ! is_user_logged_in() ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Você precisa estar logado.', 'code' => 'not_logged_in' ] );
         }
 
@@ -2600,12 +2562,10 @@ public static function delete_category() {
 
     public static function clear_draft() {
         if ( ! check_ajax_referer( 'upt_new_item', 'upt_submit_nonce', false ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Falha de segurança.', 'code' => 'invalid_nonce' ] );
         }
 
         if ( ! is_user_logged_in() ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Você precisa estar logado.', 'code' => 'not_logged_in' ] );
         }
 
@@ -2625,127 +2585,24 @@ public static function delete_category() {
 
 
     public static function delete_item() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) ) { ob_clean(); wp_send_json_error(['message' => 'Falha de segurança.']); }
-        if ( ! is_user_logged_in() ) { ob_clean(); wp_send_json_error(['message' => 'Você precisa estar logado.']); }
         $post_id = isset($_POST['item_id']) ? absint($_POST['item_id']) : 0;
-        if (!$post_id) { ob_clean(); wp_send_json_error(['message' => 'ID do item não fornecido.']); }
         
         $post = get_post($post_id);
         if (!$post || ($post->post_author != get_current_user_id() && !current_user_can('manage_options'))) {
-            ob_clean(); 
             wp_send_json_error(['message' => 'Permissão negada.']); 
         }
 
-        // Enforce mínimo de itens por esquema (items_min salvo no Schema Store)
-        $schema_terms = get_the_terms( $post_id, 'catalog_schema' );
-        if ( ! is_wp_error( $schema_terms ) && ! empty( $schema_terms ) ) {
-            $schema_slug = isset( $schema_terms[0]->slug ) ? (string) $schema_terms[0]->slug : '';
-            if ( $schema_slug ) {
-                $all_schemas = UPT_Schema_Store::get_schemas();
-                $items_min   = isset( $all_schemas[ $schema_slug ]['items_min'] ) ? absint( $all_schemas[ $schema_slug ]['items_min'] ) : 0;
-                $limit_per_category = ! empty( $all_schemas[ $schema_slug ]['items_limit_per_category'] );
-                if ( $items_min > 0 ) {
-                    $category_terms = get_the_terms( $post_id, 'catalog_category' );
-                    if ( $limit_per_category && ! is_wp_error( $category_terms ) && ! empty( $category_terms ) ) {
-                        foreach ( $category_terms as $category_term ) {
-                            $count_query = new WP_Query([
-                                'post_type'      => 'catalog_item',
-                                'post_status'    => [ 'publish', 'pending', 'draft', 'private', 'future' ],
-                                'posts_per_page' => 1,
-                                'paged'          => 1,
-                                'tax_query'      => [
-                                    [
-                                        'taxonomy' => 'catalog_schema',
-                                        'field'    => 'slug',
-                                        'terms'    => $schema_slug,
-                                    ],
-                                    [
-                                        'taxonomy' => 'catalog_category',
-                                        'field'    => 'term_id',
-                                        'terms'    => (int) $category_term->term_id,
-                                    ],
-                                ],
-                            ]);
-                            $current_count = isset( $count_query->found_posts ) ? (int) $count_query->found_posts : 0;
-                            if ( $current_count <= $items_min ) {
-                                ob_clean();
-                                wp_send_json_error([
-                                    'message' => sprintf(
-                                        'Não é possível apagar. A categoria %s exige no mínimo %d item(ns). Crie um novo item antes de apagar outro.',
-                                        esc_html( $category_term->name ),
-                                        $items_min
-                                    ),
-                                    'code'    => 'min_items_reached',
-                                ]);
-                            }
-                        }
-                    } else {
-                        $count_query = new WP_Query([
-                            'post_type'      => 'catalog_item',
-                            'post_status'    => [ 'publish', 'pending', 'draft', 'private', 'future' ],
-                            'posts_per_page' => 1,
-                            'paged'          => 1,
-                            'tax_query'      => [[
-                                'taxonomy' => 'catalog_schema',
-                                'field'    => 'slug',
-                                'terms'    => $schema_slug,
-                            ]],
-                        ]);
-                        $current_count = isset( $count_query->found_posts ) ? (int) $count_query->found_posts : 0;
-                        if ( $current_count <= $items_min ) {
-                            ob_clean();
-                            wp_send_json_error([
-                                'message' => 'Não é possível apagar. Este esquema exige no mínimo ' . $items_min . ' item(ns). Crie um novo item antes de apagar outro.',
-                                'code'    => 'min_items_reached',
-                            ]);
-                        }
-                    }
-                }
-            }
+        $min_msg = '';
+        if ( ! self::can_delete_item_enforcing_min( $post_id, $min_msg ) ) {
+            wp_send_json_error([
+                'message' => $min_msg ? $min_msg : 'Não é possível apagar este item.',
+                'code'    => 'min_items_reached',
+            ]);
         }
 
         if (wp_delete_post($post_id, true)) {
-            $show_all = isset($_POST['show_all']) && in_array($_POST['show_all'], ['true', 'yes', '1'], true);
-            $active_schema_slug = isset($_POST['active_schema_slug']) ? sanitize_text_field($_POST['active_schema_slug']) : '';
-            $active_category_id = isset($_POST['active_category_id']) ? absint($_POST['active_category_id']) : 0;
-            $table_html_args = [];
-            $table_html_args['posts_per_page'] = isset($_POST['per_page']) ? intval($_POST['per_page']) : -1;
-            $table_html_args['paged'] = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
-
-            if (!$show_all || !current_user_can('manage_options')) {
-                $table_html_args['author'] = get_current_user_id();
-            }
-            if (isset($_POST['template_id']) && !empty($_POST['template_id'])) {
-                $table_html_args['template_id'] = absint($_POST['template_id']);
-            }
-            $card_variant = isset($_POST['card_variant']) ? sanitize_key($_POST['card_variant']) : 'modern';
-            if ( ! in_array( $card_variant, [ 'modern', 'legacy' ], true ) ) {
-                $card_variant = 'modern';
-            }
-            $table_html_args['card_variant'] = $card_variant;
-            if (!empty($active_schema_slug) || $active_category_id > 0) {
-                $table_html_args['tax_query'] = ['relation' => 'AND'];
-                if (!empty($active_schema_slug)) {
-                    $table_html_args['tax_query'][] = [
-                        'taxonomy' => 'catalog_schema',
-                        'field'    => 'slug',
-                        'terms'    => $active_schema_slug,
-                    ];
-                }
-                if ($active_category_id > 0) {
-                    $table_html_args['tax_query'][] = [
-                        'taxonomy' => 'catalog_category',
-                        'field'    => 'term_id',
-                        'terms'    => $active_category_id,
-                    ];
-                }
-            }
-            $table_data = self::get_items_list_html($table_html_args);
-
-            ob_clean();
-            wp_send_json_success(['message' => 'Item excluído!', 'html' => $table_data['html'], 'pagination_html' => $table_data['pagination_html']]);
+            wp_send_json_success(['message' => 'Item excluído!']);
         } else {
-            ob_clean();
             wp_send_json_error(['message' => 'Erro ao excluir o item.']);
         }
         wp_die();
@@ -2785,8 +2642,6 @@ public static function delete_category() {
     }
 
     public static function bulk_delete_items() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) ) { ob_clean(); wp_send_json_error(['message' => 'Falha de segurança.']); }
-        if ( ! is_user_logged_in() ) { ob_clean(); wp_send_json_error(['message' => 'Você precisa estar logado.']); }
 
         $raw_ids = isset($_POST['item_ids']) ? (array) $_POST['item_ids'] : [];
         $item_ids = [];
@@ -2796,7 +2651,6 @@ public static function delete_category() {
         }
         $item_ids = array_values( array_unique( $item_ids ) );
 
-        if ( empty( $item_ids ) ) { ob_clean(); wp_send_json_error(['message' => 'Nenhum item selecionado.']); }
 
         $deleted = [];
         $errors  = [];
@@ -2827,7 +2681,6 @@ public static function delete_category() {
             }
         }
 
-        ob_clean();
         wp_send_json_success([
             'deleted' => $deleted,
             'errors'  => $errors,
@@ -2919,8 +2772,6 @@ public static function delete_category() {
 
 
     public static function get_schema_counts() {
-        if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) ) { ob_clean(); wp_send_json_error( [ 'message' => 'Falha de segurança.' ] ); }
-        if ( ! is_user_logged_in() ) { ob_clean(); wp_send_json_error( [ 'message' => 'Você precisa estar logado.' ] ); }
 
         $show_all = isset( $_POST['show_all'] ) && in_array( wp_unslash( $_POST['show_all'] ), [ 'true', 'yes', '1' ], true );
 
@@ -2930,7 +2781,6 @@ public static function delete_category() {
         ] );
 
         if ( is_wp_error( $schemas ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Erro ao carregar schemas.' ] );
         }
 
@@ -2988,7 +2838,6 @@ public static function delete_category() {
             wp_reset_postdata();
         }
 
-        ob_clean();
         wp_send_json_success(
             [
                 'schemas' => $schema_counts,
@@ -2999,7 +2848,6 @@ public static function delete_category() {
 
     public static function reorder_fields() {
         if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
         }
 
@@ -3007,7 +2855,6 @@ public static function delete_category() {
         $order       = isset( $_POST['order'] ) ? (array) $_POST['order'] : [];
 
         if ( empty( $schema_slug ) || empty( $order ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Dados inválidos.' ] );
         }
 
@@ -3016,7 +2863,6 @@ public static function delete_category() {
         $all_schemas = UPT_Schema_Store::get_schemas();
 
         if ( ! isset( $all_schemas[ $schema_slug ]['fields'] ) || ! is_array( $all_schemas[ $schema_slug ]['fields'] ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Esquema não encontrado.' ] );
         }
 
@@ -3050,17 +2896,14 @@ public static function delete_category() {
         $all_schemas[ $schema_slug ]['fields'] = $new_fields;
 
         if ( ! UPT_Schema_Store::save_schemas( $all_schemas ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Erro ao salvar nova ordem.' ] );
         }
 
-        ob_clean();
         wp_send_json_success( [ 'message' => 'Ordem atualizada.' ] );
     }
 
     public static function reorder_items() {
         if ( ! check_ajax_referer( 'upt_ajax_nonce', 'nonce', false ) || ! current_user_can( 'manage_options' ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Permissão negada.' ] );
         }
 
@@ -3070,13 +2913,11 @@ public static function delete_category() {
         $order = array_values( array_unique( array_filter( array_map( 'absint', $order ) ) ) );
 
         if ( empty( $schema_slug ) || empty( $order ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Dados inválidos.' ] );
         }
 
         $schema_term = get_term_by( 'slug', $schema_slug, 'catalog_schema' );
         if ( ! $schema_term || is_wp_error( $schema_term ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Esquema não encontrado.' ] );
         }
 
@@ -3122,13 +2963,11 @@ public static function delete_category() {
         wp_reset_postdata();
 
         if ( empty( $schema_item_ids ) ) {
-            ob_clean();
             wp_send_json_error( [ 'message' => 'Nenhum item encontrado para este esquema.' ] );
         }
 
         foreach ( $order as $item_id ) {
             if ( ! in_array( $item_id, $schema_item_ids, true ) ) {
-                ob_clean();
                 wp_send_json_error( [ 'message' => 'O item informado não pertence a este esquema.' ] );
             }
         }
@@ -3154,7 +2993,6 @@ public static function delete_category() {
             }
         }
 
-        ob_clean();
         wp_send_json_success( [ 'message' => 'Ordem dos itens atualizada.' ] );
     }
 
@@ -3470,6 +3308,91 @@ public static function delete_category() {
 
         $result = UPT_Imobiliaria_Importer::ajax_cancel( $session_id );
         wp_send_json_success( $result );
+    }
+
+    private static function build_table_response_args() {
+        $show_all           = isset( $_POST['show_all'] ) && in_array( $_POST['show_all'], [ 'true', 'yes', '1' ], true );
+        $active_schema_slug = isset( $_POST['active_schema_slug'] ) ? sanitize_text_field( $_POST['active_schema_slug'] ) : '';
+        $active_category_id = isset( $_POST['active_category_id'] ) ? absint( $_POST['active_category_id'] ) : 0;
+
+        $args                        = [];
+        $args['posts_per_page']      = isset( $_POST['per_page'] ) ? intval( $_POST['per_page'] ) : -1;
+        $args['paged']               = isset( $_POST['paged'] ) ? absint( $_POST['paged'] ) : 1;
+        $args['card_variant']        = 'modern';
+        $args['template_id']         = 0;
+
+        if ( ! $show_all || ! current_user_can( 'manage_options' ) ) {
+            $args['author'] = get_current_user_id();
+        }
+        if ( isset( $_POST['template_id'] ) && ! empty( $_POST['template_id'] ) ) {
+            $args['template_id'] = absint( $_POST['template_id'] );
+        }
+        if ( isset( $_POST['card_variant'] ) ) {
+            $variant = sanitize_key( $_POST['card_variant'] );
+            if ( in_array( $variant, [ 'modern', 'legacy' ], true ) ) {
+                $args['card_variant'] = $variant;
+            }
+        }
+        if ( ! empty( $active_schema_slug ) || $active_category_id > 0 ) {
+            $args['tax_query'] = [ 'relation' => 'AND' ];
+            if ( ! empty( $active_schema_slug ) ) {
+                $args['tax_query'][] = [
+                    'taxonomy' => 'catalog_schema',
+                    'field'    => 'slug',
+                    'terms'    => $active_schema_slug,
+                ];
+            }
+            if ( $active_category_id > 0 ) {
+                $args['tax_query'][] = [
+                    'taxonomy' => 'catalog_category',
+                    'field'    => 'term_id',
+                    'terms'    => $active_category_id,
+                ];
+            }
+        }
+
+        return $args;
+    }
+
+    private static function sanitize_field_value( $raw_value, $field_type, $field_id, $post_id ) {
+        if ( is_array( $raw_value ) ) {
+            return array_map( 'sanitize_text_field', $raw_value );
+        }
+
+        switch ( $field_type ) {
+            case 'textarea':
+                return sanitize_textarea_field( $raw_value );
+            case 'wysiwyg':
+                return wp_kses_post( $raw_value );
+            case 'number':
+            case 'price':
+                return floatval( $raw_value );
+            case 'url':
+                $raw_value = trim( $raw_value );
+                return $raw_value === '' ? '' : esc_url_raw( $raw_value );
+            case 'image':
+            case 'video':
+            case 'pdf':
+            case 'relationship':
+                return absint( $raw_value );
+            case 'gallery':
+                $ids            = explode( ',', $raw_value );
+                $sanitized_ids  = array_map( 'absint', $ids );
+                return implode( ',', array_filter( $sanitized_ids ) );
+            case 'list':
+                $lines = preg_split( '/\r\n|\r|\n/', (string) $raw_value );
+                $lines = array_map( 'trim', $lines );
+                $lines = array_filter( $lines, function ( $v ) { return $v !== ''; } );
+                return array_values( array_map( 'sanitize_text_field', $lines ) );
+            case 'unit_measure':
+                $value = floatval( $raw_value );
+                if ( isset( $_POST[ $field_id . '_unit' ] ) ) {
+                    update_post_meta( $post_id, $field_id . '_unit', sanitize_text_field( $_POST[ $field_id . '_unit' ] ) );
+                }
+                return $value;
+            default:
+                return sanitize_text_field( $raw_value );
+        }
     }
 
 }

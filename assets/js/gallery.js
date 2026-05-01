@@ -1729,7 +1729,7 @@ function loadImages(folderId, folderName, highlightId, options) {
                 parentId = parseInt(sidebarList.find('a.active').data('folder-id') || 0, 10) || 0;
             }
             if (!folderName) {
-                createFolderStatus.text('Por favor, insira um nome.').css('color', 'red');
+                createFolderStatus.text('Por favor, insira um nome.').addClass('upt-status-error');
                 return;
             }
             button.prop('disabled', true).find('span').text('Criando...');
@@ -1745,11 +1745,11 @@ function loadImages(folderId, folderName, highlightId, options) {
                             sidebarList.find('a[data-folder-id="' + response.data.term_id + '"]').trigger('click');
                         });
                     } else {
-                        createFolderStatus.text(response.data.message).css('color', 'red');
+                        createFolderStatus.text(response.data.message).addClass('upt-status-error');
                     }
                 },
                 error: function() {
-                    createFolderStatus.text('Erro de comunicação.').css('color', 'red');
+                    createFolderStatus.text('Erro de comunicação.').addClass('upt-status-error');
                 },
                 complete: function() {
                     button.prop('disabled', false).find('span').text('Criar Pasta');
